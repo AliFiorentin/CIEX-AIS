@@ -31,9 +31,16 @@ Thumbs.db
 .claude/
 CLAUDE.md
 
-# tooling e documentação de processo (mantidos apenas localmente)
-/docs/
-/scripts/
+# scripts e docs são versionados; ficam de fora só os insumos grandes e os artefatos de processo
+# insumos grandes dos conversores (baixe conforme scripts/data/LEIA-ME.md)
+/scripts/data/*.tif
+/scripts/data/agricultura_riogrande_col10_2024.geojson
+# planos e especificações gerados por ferramentas de IA (processo, não documentação do projeto)
+/docs/superpowers/
+/docs/comparativo-*
+# cache do Python
+__pycache__/
+*.pyc
 
 # worker do maplibre-gl (copiado por pnpm copy:maplibre)
 /public/maplibre/
