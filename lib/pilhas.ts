@@ -38,25 +38,43 @@ function coordenadas(f: FeicaoPonto): [number, number] | null {
 /** Maior pilha (ponto com >= minPontos estabelecimentos de >= minCeps CEPs distintos), ou null. */
 export function detectarPilha(
   feicoes: FeicaoPonto[],
-  { minPontos = 20, minCeps = 10, casas = 5, campoCep = "cep" }: OpcoesPilha = {}
+  {
+    minPontos = 20,
+    minCeps = 10,
+    casas = 5,
+    campoCep = "cep",
+  }: OpcoesPilha = {}
 ): Pilha | null {
-  const grupos = new Map<string, { lon: number; lat: number; n: number; ceps: Set<string> }>()
+  const grupos = new Map<
+    string,
+    { lon: number; lat: number; n: number; ceps: Set<string> }
+  >()
   for (const f of feicoes) {
     const xy = coordenadas(f)
     if (!xy) continue
     const k = chave(xy[0], xy[1], casas)
     let g = grupos.get(k)
     if (!g) {
-      g = { lon: Number(xy[0].toFixed(casas)), lat: Number(xy[1].toFixed(casas)), n: 0, ceps: new Set() }
+      g = {
+        lon: Number(xy[0].toFixed(casas)),
+        lat: Number(xy[1].toFixed(casas)),
+        n: 0,
+        ceps: new Set(),
+      }
       grupos.set(k, g)
     }
     g.n += 1
     const cep = f.properties?.[campoCep]
-    if (cep !== null && cep !== undefined && String(cep).trim() !== "") g.ceps.add(String(cep).trim())
+    if (cep !== null && cep !== undefined && String(cep).trim() !== "")
+      g.ceps.add(String(cep).trim())
   }
   let melhor: Pilha | null = null
   for (const g of grupos.values()) {
-    if (g.n >= minPontos && g.ceps.size >= minCeps && (!melhor || g.n > melhor.n)) {
+    if (
+      g.n >= minPontos &&
+      g.ceps.size >= minCeps &&
+      (!melhor || g.n > melhor.n)
+    ) {
       melhor = { lon: g.lon, lat: g.lat, n: g.n, ceps: g.ceps.size }
     }
   }
@@ -64,7 +82,11 @@ export function detectarPilha(
 }
 
 /** Quantas das feições estão no ponto da pilha (por exemplo, entre os pontos atingidos de um cenário). */
-export function pontosNaPilha(feicoes: FeicaoPonto[], pilha: Pilha, casas = 5): number {
+export function pontosNaPilha(
+  feicoes: FeicaoPonto[],
+  pilha: Pilha,
+  casas = 5
+): number {
   const alvo = chave(pilha.lon, pilha.lat, casas)
   let n = 0
   for (const f of feicoes) {

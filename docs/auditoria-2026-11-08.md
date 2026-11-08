@@ -62,7 +62,7 @@ achado depois das correções. Os problemas que nascem no projeto de origem est�
 - ✔ Docstring de `calcular_perdas_rio_grande.py` corrigida (massa mensal × 12; `dias_agudo = N/2` no `--dias N`).
 - ✔ `converter_manchas_altura.py` e `gerar_populacao_atingida.py` funcionam no Python 3.9 (`from __future__ import annotations`); `pillow` e `scipy` entraram no `pip install`.
 - ◐ Dados: `staff_diag_lab_imagem` é 0 nas 462 unidades; 87 CNES com 6 dígitos; 42% das quadras sem número válido; `Nome` nulo em 211 de 355 do patrimônio. Documentado na Seção 12 (os cadastros vêm de fora e não foram alterados).
-- ◐ Referências: o link da CONAB foi preenchido (página inicial); a CEPAL (2024) já tinha entrada; "Teixeira et al. (2025)" está marcada como "referência completa a confirmar" porque não tenho a citação.
+- ◐ Referências: o link da CONAB foi preenchido (página inicial); a CEPAL (2024) já tinha entrada; uma citação sem referência completa foi removida da Metodologia.
 
 ### Bugs do app (testes no navegador)
 - ✔ `?cenario=` (inclusive `todas-as-cotas`) abria o cenário padrão no modo de desenvolvimento: o efeito de carga inicial zerava o permalink e o React (StrictMode) o executa duas vezes. Testado nos 4 permalinks.

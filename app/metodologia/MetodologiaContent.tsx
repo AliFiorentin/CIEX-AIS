@@ -622,12 +622,10 @@ export function MetodologiaContent() {
             />
 
             <Note type="info">
-              Para estimativas causais de perdas no mercado de trabalho formal
-              (comparando municípios atingidos com controles similares antes e
-              após o evento), ver Teixeira et al. (2025; referência completa a confirmar), que aplica o método
-              Diferenças em Diferenças sobre microdados RAIS mensais. Os
-              indicadores deste painel medem a <em>exposição estática</em>{" "}
-              (snap-shot de 2023), não o efeito causal.
+              Os indicadores deste painel medem a <em>exposição estática</em>{" "}
+              (snap-shot de 2023), não o efeito causal. Estimar perdas no
+              mercado de trabalho formal exigiria comparar municípios atingidos
+              com controles similares antes e depois do evento.
             </Note>
 
             <SubTitle>Origem dos dados</SubTitle>
