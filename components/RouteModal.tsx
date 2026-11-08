@@ -28,7 +28,7 @@ export function RouteModal({ children }: { children: React.ReactNode }) {
       style={{ backgroundColor: "rgba(9,26,31,0.6)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)" }}
       onClick={e => { if (e.target === e.currentTarget) close(); }}
     >
-      <div className="relative w-full max-w-[1200px] rounded-2xl shadow-2xl overflow-hidden bg-white animate-scale-in">
+      <div className="relative w-full max-w-[1440px] rounded-2xl shadow-2xl overflow-hidden bg-white animate-scale-in">
         <button
           onClick={close}
           aria-label="Fechar"
