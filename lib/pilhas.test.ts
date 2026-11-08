@@ -11,7 +11,9 @@ const f = (lon: number, lat: number, cep: string | null) => ({
   properties: { cep },
 })
 const pilha = (n: number, ceps: number) =>
-  Array.from({ length: n }, (_, i) => f(PONTO[0], PONTO[1], `9620${String(i % ceps).padStart(4, "0")}`))
+  Array.from({ length: n }, (_, i) =>
+    f(PONTO[0], PONTO[1], `9620${String(i % ceps).padStart(4, "0")}`)
+  )
 
 test("detecta o ponto com muitos CEPs distintos", () => {
   const r = detectarPilha(pilha(25, 12))
@@ -31,12 +33,18 @@ test("poucos pontos não é pilha", () => {
 })
 
 test("ruído de ponto flutuante não separa a pilha", () => {
-  const feats = pilha(25, 12).map((x, i) => f(PONTO[0] + (i % 3) * 1e-7, PONTO[1] - (i % 2) * 1e-7, x.properties.cep))
+  const feats = pilha(25, 12).map((x, i) =>
+    f(PONTO[0] + (i % 3) * 1e-7, PONTO[1] - (i % 2) * 1e-7, x.properties.cep)
+  )
   assert.equal(detectarPilha(feats)?.n, 25)
 })
 
 test("feições sem geometria são ignoradas", () => {
-  const feats = [...pilha(25, 12), { properties: { cep: "1" } }, { geometry: {}, properties: {} }]
+  const feats = [
+    ...pilha(25, 12),
+    { properties: { cep: "1" } },
+    { geometry: {}, properties: {} },
+  ]
   assert.equal(detectarPilha(feats)?.n, 25)
 })
 
@@ -45,7 +53,9 @@ test("limites configuráveis", () => {
 })
 
 test("devolve a maior pilha quando há duas", () => {
-  const outra = Array.from({ length: 22 }, (_, i) => f(-52.2, -32.1, `7${String(i).padStart(7, "0")}`))
+  const outra = Array.from({ length: 22 }, (_, i) =>
+    f(-52.2, -32.1, `7${String(i).padStart(7, "0")}`)
+  )
   assert.equal(detectarPilha([...outra, ...pilha(30, 15)])?.n, 30)
 })
 
