@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
@@ -26,6 +26,12 @@ export const metadata: Metadata = {
     title,
     description,
   },
+};
+
+// O dashboard é só claro: "only light" impede o escurecimento automático do navegador e de extensões
+// e mantém claros os controles nativos (rolagem, campos), mesmo com o sistema em modo escuro.
+export const viewport: Viewport = {
+  colorScheme: "only light",
 };
 
 export default function RootLayout({ children, modal }: { children: React.ReactNode; modal: React.ReactNode }) {
