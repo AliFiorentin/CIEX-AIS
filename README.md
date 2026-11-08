@@ -19,7 +19,7 @@ A aplicação é um dashboard de página única construído com **Next.js + Type
 **Funcionalidades:**
 - Alternância entre cenários de inundação com carregamento assíncrono por demanda
 - Painel de análise com abas por setor (Empresas, Saúde, Educação, Patrimônio Histórico, Infraestrutura, Agricultura, Cobertura da Terra)
-- Heatmap de população (WorldPop) exibido como camada de fundo permanente, com KPI de população total e atingida por cenário no topo do painel
+- Heatmap de população (WorldPop) exibido como camada alternável pelo botão "População" no cabeçalho, com KPI de população total e atingida por cenário no topo do painel
 - Filtros por setor econômico (CNAE), dependência administrativa, tipo de estabelecimento e tipologia de patrimônio
 - Permalink via parâmetro `?cenario=<código>` na URL (mais `lat`/`lng`/`zoom` para a posição do mapa)
 
@@ -29,19 +29,17 @@ A aplicação é um dashboard de página única construído com **Next.js + Type
 
 | Camada | Fonte | Descrição |
 |---|---|---|
-| **Empresas** | RAIS (MTE) | Microdados de vínculos empregatícios formais (empregados, massa salarial, CNAE) — pipeline BID |
+| **Empresas** | RAIS (MTE) | Microdados de vínculos empregatícios formais (empregados, massa salarial, CNAE) |
 | **Educação** | Censo Escolar (INEP) | Escolas, matrículas por modalidade, professores e dependência administrativa |
 | **Saúde** | CNES (Ministério da Saúde) | Unidades de saúde, tipo de estabelecimento e quadro de pessoal por categoria |
 | **Logradouros** | Prefeitura de Rio Grande | Arruamento com atributos de drenagem e iluminação pública |
 | **Quadras** | Prefeitura de Rio Grande | Quadras urbanas com código e área |
 | **Terrenos** | Prefeitura de Rio Grande | Lotes com informações de saneamento (água, esgoto, coleta de lixo) |
-| **Prédios Públicos** | Prefeitura de Rio Grande | Equipamentos públicos municipais |
-| **Segurança** | Prefeitura de Rio Grande | Postos e instalações de segurança pública |
 | **Patrimônio Histórico** | Levantamento de Patrimônio Histórico — Rio Grande/RS | Bens tombados/inventariados (355 pontos) com nome, endereço e tipologia arquitetônica |
-| **Uso e Cobertura da Terra** | MapaBiomas Coleção 10 (2024) | Classes: Silvicultura, Campo Alagado, Formação Campestre, Mosaico de Usos, Restinga Arbórea, Restinga Herbácea |
-| **Agricultura** | MapaBiomas Coleção 10 (2024) | Culturas: Soja, Arroz, Outras Lavouras Temporárias |
+| **Uso e Cobertura da Terra** | MapBiomas Coleção 10 (2024) | Classes: Silvicultura, Campo Alagado, Formação Campestre, Mosaico de Usos, Restinga Arbórea, Restinga Herbácea |
+| **Agricultura** | MapBiomas Coleção 10 (2024) | Culturas: Soja, Arroz, Outras Lavouras Temporárias |
 | **População** | WorldPop | Grade populacional (hab./pixel) renderizada como heatmap raster; população total e atingida por cenário pré-computadas |
-| **Cenários de inundação** | Modelagem hidrológica | Manchas de inundação vetoriais dos eventos de Setembro de 2023, Maio de 2024 e cenário expandido (+50%) |
+| **Cenários de inundação** | Modelagem hidrológica | Manchas de inundação vetoriais dos eventos de Setembro de 2023, Maio de 2024 e cenário de sensibilidade "Maio 2024 + 50%" (Maio 2024 com a água 60 cm mais alta; o "+50%" é só o nome herdado do cenário) |
 | **Mancha de altura da lâmina d'água** | Simulação hidrológica por bacias — plataforma Economia Azul (GPEA/FURG) | Nível da Lagoa (16/05/2024, 20h) + Chuva Acumulada (60,8mm) combinados: rasters de profundidade por bacia hidrográfica, estilizados por rampa de cor QGIS (`.qml`) |
 
 ---
@@ -114,9 +112,9 @@ A área de cada feição vetorial $f_i$ é calculada pelo `@turf/turf` (elipsoid
 
 $$a_i = \frac{\text{area}(f_i)}{10000}$$
 
-Feições com $a_i < 0{,}5\;\text{ha}$ são descartadas (ruído de vetorização do raster MapaBiomas). A área total atingida por classe ou cultura $k$ é:
+O ruído de vetorização do raster MapBiomas (fragmentos $< 0{,}5\;\text{ha}$) é removido offline, polígono a polígono e em hectares reais (EPSG:31982), por `scripts/filtro_ruido.py`, antes de dissolver por classe; o navegador não aplica mais corte. A área total atingida por classe ou cultura $k$ é:
 
-$$A_k = \sum_{\substack{i \,\in\, \hat{N},\; k_i = k \\ a_i \,\geq\, 0{,}5}} a_i \qquad \%\,\text{área}_k = \frac{A_{k,\,\hat{N}}}{A_{k,\,N}} \times 100$$
+$$A_k = \sum_{\substack{i \,\in\, \hat{N},\; k_i = k}} a_i \qquad \%\,\text{área}_k = \frac{A_{k,\,\hat{N}}}{A_{k,\,N}} \times 100$$
 
 #### Patrimônio Histórico
 
@@ -130,13 +128,13 @@ Diferente das demais camadas, a população **não** é um recorte vetorial: é 
 
 $$\%\,\text{pop. atingida} = \frac{\text{pop. atingida}}{\text{pop. total}} \times 100$$
 
-O KPI de população é lido diretamente desse JSON (não é recalculado no cliente). A imagem raster (`populacao.png`) é posicionada pelas quatro coordenadas de canto presentes no JSON. Diferente das camadas por setor, a População não tem botão de alternância no cabeçalho: é uma camada de fundo permanente, identificada apenas pela legenda (gradiente de densidade) e pelo KPI no painel.
+O KPI de população é lido diretamente desse JSON (não é recalculado no cliente). A imagem raster (`populacao.png`) é posicionada pelas quatro coordenadas de canto presentes no JSON. A camada é ligada e desligada pelo botão "População" no cabeçalho do mapa; a legenda (gradiente de densidade) e o KPI no painel acompanham o cenário.
 
-**Nota sobre o cenário combinado (Nível da Lagoa + Chuva Acumulada).** O GeoTIFF WorldPop original e o script que gerou os valores de `pop_atingida` dos demais cenários não estão neste repositório (dado externo do projeto BID/GPEA). Para esse cenário, `pop_atingida` foi **estimado** a partir do próprio `populacao.png` já renderizado: o canal alfa da imagem correlaciona quase perfeitamente (r ≈ 0,998, testado empiricamente) com a posição de cada pixel na rampa de cor do heatmap — uma proxy contínua e monotônica da densidade populacional subjacente. O alfa é usado como peso por pixel, calibrado proporcionalmente contra `pop_total` (valor real, conhecido):
+**Nota sobre o cenário combinado (Nível da Lagoa + Chuva Acumulada).** Setembro de 2023, Maio de 2024 e Maio de 2024 + 50% têm população atingida exata, de uma base externa ao CIEX (raster de 100 m). Para o 16/05/2024 não há valor exato: `pop_atingida` é **estimado** a partir do `populacao.png` já renderizado. O canal alfa da imagem correlaciona quase perfeitamente (r ≈ 0,998) com a posição de cada pixel na rampa de cor do heatmap, uma proxy da densidade. O alfa é usado como peso por pixel e o resultado é dividido por um fator de calibração $k$, medido nos três cenários com valor exato (a proxy subestima: razões de 0,52 a 0,61; $k = 0{,}545$ pela razão das somas):
 
-$$\text{pop\_atingida} \approx \text{pop\_total} \times \frac{\sum_{\text{pixel} \,\in\, \text{mancha}} \text{alfa}}{\sum_{\text{pixel}} \text{alfa}}$$
+$$\text{pop\_atingida} \approx \frac{1}{k}\,\text{pop\_total} \times \frac{\sum_{\text{pixel} \,\in\, \text{mancha}} \text{alfa}}{\sum_{\text{pixel}} \text{alfa}}$$
 
-Ver `scripts/estimar_populacao_atingida.py`. É uma aproximação — sujeita à quantização de 256 níveis do PNG e a qualquer divergência entre o alfa exibido e a densidade real — não o mesmo método (resolução muito maior) dos demais cenários.
+Resultado: 18.000 hab. (9,1%), faixa de 15.900 a 19.000. Ver `scripts/estimar_populacao_atingida.py`. Um teste com o raster WorldPop de densidade a ~1 km (`scripts/gerar_populacao_atingida.py`, variável `POP_RASTER`) foi descartado: manchas pequenas dependem de poucos pixels de 1 km² (Setembro de 2023 saía 15,5% contra 4,0% exato).
 
 #### Manchas de altura da lâmina d'água (Nível da Lagoa + Chuva Acumulada)
 
@@ -162,17 +160,19 @@ O limiar **≥ 45 cm** (primeira classe visível do `.qml`) entra na área ating
 
 **Perdas operacionais.** O cenário combinado foi incluído em `CENARIOS`/`CENARIO_PERIODO` de `calcular_perdas_rio_grande.py`, usando os mesmos parâmetros DaLA (dias agudo/recuperação) e coeficientes agrícolas do período "maio_2024".
 
+**Danos (`/danos`) e cotas.** A antiga página `/perdas` virou `/danos`, com as abas Danos Operacionais (perdas DaLA) e Danos Físicos (exposição por cota; sem R$, porque as máscaras de Rio Grande não têm profundidade). O cenário "Todas as cotas" anima a água por cota (1,00 a 2,6215 m) a partir de arquivos de uma fonte externa ao CIEX. O cálculo de perdas normaliza o CNAE para 5 dígitos.
+
 **Renderização.** Diferente dos demais cenários (preenchimento de cor única + contorno), este cenário é exibido como imagem raster colorida (`Source type="image"`), preservando o gradiente/classificação original — ver `ALTURA_MANCHAS` em [app/page.tsx](app/page.tsx).
 
 ### 3. Formatos de arquivo e desempenho
 
 | Formato | Camadas | Motivo |
 |---|---|---|
-| `.geojson` | Empresas, Educação, Saúde, Patrimônio Histórico, Logradouros, Prédios Públicos, Segurança, Cenário | Tamanho reduzido, parsing nativo |
+| `.geojson` | Empresas, Educação, Saúde, Patrimônio Histórico, Logradouros, Cenário | Tamanho reduzido, parsing nativo |
 | `.fgb` (FlatGeobuf) | Cobertura, Agricultura, Quadras, Terrenos | Streaming binário eficiente para arquivos grandes |
 | `.png` + `.json` | População | Imagem raster (heatmap) posicionada por coordenadas de canto + métricas pré-computadas por cenário |
 
-O FlatGeobuf é carregado em stream via `flatgeobuf.geojson.deserialize`, sem necessidade de carregar o arquivo inteiro na memória antes de renderizar. Terrenos (~28 MB) solicita confirmação do usuário antes do carregamento.
+O FlatGeobuf é carregado em stream via `flatgeobuf.geojson.deserialize`, sem necessidade de carregar o arquivo inteiro na memória antes de renderizar. Terrenos (~17 MB) solicita confirmação do usuário antes do carregamento.
 
 Dados de base são carregados uma única vez na inicialização. Dados atingidos são carregados sob demanda a cada troca de cenário, com `AbortController` para cancelar requisições em andamento.
 
@@ -203,12 +203,10 @@ O cenário ativo é persistido na URL via `?cenario=<código>` usando `history.r
 |---|---|---|
 | `next` | ^16 | Framework React com SSR e servidor estático |
 | `react` / `react-dom` | ^19 | Biblioteca de UI |
-| `maplibre-gl` | ^5 | Motor de renderização de mapas vetoriais |
+| `maplibre-gl` | ^6 | Motor de renderização de mapas vetoriais |
 | `react-map-gl` | ^8 | Wrapper React para MapLibre GL |
 | `@turf/turf` | ^7 | Cálculos geoespaciais (área, bounding box) |
 | `flatgeobuf` | ^4 | Leitura em stream de arquivos `.fgb` |
-| `recharts` | ^3 | Gráficos de rosca (donut charts) |
-| `xlsx` | ^0.18 | Exportação de dados em formato XLSX |
 | `radix-ui` | ^1 | Primitivos de UI acessíveis (base do shadcn/ui) |
 | `lucide-react` | ^1 | Biblioteca de ícones |
 | `tailwindcss` | ^4 | Framework CSS utilitário |
@@ -227,11 +225,11 @@ pnpm install
 | `shapely` | Operações geométricas (dependência do geopandas) |
 | `pandas` | Manipulação tabular |
 | `numpy` | Operações numéricas |
-| `rasterio` | Leitura e vetorização de rasters GeoTIFF (MapaBiomas) |
+| `rasterio` | Leitura e vetorização de rasters GeoTIFF (MapBiomas) |
 
 Instalar com:
 ```bash
-pip install geopandas shapely pandas numpy rasterio
+pip install geopandas shapely pandas numpy rasterio pillow scipy
 ```
 
 ---
@@ -262,17 +260,17 @@ pnpm format     # Prettier
 
 ```
 app/
-  page.tsx          — Componente único Dashboard (~2000 linhas): todo o estado, lógica e UI
+  page.tsx          — Componente único Dashboard (~6.250 linhas): todo o estado, lógica e UI
   layout.tsx        — Layout raiz Next.js
   globals.css       — Estilos globais e Tailwind
-components/ui/      — Componentes shadcn/ui + wrapper MapLibre
+components/ui/      — Componentes shadcn/ui (card, donut-chart, dropdown, select, skeleton, tabs)
 public/
   dados_convertidos/
     populacao_atingida.json — População total/atingida por cenário + coordenadas do raster
     rio_grande/     — GeoJSON, FGB e populacao.png prontos para consumo pelo browser
 ```
 
-> Os conversores Python (GeoPandas/Rasterio) que geram os dados são mantidos **fora do repositório** (localmente) e catalogados no gerenciador de projetos. O app só consome os arquivos estáticos já processados em `public/dados_convertidos/`.
+> Os conversores Python (GeoPandas/Rasterio), seus testes e a documentação de processo ficam em `scripts/` (`converter_*.py`, `gerar_*.py`, `sincronizar_dados_externos.py`, `tests/`) e `docs/` (`dados-externos-rio-grande.md`, `auditoria-2026-11-08.md`, `sensibilidade-limiares-mancha-16-05.md`). Os insumos grandes (rasters do MapBiomas e outros) não estão no git: veja `scripts/data/LEIA-ME.md`. `pnpm test` roda os testes de `lib/` e os de `scripts/tests/`.
 
 ---
 
@@ -295,7 +293,7 @@ Doutorando em Economia Aplicada — Universidade Federal do Rio Grande do Sul (U
 
 ---
 
-Desenvolvido com apoio do **BID (Banco Interamericano de Desenvolvimento)** e da **Prefeitura Municipal de Rio Grande/RS**.
+Desenvolvido com apoio da **Prefeitura Municipal de Rio Grande/RS**.
 
-Dados de uso e cobertura da terra: [MapaBiomas](https://mapbiomas.org/) — Coleção 10 (2024).
+Dados de uso e cobertura da terra: [MapBiomas](https://mapbiomas.org/) — Coleção 10 (2024).
 Dados de grade populacional: [WorldPop](https://www.worldpop.org/).

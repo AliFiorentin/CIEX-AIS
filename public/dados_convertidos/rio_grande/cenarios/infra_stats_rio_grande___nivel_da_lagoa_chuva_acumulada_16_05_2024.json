@@ -1,13 +1,13 @@
 {
   "Logradouros": {
     "segmentos_total": 8184,
-    "segmentos_atingidos": 2255,
+    "segmentos_atingidos": 2148,
     "ruas_total": 1052,
-    "ruas_atingidas": 368,
+    "ruas_atingidas": 355,
     "drenagem_total": 3527,
-    "drenagem_atingidos": 1523,
+    "drenagem_atingidos": 1470,
     "iluminacao_total": 7500,
-    "iluminacao_atingidos": 2161,
+    "iluminacao_atingidos": 2063,
     "ruas_atingidas_lista": [
       "AVENIDA ALMIRANTE TAMANDARE",
       "AVENIDA ARGENTINA",
@@ -19,7 +19,6 @@
       "AVENIDA DOS BANDEIRANTES",
       "AVENIDA ENGENHEIRO FRANCISCO MARTINS BASTOS",
       "AVENIDA HONORIO BICALHO",
-      "AVENIDA JOSE BONIFACIO",
       "AVENIDA MAJOR CARLOS PINTO",
       "AVENIDA MODESTO REY DORNELLES",
       "AVENIDA OLAVO BILAC",
@@ -43,7 +42,6 @@
       "RUA ABDALA NADER",
       "RUA ACACIA RIOGRANDENSE",
       "RUA ACRE",
-      "RUA AGOSTINHO PETRONE",
       "RUA ALBERTO DE OLIVEIRA",
       "RUA ALBERTO TORRES",
       "RUA ALCIDES LIMA FARIA",
@@ -98,14 +96,11 @@
       "RUA CASTRO ALVES",
       "RUA CEARÁ",
       "RUA CENTO E CINQUENTA E OITO",
-      "RUA CENTO E QUARENTA E CINCO",
       "RUA CENTO E QUARENTA E SETE",
       "RUA CENTO E SESSENTA E NOVE",
-      "RUA CENTO E TRINTA E QUATRO",
       "RUA CHILE",
       "RUA CINCO",
       "RUA COELHO NETO",
-      "RUA COLOMBIA",
       "RUA COMENDADOR FRANCISCO MARQUES",
       "RUA COMENDADOR HENRIQUE PANCADA",
       "RUA CONDE AFONSO CELSO",
@@ -170,7 +165,6 @@
       "RUA ENGENHEIRO ELMER LAWSORENCE CORTHEILL",
       "RUA ENGENHEIRO HEITOR AMARO BARCELOS",
       "RUA ENGENHEIRO THOMAS PAES DA CUNHA FILHO",
-      "RUA EQUADOR",
       "RUA ERNANI FORNARI",
       "RUA ERNESTO ALVES",
       "RUA ESTADOS UNIDOS DA AMÉRICA",
@@ -209,7 +203,6 @@
       "RUA HENRIQUE DIAS",
       "RUA HONDURAS",
       "RUA HONORATO CARVALHO",
-      "RUA HONORIO AIKIM",
       "RUA ILHA DA TRINDADE",
       "RUA INTENDENTE CARVALHO",
       "RUA INTENDENTE CONRADO",
@@ -252,7 +245,6 @@
       "RUA MARECHAL FLORIANO PEIXOTO",
       "RUA MARECHAL HUMBERTO DE ALENCAR CASTELO BRANCO",
       "RUA MARECHAL JOAO MASCARENHAS DE MORAES",
-      "RUA MARECHAL RONDON",
       "RUA MARIO QUINTANA",
       "RUA MARIO RIBEIRO",
       "RUA MARQUES DE MARICA",
@@ -274,7 +266,6 @@
       "RUA PADRE CAIO",
       "RUA PADRE CONSTANTINO",
       "RUA PADRE FEIJO",
-      "RUA PADRE VIEIRA",
       "RUA PANAMA",
       "RUA PARAGUAI",
       "RUA PEDRO DE SÁ FREITAS",
@@ -308,9 +299,7 @@
       "RUA RITA LOBATO",
       "RUA RODRIGUES DUARTE",
       "RUA ROSA CRUZ",
-      "RUA RUY BARBOSA",
       "RUA SAFIRA",
-      "RUA SANTA CATARINA",
       "RUA SAO DOMINGOS SAVIO",
       "RUA SAO FRANCISCO DE ASSIS",
       "RUA SAO VICENTE DE PAULA",
@@ -340,7 +329,6 @@
       "RUA VETERANO SPORT CLUBE RIO GRANDE",
       "RUA VICE ALMIRANTE ABREU",
       "RUA VIDAL DE NEGREIROS",
-      "RUA VINTE E CINCO",
       "RUA VINTE E QUATRO DE MAIO",
       "RUA VISCONDE DE MAUA",
       "RUA VISCONDE DE PARANAGUA",
@@ -360,7 +348,6 @@
       "TRAVESSA FRONTEIRA DO SUL",
       "TRAVESSA GIORDANO BRUNO",
       "TRAVESSA GLOBO",
-      "TRAVESSA GUIANAS",
       "TRAVESSA J. MINHEMANN",
       "TRAVESSA JOAO TOUGUINHA",
       "TRAVESSA JOSE DO PATROCINIO",
@@ -381,34 +368,34 @@
   },
   "Quadras": {
     "total": 3203,
-    "atingidas": 830
+    "atingidas": 785
   },
   "Terrenos": {
     "total": 71019,
-    "atingidos": 15037,
+    "atingidos": 10494,
     "agua": {
       "total": 69664,
-      "atingidos": 14901
+      "atingidos": 10399
     },
     "lixo": {
       "total": 53320,
-      "atingidos": 11122
+      "atingidos": 7827
     },
     "esgoto_pluvial": {
       "total": 18974,
-      "atingidos": 7041
+      "atingidos": 4867
     },
     "esgoto_cloacal": {
       "total": 53561,
-      "atingidos": 11019
+      "atingidos": 7773
     },
     "fossa": {
       "total": 1906,
-      "atingidos": 427
+      "atingidos": 286
     },
     "condominio": {
       "total": 5136,
-      "atingidos": 1500
+      "atingidos": 1151
     }
   }
 }
