@@ -173,7 +173,7 @@
   }
 }
 
-/* Cabeçalho do Dashboard: tamanhos fluidos com a largura da janela (mesma escala do Dashboard BID). */
+/* Cabeçalho do Dashboard: tamanhos fluidos com a largura da janela. */
 .dash-header {
   --logo-h: clamp(20px, 1.7vw, 28px);
   --logo-h2: clamp(17px, 1.45vw, 24px);

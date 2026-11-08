@@ -127,7 +127,7 @@ export function MetodologiaContent() {
               mancha de inundação de cada cenário; e (b) as{" "}
               <strong>perdas econômicas operacionais</strong>: estimativa do
               fluxo de produção e serviços não realizado durante o período de
-              interrupção, seguindo a abordagem DaLA (CEPAL/BID). Todo o
+              interrupção, seguindo a abordagem DaLA (CEPAL). Todo o
               processamento espacial é <strong>pré-computado offline</strong> em
               Python; o painel web apenas renderiza os arquivos estáticos
               resultantes.
@@ -165,7 +165,7 @@ export function MetodologiaContent() {
                 [
                   "Cenário Maio 2024 + 50%",
                   "Maio 2024, nível 60 cm acima",
-                  "Cenário de sensibilidade: o evento de maio com a água 60 cm mais alta (shapefile CEN_MAI24_MAIS60CM do projeto BID). O \"+50%\" é só o nome herdado do cenário; a mancha resultante é ~7× a de Maio 2024 em área",
+                  "Cenário de sensibilidade: o evento de maio com a água 60 cm mais alta (shapefile CEN_MAI24_MAIS60CM). O \"+50%\" é só o nome herdado do cenário; a mancha resultante é ~7× a de Maio 2024 em área",
                 ],
                 [
                   "Nível da Lagoa + Chuva Acumulada",
@@ -724,8 +724,8 @@ export function MetodologiaContent() {
               Δλ e Δφ: resolução angular do raster; φ<sub>c</sub>: latitude
               central do recorte municipal. A área atingida é medida sobre os
               polígonos de cultura recortados pela mancha (EPSG:32722 no
-              pipeline do projeto BID, que produz os{" "}
-              <code>agricultura_stats_*.json</code>), após suavização da geometria. O pipeline do BID descarta ainda fragmentos menores que 5 m²; essa regra não é aplicada nos scripts do CIEX. Os scripts
+              pipeline externo ao CIEX, que produz os{" "}
+              <code>agricultura_stats_*.json</code>), após suavização da geometria. O pipeline externo descarta ainda fragmentos menores que 5 m²; essa regra não é aplicada nos scripts do CIEX. Os scripts
               próprios do CIEX (filtro de ruído, manchas por cota, Setembro de
               2023) usam EPSG:31982 (SIRGAS 2000 / UTM 22S); a diferença de
               área entre os dois sistemas é desprezível nessa escala.
@@ -1041,8 +1041,7 @@ export function MetodologiaContent() {
             <p>
               Os vínculos de profissionais de saúde são agrupados em 11
               categorias com base no código CBO (Classificação Brasileira de
-              Ocupações) de 4 dígitos. O agrupamento é feito no pipeline do
-              projeto BID; o CIEX recebe as 11 colunas <code>staff_*</code> já
+              Ocupações) de 4 dígitos. O agrupamento é feito no pipeline externo ao CIEX; o CIEX recebe as 11 colunas <code>staff_*</code> já
               somadas por unidade e não refaz a classificação:
             </p>
             <DataTable
@@ -1408,8 +1407,8 @@ export function MetodologiaContent() {
             <Note type="info">
               <strong>Procedência dos valores de Rio Grande:</strong> a
               população total (198.418 hab.) e a população atingida de
-              Setembro de 2023, Maio de 2024 e Maio de 2024 + 50% vêm do
-              projeto BID/GPEA, calculadas sobre o raster de 100 m descrito
+              Setembro de 2023, Maio de 2024 e Maio de 2024 + 50% vêm de
+              uma base externa ao CIEX, calculadas sobre o raster de 100 m descrito
               acima. O cenário de 16/05/2024 é estimado (veja abaixo). Um teste
               com o raster WorldPop de densidade a ~1 km
               (<code>scripts/gerar_populacao_atingida.py</code>) foi
@@ -1438,7 +1437,7 @@ export function MetodologiaContent() {
               como peso por pixel, e o resultado é dividido por um fator de
               calibração <em>k</em>, medido nos três cenários que têm valor
               exato (a proxy sempre subestima: razões de 0,52 a 0,61 contra o
-              valor do BID, <em>k</em> = 0,545 pela razão das somas):
+              valor exato, <em>k</em> = 0,545 pela razão das somas):
             </p>
             <MathBlock
               exprs={[
@@ -1464,7 +1463,7 @@ export function MetodologiaContent() {
             <p>
               A estimativa de perdas econômicas segue a metodologia{" "}
               <strong>DaLA (Damage and Loss Assessment)</strong>, desenvolvida
-              pela CEPAL em parceria com o BID e o Banco Mundial, aplicada pela
+              pela CEPAL em parceria com o Banco Mundial, aplicada pela
               CEPAL na avaliação das enchentes RS/2024. O DaLA distingue dois
               conceitos:
             </p>
@@ -1933,7 +1932,7 @@ export function MetodologiaContent() {
               custo de construção (CUB/RS, Sinduscon-RS, dez/2024) e por um
               multiplicador que acrescenta o conteúdo (equipamentos, estoque) à
               estrutura: empresas 2,0, indústria 2,5, saúde 2,25 e educação 1,5
-              (parâmetros do pipeline do BID). A tabela abaixo mostra a área e
+              (parâmetros do pipeline externo). A tabela abaixo mostra a área e
               o custo por metro quadrado, antes do multiplicador:
             </p>
             <DataTable
@@ -2000,32 +1999,32 @@ export function MetodologiaContent() {
 
             <SubTitle>Cenário Setembro 2023</SubTitle>
             <ul className="ml-1 list-inside list-disc space-y-1.5 text-sm text-slate-700">
-              <li>A mancha e os pontos atingidos de empresas, educação, saúde, logradouros e agricultura vêm do projeto BID; patrimônio, quadras, terrenos e cobertura da terra são gerados pelo CIEX.</li>
+              <li>A mancha e os pontos atingidos de empresas, educação, saúde, logradouros e agricultura vêm de uma fonte externa ao CIEX; patrimônio, quadras, terrenos e cobertura da terra são gerados pelo CIEX.</li>
               <li>O período de interrupção é menor que o de Maio: 15 dias agudos + 30 de recuperação a 50% (30 dias efetivos, contra 60). Os totais de perdas (R$ 12,9 mi) não são comparáveis diretamente com os de Maio.</li>
               <li>As perdas de produção do SUS e as agrícolas resultam em R$ 0 neste cenário. Na agricultura, os fragmentos atingidos (0,04 a 0,11 ha) ficam abaixo do filtro de ruído de 0,5 ha, e o mapa mostra &ldquo;Nenhuma cultura atingida&rdquo;.</li>
-              <li>A população atingida (7.844 hab., 4,0%) é do BID, calculada sobre o raster de 100 m.</li>
+              <li>A população atingida (7.844 hab., 4,0%) é de uma base externa, calculada sobre o raster de 100 m.</li>
             </ul>
 
             <SubTitle>Cenário Maio 2024</SubTitle>
             <ul className="ml-1 list-inside list-disc space-y-1.5 text-sm text-slate-700">
-              <li>A mancha tem 8,25 km² e foi atualizada com geometria mais detalhada no BID. Pontos a menos de 10 m da borda mudam de classificação conforme a simplificação do polígono: por exemplo, 601 empresas estão gravadas como atingidas, contra 556 pela interseção com a mancha atual, e 46 das 53 de diferença estão num único ponto.</li>
-              <li>Patrimônio, cobertura da terra e agricultura atingidos vêm de conversores do CIEX e podem divergir da mancha do BID na borda.</li>
+              <li>A mancha tem 8,25 km² e foi atualizada com geometria mais detalhada na fonte externa. Pontos a menos de 10 m da borda mudam de classificação conforme a simplificação do polígono: por exemplo, 601 empresas estão gravadas como atingidas, contra 556 pela interseção com a mancha atual, e 46 das 53 de diferença estão num único ponto.</li>
+              <li>Patrimônio, cobertura da terra e agricultura atingidos vêm de conversores do CIEX e podem divergir da mancha da fonte externa na borda.</li>
               <li>A Secretaria Municipal de Saúde (CNES 6303609) teve a coordenada corrigida pelo CIEX e, com isso, sai deste cenário.</li>
               <li>Perda agrícola de R$ 0 (mesma razão do filtro de 0,5 ha). A perda é calculada para 60 dias efetivos (30 agudos + 60 de recuperação a 50%); a página de Danos permite 30, 45 e 60 dias, e só a parcela proporcional à duração muda (a agrícola não).</li>
-              <li>A população atingida (23.058 hab., 11,6%) é do BID.</li>
+              <li>A população atingida (23.058 hab., 11,6%) é de uma base externa.</li>
             </ul>
 
             <SubTitle>Cenário Maio 2024 + 50%</SubTitle>
             <ul className="ml-1 list-inside list-disc space-y-1.5 text-sm text-slate-700">
-              <li>O nome &ldquo;+50%&rdquo; é herdado do BID. A mancha corresponde à água 60 cm mais alta (shapefile <code>CEN_MAI24_MAIS60CM</code>) e tem 59,4 km², cerca de 7 vezes a de Maio 2024. É um cenário de sensibilidade, não uma previsão.</li>
+              <li>O nome &ldquo;+50%&rdquo; é herdado da fonte dos dados. A mancha corresponde à água 60 cm mais alta (shapefile <code>CEN_MAI24_MAIS60CM</code>) e tem 59,4 km², cerca de 7 vezes a de Maio 2024. É um cenário de sensibilidade, não uma previsão.</li>
               <li>Atinge 2.400 das 3.220 empresas (75%). As 777 empresas da pilha de geocodificação (veja o eixo Município) entram aqui só por causa do ponto falso em que foram colocadas, de modo que o total de R$ 557,8 mi (empresas: R$ 473,9 mi) é o mais sensível a esse erro.</li>
-              <li>A área agrícola atingida medida no mapa (53,4 ha) difere em cerca de 7% das estatísticas do BID (49,7 ha), que são as usadas no cálculo das perdas.</li>
-              <li>A população atingida (80.124 hab., 40,4%) é do BID.</li>
+              <li>A área agrícola atingida medida no mapa (53,4 ha) difere em cerca de 7% das estatísticas externas (49,7 ha), que são as usadas no cálculo das perdas.</li>
+              <li>A população atingida (80.124 hab., 40,4%) é de uma base externa.</li>
             </ul>
 
             <SubTitle>Cenário Nível da Lagoa + Chuva Acumulada – 16/05/2024</SubTitle>
             <ul className="ml-1 list-inside list-disc space-y-1.5 text-sm text-slate-700">
-              <li>Cenário exclusivo do CIEX: o sincronizador de dados com o BID nunca o sobrescreve e não há totais do BID para conferir.</li>
+              <li>Cenário exclusivo do CIEX: a atualização dos dados externos nunca o sobrescreve e não há totais externos para conferir.</li>
               <li>A mancha é a união de duas simulações com unidades diferentes: a Lagoa em centímetros (≥ 45 cm) e a Chuva Acumulada em unidade do modelo (faixa 86–253; valores ≥ 254 são tratados como água pré-existente e ficam fora). O corte de 86 corresponde a cerca de 10 cm segundo a fonte, não a uma conversão verificada.</li>
               <li>A mancha publicada (6,35 km²) é cerca de 10% maior que o limiar bruto (5,76 km²), por causa do fechamento de vãos de até ~16 m. Antes da correção da redução de resolução, era 39% maior.</li>
               <li>As mesmas 777 empresas da pilha de geocodificação entram aqui pelo ponto falso, e o VAB de empresas (R$ 379,0 mi) depende delas.</li>
@@ -2037,7 +2036,7 @@ export function MetodologiaContent() {
             <ul className="ml-1 list-inside list-disc space-y-1.5 text-sm text-slate-700">
               <li>Mostra só exposição de empresas, educação e saúde (Danos Físicos), com cotas de 1,00 a 2,6215 m do pico de 21/05/2024. Cobertura da terra, agricultura e infraestrutura não têm exposição por cota no mapa.</li>
               <li>As máscaras são molhado/seco, sem profundidade: não existe altura da água, faixa de profundidade nem profundidade média.</li>
-              <li>O índice de cota de cada ponto vem do BID e concorda com as máscaras brutas por cota em 94% das empresas, 97% das escolas e 96% das unidades de saúde; a diferença restante vem da resolução e da posição exata de cada ponto. A imagem do mapa (4,7 × 5,5 m por célula) foi regenerada a partir das máscaras de 1 m e confere com a área declarada por cota (7,0 km² no pico, contra 6,9 km² nas máscaras).</li>
+              <li>O índice de cota de cada ponto vem da fonte externa e concorda com as máscaras brutas por cota em 94% das empresas, 97% das escolas e 96% das unidades de saúde; a diferença restante vem da resolução e da posição exata de cada ponto. A imagem do mapa (4,7 × 5,5 m por célula) foi regenerada a partir das máscaras de 1 m e confere com a área declarada por cota (7,0 km² no pico, contra 6,9 km² nas máscaras).</li>
               <li>Nenhuma área agrícola mapeada fica sob a água em nenhuma das cotas.</li>
             </ul>
 
@@ -2049,7 +2048,7 @@ export function MetodologiaContent() {
             <ul className="ml-1 list-inside list-disc space-y-1.5 text-sm text-slate-700">
               <li>Um ponto é atingido se está dentro da mancha; pontos a poucos metros da borda dependem da simplificação do polígono (diferenças de 0,5 a 10 m foram medidas).</li>
               <li>Quadras e terrenos entram inteiros, e logradouros, agricultura e cobertura da terra são recortados pela mancha; por isso as áreas dos dois grupos não são a mesma grandeza.</li>
-              <li>O pipeline do BID calcula áreas em EPSG:32722 e descarta fragmentos menores que 5 m²; os scripts do CIEX usam EPSG:31982 e não aplicam essa regra. A diferença é desprezível nessa escala.</li>
+              <li>O pipeline externo calcula áreas em EPSG:32722 e descarta fragmentos menores que 5 m²; os scripts do CIEX usam EPSG:31982 e não aplicam essa regra. A diferença é desprezível nessa escala.</li>
             </ul>
 
             <SubTitle>Empresas e VAB (Seção 3)</SubTitle>
@@ -2071,14 +2070,14 @@ export function MetodologiaContent() {
             <ul className="ml-1 list-inside list-disc space-y-1.5 text-sm text-slate-700">
               <li><strong>Matrículas de educação especial:</strong> as seis modalidades (infantil, fundamental, médio, profissional, EJA e especial) são somadas. Nas 140 escolas de Rio Grande, o total declarado na base é exatamente essa soma, então não há contagem repetida dentro dos dados; a educação especial responde por 7% a 10% das matrículas atingidas.</li>
               <li><strong>Matrículas privadas:</strong> o VAAT-MIN do FUNDEB financia a rede pública, mas o cálculo usa as matrículas de todas as escolas atingidas, inclusive as privadas, que são de 20% a 27% do total atingido nos quatro cenários. A perda educacional está superestimada nessa proporção se o objetivo for só o custo público.</li>
-              <li><strong>Dias letivos × dias corridos:</strong> o valor diário é o VAAT-MIN dividido por 200 dias letivos, mas é multiplicado pelos dias corridos de interrupção (30 agudos, 15 em Setembro de 2023). Se esses dias forem corridos, o correto seria dividir por 365; o método segue o do BID, que usa 200.</li>
+              <li><strong>Dias letivos × dias corridos:</strong> o valor diário é o VAAT-MIN dividido por 200 dias letivos, mas é multiplicado pelos dias corridos de interrupção (30 agudos, 15 em Setembro de 2023). Se esses dias forem corridos, o correto seria dividir por 365; o método segue o da fonte dos dados, que usa 200.</li>
               <li><strong>Educação somada em dobro por construção:</strong> a perda (serviço educacional não prestado) e o custo adicional (reposição obrigatória das aulas, LDB art. 24, I) têm o mesmo valor e ambos entram no total, o que dobra a educação em relação a um único componente (as duas parcelas somam de 12,6% a 20,9% do total conforme o cenário).</li>
             </ul>
 
             <SubTitle>Saúde (Seção 6)</SubTitle>
             <ul className="ml-1 list-inside list-disc space-y-1.5 text-sm text-slate-700">
               <li>A perda é a produção SUS anualizada (SIA + SIH) de cada unidade; unidades sem produção SUS registrada contribuem R$ 0, e a produção que não é do SUS não entra no cálculo.</li>
-              <li>O agrupamento dos profissionais por CBO é feito no pipeline do BID; o CIEX recebe as 11 colunas já somadas e não o refaz.</li>
+              <li>O agrupamento dos profissionais por CBO é feito no pipeline externo; o CIEX recebe as 11 colunas já somadas e não o refaz.</li>
               <li>O CNES informa leitos totais; não há separação entre leitos SUS e demais.</li>
             </ul>
 
@@ -2119,11 +2118,11 @@ export function MetodologiaContent() {
               C. Por município: Rio Grande
             </h3>
             <ul className="ml-1 list-inside list-disc space-y-1.5 text-sm text-slate-700">
-              <li><strong>Pilhas de geocodificação.</strong> 777 das 3.220 empresas (24%, 14.854 de 43.568 vínculos), 40 de 140 escolas e 164 de 462 unidades de saúde estão no mesmo ponto, apesar de terem ruas e CEPs diferentes (as empresas vêm de 395 ruas e 106 bairros): é o ponto em que o geocodificador cai quando não acha o endereço. Esse ponto fica fora da mancha em Setembro 2023 e Maio 2024 e dentro em Maio 2024 + 50% e 16/05/2024, e por isso os totais desses dois cenários são os mais sensíveis; no Danos Físicos, o valor sobe em degraus quando cada pilha entra de uma vez. A base é mantida como reportada pelo BID; uma proposta de realocação por CEP e por rua e bairro está em <code>docs/realocacao-pilhas-geocodificacao.csv</code> para o BID aplicar no geocodificador.</li>
+              <li><strong>Pilhas de geocodificação.</strong> 777 das 3.220 empresas (24%, 14.854 de 43.568 vínculos), 40 de 140 escolas e 164 de 462 unidades de saúde estão no mesmo ponto, apesar de terem ruas e CEPs diferentes (as empresas vêm de 395 ruas e 106 bairros): é o ponto em que o geocodificador cai quando não acha o endereço. Esse ponto fica fora da mancha em Setembro 2023 e Maio 2024 e dentro em Maio 2024 + 50% e 16/05/2024, e por isso os totais desses dois cenários são os mais sensíveis; no Danos Físicos, o valor sobe em degraus quando cada pilha entra de uma vez. A base é mantida como reportada pela fonte; uma proposta de realocação por CEP e por rua e bairro está em <code>docs/realocacao-pilhas-geocodificacao.csv</code> para a fonte aplicar no geocodificador.</li>
               <li><strong>Pontos fora do município.</strong> 102 empresas, 1 escola e 5 unidades de saúde estão fora do município ou do raster e são excluídas da exposição por cota.</li>
               <li><strong>Sem profundidade.</strong> Rio Grande não tem raster de profundidade por cota, só máscaras molhado/seco; por isso não há dano físico em R$.</li>
               <li><strong>Datas das bases.</strong> RAIS 2023, Censo Escolar 2024, CNES de abril/2024, MapBiomas 2024 e população total de 198.418 habitantes. Mudanças posteriores a essas datas não estão refletidas.</li>
-              <li><strong>Origem dos dados.</strong> Parte dos dados é do projeto BID e é copiada sem alteração, exceto a coordenada da Secretaria Municipal de Saúde, corrigida pelo CIEX. Veja <code>docs/dados-bid-rio-grande.md</code>.</li>
+              <li><strong>Origem dos dados.</strong> Parte dos dados vem de uma fonte externa e é copiada sem alteração, exceto a coordenada da Secretaria Municipal de Saúde, corrigida pelo CIEX.</li>
             </ul>
           </Section>
 

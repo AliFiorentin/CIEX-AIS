@@ -156,7 +156,7 @@ const glassStyle = (opacity = 0.55, tint?: string) =>
     boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)",
   }) as const
 
-// Fundo padrão de TODOS os cards/gráficos/elementos do Painel (translúcido, igual ao BID)
+// Fundo padrão de TODOS os cards/gráficos/elementos do Painel (translúcido)
 const PANEL_CARD_BG = "rgba(255,255,255,0.55)"
 const PANEL_TRACK_BG = "rgba(30,64,74,0.10)"
 

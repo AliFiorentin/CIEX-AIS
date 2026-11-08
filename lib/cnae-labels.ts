@@ -1,4 +1,4 @@
-// Rótulos das seções CNAE 2.0 (copiado de BID/dashboard/lib/constants.ts).
+// Rótulos das seções CNAE 2.0 (IBGE).
 export const CNAE_LABELS: Record<string, string> = {
   "ADMINISTRACAO PUBLICA, DEFESA E SEGURIDADE SOCIAL": "Adm. Pública",
   "AGRICULTURA, PECUARIA, PRODUCAO FLORESTAL, PESCA E AQUICULTURA":
