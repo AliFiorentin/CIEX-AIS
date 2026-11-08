@@ -16,7 +16,7 @@ function lerJson<T>(arquivo: string): T | null {
 /** Dados da página Danos (abas Operacionais e Físicos), lidos no servidor. */
 export function getDanosData(): DanosData {
   const expo = lerJson<ExposicaoMun>("climada_exposicao_rio_grande.json")
-  // O detalhe por categoria e por cota vai dentro de `expo.detalhe` (como no BID).
+  // O detalhe por categoria e por cota vai dentro de `expo.detalhe`.
   if (expo)
     expo.detalhe =
       lerJson<DetalheCota>("climada_cota_detalhe_rio_grande.json") ?? undefined

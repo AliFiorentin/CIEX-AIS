@@ -29,7 +29,7 @@ A aplicação é um dashboard de página única construído com **Next.js + Type
 
 | Camada | Fonte | Descrição |
 |---|---|---|
-| **Empresas** | RAIS (MTE) | Microdados de vínculos empregatícios formais (empregados, massa salarial, CNAE) — pipeline BID |
+| **Empresas** | RAIS (MTE) | Microdados de vínculos empregatícios formais (empregados, massa salarial, CNAE) |
 | **Educação** | Censo Escolar (INEP) | Escolas, matrículas por modalidade, professores e dependência administrativa |
 | **Saúde** | CNES (Ministério da Saúde) | Unidades de saúde, tipo de estabelecimento e quadro de pessoal por categoria |
 | **Logradouros** | Prefeitura de Rio Grande | Arruamento com atributos de drenagem e iluminação pública |
@@ -39,7 +39,7 @@ A aplicação é um dashboard de página única construído com **Next.js + Type
 | **Uso e Cobertura da Terra** | MapaBiomas Coleção 10 (2024) | Classes: Silvicultura, Campo Alagado, Formação Campestre, Mosaico de Usos, Restinga Arbórea, Restinga Herbácea |
 | **Agricultura** | MapaBiomas Coleção 10 (2024) | Culturas: Soja, Arroz, Outras Lavouras Temporárias |
 | **População** | WorldPop | Grade populacional (hab./pixel) renderizada como heatmap raster; população total e atingida por cenário pré-computadas |
-| **Cenários de inundação** | Modelagem hidrológica | Manchas de inundação vetoriais dos eventos de Setembro de 2023, Maio de 2024 e cenário de sensibilidade "Maio 2024 + 50%" (Maio 2024 com a água 60 cm mais alta; o "+50%" é só o nome herdado do BID) |
+| **Cenários de inundação** | Modelagem hidrológica | Manchas de inundação vetoriais dos eventos de Setembro de 2023, Maio de 2024 e cenário de sensibilidade "Maio 2024 + 50%" (Maio 2024 com a água 60 cm mais alta; o "+50%" é só o nome herdado do cenário) |
 | **Mancha de altura da lâmina d'água** | Simulação hidrológica por bacias — plataforma Economia Azul (GPEA/FURG) | Nível da Lagoa (16/05/2024, 20h) + Chuva Acumulada (60,8mm) combinados: rasters de profundidade por bacia hidrográfica, estilizados por rampa de cor QGIS (`.qml`) |
 
 ---
@@ -130,7 +130,7 @@ $$\%\,\text{pop. atingida} = \frac{\text{pop. atingida}}{\text{pop. total}} \tim
 
 O KPI de população é lido diretamente desse JSON (não é recalculado no cliente). A imagem raster (`populacao.png`) é posicionada pelas quatro coordenadas de canto presentes no JSON. A camada é ligada e desligada pelo botão "População" no cabeçalho do mapa; a legenda (gradiente de densidade) e o KPI no painel acompanham o cenário.
 
-**Nota sobre o cenário combinado (Nível da Lagoa + Chuva Acumulada).** Setembro de 2023, Maio de 2024 e Maio de 2024 + 50% têm população atingida exata, do projeto BID/GPEA (raster de 100 m). Para o 16/05/2024 não há valor exato: `pop_atingida` é **estimado** a partir do `populacao.png` já renderizado. O canal alfa da imagem correlaciona quase perfeitamente (r ≈ 0,998) com a posição de cada pixel na rampa de cor do heatmap, uma proxy da densidade. O alfa é usado como peso por pixel e o resultado é dividido por um fator de calibração $k$, medido nos três cenários com valor exato (a proxy subestima: razões de 0,52 a 0,61; $k = 0{,}545$ pela razão das somas):
+**Nota sobre o cenário combinado (Nível da Lagoa + Chuva Acumulada).** Setembro de 2023, Maio de 2024 e Maio de 2024 + 50% têm população atingida exata, de uma base externa ao CIEX (raster de 100 m). Para o 16/05/2024 não há valor exato: `pop_atingida` é **estimado** a partir do `populacao.png` já renderizado. O canal alfa da imagem correlaciona quase perfeitamente (r ≈ 0,998) com a posição de cada pixel na rampa de cor do heatmap, uma proxy da densidade. O alfa é usado como peso por pixel e o resultado é dividido por um fator de calibração $k$, medido nos três cenários com valor exato (a proxy subestima: razões de 0,52 a 0,61; $k = 0{,}545$ pela razão das somas):
 
 $$\text{pop\_atingida} \approx \frac{1}{k}\,\text{pop\_total} \times \frac{\sum_{\text{pixel} \,\in\, \text{mancha}} \text{alfa}}{\sum_{\text{pixel}} \text{alfa}}$$
 
@@ -160,7 +160,7 @@ O limiar **≥ 45 cm** (primeira classe visível do `.qml`) entra na área ating
 
 **Perdas operacionais.** O cenário combinado foi incluído em `CENARIOS`/`CENARIO_PERIODO` de `calcular_perdas_rio_grande.py`, usando os mesmos parâmetros DaLA (dias agudo/recuperação) e coeficientes agrícolas do período "maio_2024".
 
-**Danos (`/danos`) e cotas.** A antiga página `/perdas` virou `/danos`, com as abas Danos Operacionais (perdas DaLA) e Danos Físicos (exposição por cota; sem R$, porque as máscaras de Rio Grande não têm profundidade). O cenário "Todas as cotas" anima a água por cota (1,00 a 2,6215 m) a partir de arquivos copiados do projeto BID — política e procedência em [docs/dados-bid-rio-grande.md](docs/dados-bid-rio-grande.md); comparação das metodologias em [docs/comparativo-metodologia-bid-ciex.md](docs/comparativo-metodologia-bid-ciex.md). O cálculo de perdas normaliza o CNAE para 5 dígitos (igual ao BID).
+**Danos (`/danos`) e cotas.** A antiga página `/perdas` virou `/danos`, com as abas Danos Operacionais (perdas DaLA) e Danos Físicos (exposição por cota; sem R$, porque as máscaras de Rio Grande não têm profundidade). O cenário "Todas as cotas" anima a água por cota (1,00 a 2,6215 m) a partir de arquivos de uma fonte externa ao CIEX. O cálculo de perdas normaliza o CNAE para 5 dígitos.
 
 **Renderização.** Diferente dos demais cenários (preenchimento de cor única + contorno), este cenário é exibido como imagem raster colorida (`Source type="image"`), preservando o gradiente/classificação original — ver `ALTURA_MANCHAS` em [app/page.tsx](app/page.tsx).
 
@@ -270,7 +270,7 @@ public/
     rio_grande/     — GeoJSON, FGB e populacao.png prontos para consumo pelo browser
 ```
 
-> Os conversores Python (GeoPandas/Rasterio) e a documentação de processo ficam nas pastas locais `scripts/` e `docs/` (`converter_*.py`, `gerar_*.py`, `sincronizar_dados_bid.py`, `docs/dados-bid-rio-grande.md`, `docs/auditoria-2026-11-08.md`), **ignoradas pelo git** (`.gitignore`): não vêm num clone do repositório. Referências a `scripts/...` e `docs/...` neste README apontam para esses arquivos locais.
+> Os conversores Python (GeoPandas/Rasterio) e a documentação de processo ficam nas pastas locais `scripts/` e `docs/` (`converter_*.py`, `gerar_*.py`, `docs/auditoria-2026-11-08.md`), **ignoradas pelo git** (`.gitignore`): não vêm num clone do repositório. Referências a `scripts/...` e `docs/...` neste README apontam para esses arquivos locais.
 
 ---
 
@@ -293,7 +293,7 @@ Doutorando em Economia Aplicada — Universidade Federal do Rio Grande do Sul (U
 
 ---
 
-Desenvolvido com apoio do **BID (Banco Interamericano de Desenvolvimento)** e da **Prefeitura Municipal de Rio Grande/RS**.
+Desenvolvido com apoio da **Prefeitura Municipal de Rio Grande/RS**.
 
 Dados de uso e cobertura da terra: [MapaBiomas](https://mapbiomas.org/) — Coleção 10 (2024).
 Dados de grade populacional: [WorldPop](https://www.worldpop.org/).

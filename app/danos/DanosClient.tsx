@@ -839,7 +839,7 @@ const BANNER: Record<
     titulo: "Danos Operacionais",
     subtitulo:
       "Estimativa de Perdas Econômicas: Cenários de Inundação em Rio Grande (RS)",
-    nota: "Metodologia DaLA (CEPAL/BID) · Setembro 2023, Maio 2024, Maio 2024 + 50% e 16/05/2024",
+    nota: "Metodologia DaLA (CEPAL) · Setembro 2023, Maio 2024, Maio 2024 + 50% e 16/05/2024",
     icone: TrendingDown,
   },
   fisicos: {
