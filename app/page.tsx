@@ -58,6 +58,8 @@ import { CotaCanvasLayer } from "@/components/CotaCanvasLayer"
 import { CotaControle } from "@/components/CotaControle"
 import { useCotas, useCotaAtingidos } from "@/hooks/useCotas"
 import { COTAS_CENARIO } from "@/lib/cotas"
+import { detectarPilha, pontosNaPilha } from "@/lib/pilhas"
+import { calcEmp, calcEdu, calcSau, STAFF_COLS } from "@/lib/metricas"
 
 // maplibre-gl 6 is ESM-only: worker is copied to public/ by `pnpm copy:maplibre`.
 setWorkerUrl("/maplibre/maplibre-gl-worker.mjs")
@@ -80,7 +82,7 @@ const INFRA_COLORS: Record<string, string> = {
   Terrenos: "#27ae60",
 }
 
-// Coordenadas geográficas dos rasters MapaBiomas (EPSG:4326): [NW, NE, SE, SW]
+// Coordenadas geográficas dos rasters MapBiomas (EPSG:4326): [NW, NE, SE, SW]
 // Agricultura e Cobertura usam o mesmo TIFF extent (município de Rio Grande)
 const RASTER_COORDS: [
   [number, number],
@@ -108,7 +110,7 @@ const DONUT_COLORS = [
   "#b45309",
 ]
 
-// Cores por classe de cobertura (MapaBiomas Col.10) — sem classes agricolas
+// Cores por classe de cobertura (MapBiomas Col.10) — sem classes agricolas
 const COBERTURA_COLORS: Record<string, string> = {
   Silvicultura: "#7a5900",
   "Campo Alagado e Area Pantanosa": "#519799",
@@ -284,20 +286,6 @@ const INFRA_TAMANHOS_MB: Record<string, number> = {
   Terrenos: 17,
 }
 
-const STAFF_COLS = [
-  "staff_acs_endemias",
-  "staff_admin_gestao_apoio",
-  "staff_diag_lab_imagem",
-  "staff_enfermagem",
-  "staff_farmacia",
-  "staff_medicos",
-  "staff_odontologia",
-  "staff_outros",
-  "staff_outros_superior_saude",
-  "staff_servicos_gerais",
-  "staff_transporte_urgencia",
-]
-
 const STAFF_LABELS: Record<string, string> = {
   staff_acs_endemias: "ACS/Endemias",
   staff_admin_gestao_apoio: "Admin/Gestão",
@@ -320,6 +308,28 @@ const DEP_LABELS: Record<string, string> = {
 }
 
 // ─── Utilitários ─────────────────────────────────────────────────────────────
+
+// Cenário sem agricultura atingida não tem .fgb (o arquivo é removido por estar vazio). As estatísticas
+// agrícolas ({} quando não há nada) existem para todo cenário e dizem isso sem gerar 404 no console.
+async function loadAgriculturaAtingida(
+  sSlug: string,
+  signal?: AbortSignal
+): Promise<any> {
+  const base = "/dados_convertidos/rio_grande/cenarios"
+  try {
+    const r = await fetch(
+      `${base}/agricultura_stats_${sSlug}.json`,
+      signal ? { signal } : {}
+    )
+    if (r.ok) {
+      const stats = await r.json()
+      if (!stats || Object.keys(stats).length === 0) return null
+    }
+  } catch (e) {
+    if ((e as Error).name === "AbortError") throw e
+  }
+  return loadFGB(`${base}/agricultura_ATINGIDOS_${sSlug}.fgb`, signal)
+}
 
 async function loadFGB(url: string, signal?: AbortSignal): Promise<any> {
   const res = await fetch(url, signal ? { signal } : {})
@@ -400,69 +410,6 @@ const calcPct = (parte: number, total: number) =>
   !total ? "0%" : `${formatoBr((parte / total) * 100, 0)}%`
 
 // ─── Métricas ────────────────────────────────────────────────────────────────
-
-const calcEmp = (base: any) => {
-  if (!base?.features) return { estab: 0, emp: 0, massa: 0, media: 0 }
-  const estab = base.features.length
-  const emp = base.features.reduce(
-    (a: number, f: any) => a + (f.properties?.Empregados || 0),
-    0
-  )
-  const massa = base.features.reduce(
-    (a: number, f: any) => a + (f.properties?.Massa_Salarial || 0),
-    0
-  )
-  // Média ponderada por vínculo: massa salarial / vínculos (mesma definição da
-  // Metodologia e da aba /danos). Média simples de salario_medio por
-  // estabelecimento dava peso igual a empresas de 1 e de 500 vínculos.
-  const media = emp > 0 ? massa / emp : 0
-  return { estab, emp, massa, media }
-}
-
-const calcEdu = (base: any) => {
-  if (!base?.features)
-    return {
-      escolas: 0,
-      prof: 0,
-      inf: 0,
-      fund: 0,
-      med: 0,
-      profis: 0,
-      eja: 0,
-      esp: 0,
-    }
-  const sum = (p: string) =>
-    base.features.reduce((a: number, f: any) => a + (f.properties?.[p] || 0), 0)
-  return {
-    escolas: base.features.length,
-    // Docentes (qtd_doc). qtd_prof = profissionais escolares não docentes.
-    prof: sum("qtd_doc"),
-    inf: sum("qtd_matri_inf"),
-    fund: sum("qtd_matri_fund"),
-    med: sum("qtd_matri_med"),
-    profis: sum("qtd_matri_prof"),
-    eja: sum("qtd_matri_eja"),
-    esp: sum("qtd_matri_esp"),
-  }
-}
-
-const calcSau = (base: any) => {
-  if (!base?.features)
-    return {
-      unidades: 0,
-      tipos: {} as Record<string, number>,
-      staff: {} as Record<string, number>,
-    }
-  const tipos: Record<string, number> = {}
-  const staff: Record<string, number> = {}
-  STAFF_COLS.forEach((c) => (staff[c] = 0))
-  base.features.forEach((f: any) => {
-    const t = f.properties?.co_tipo_estabelecimento
-    if (t && t !== "nan" && t !== "") tipos[t] = (tipos[t] || 0) + 1
-    STAFF_COLS.forEach((c) => (staff[c] += f.properties?.[c] || 0))
-  })
-  return { unidades: base.features.length, tipos, staff }
-}
 
 const calcPatrimonio = (base: any) => {
   if (!base?.features) return { total: 0, tipos: {} as Record<string, number> }
@@ -629,8 +576,9 @@ export default function Dashboard() {
     const { signal } = ctrl
     setIsLoading(true)
 
+    // Não zerar o ref aqui: em desenvolvimento o React (StrictMode) roda este efeito duas vezes, e a segunda
+    // execução perdia o permalink e caía no cenário padrão (ex.: ?cenario=todas-as-cotas abria Maio 2024).
     const desired = permalinkCenarioRef.current
-    permalinkCenarioRef.current = null
     // `desired` é o código amigável da URL (CENARIO_URL_SLUGS) — ver o efeito
     // que escreve `?cenario=`, mais abaixo.
     const initialCenario =
@@ -688,10 +636,7 @@ export default function Dashboard() {
         `/dados_convertidos/rio_grande/cenarios/cobertura_ATINGIDOS_${sSlug}.fgb`,
         signal
       ),
-      loadFGB(
-        `/dados_convertidos/rio_grande/cenarios/agricultura_ATINGIDOS_${sSlug}.fgb`,
-        signal
-      ),
+      loadAgriculturaAtingida(sSlug, signal),
       fetch(
         `/dados_convertidos/rio_grande/cenarios/patrimonio_ATINGIDOS_${sSlug}.geojson`,
         { signal }
@@ -937,10 +882,7 @@ export default function Dashboard() {
             `/dados_convertidos/rio_grande/cenarios/cobertura_ATINGIDOS_${sSlug}.fgb`,
             signal
           ),
-          loadFGB(
-            `/dados_convertidos/rio_grande/cenarios/agricultura_ATINGIDOS_${sSlug}.fgb`,
-            signal
-          ),
+          loadAgriculturaAtingida(sSlug, signal),
           fetch(
             `/dados_convertidos/rio_grande/cenarios/patrimonio_ATINGIDOS_${sSlug}.geojson`,
             { signal }
@@ -1381,6 +1323,18 @@ export default function Dashboard() {
   // Métricas calculadas sobre o dado filtrado atualmente exibido no mapa
   const renderEmpMetrics = useMemo(() => calcEmp(renderEmp), [renderEmp])
   const renderEduMetrics = useMemo(() => calcEdu(renderEdu), [renderEdu])
+  // Pilha de geocodificação: empresas de CEPs diferentes no mesmo ponto (aviso no painel de Empresas).
+  const pilhaEmpresas = useMemo(
+    () => (baseEmpresas?.features ? detectarPilha(baseEmpresas.features) : null),
+    [baseEmpresas]
+  )
+  const empresasNaPilha = useMemo(
+    () =>
+      pilhaEmpresas && atingidosEmpresas?.features
+        ? pontosNaPilha(atingidosEmpresas.features, pilhaEmpresas)
+        : 0,
+    [pilhaEmpresas, atingidosEmpresas]
+  )
   const renderSauMetrics = useMemo(() => calcSau(renderSau), [renderSau])
   const baseEmpFiltMetrics = useMemo(
     () => calcEmp(baseEmpFiltrado),
@@ -3957,6 +3911,44 @@ export default function Dashboard() {
               value="empresas"
               className="mt-4 flex-1 overflow-y-auto pr-2 pb-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-track]:bg-transparent"
             >
+              {pilhaEmpresas && isCenarioAtivo && (
+                <div className="mb-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-[11px] leading-snug text-amber-900">
+                  <strong>Localização aproximada.</strong>{" "}
+                  {empresasNaPilha > 0 ? (
+                    <>
+                      {formatoBr(empresasNaPilha, 0)} das{" "}
+                      {formatoBr(atingidosEmpresas?.features?.length ?? 0, 0)}{" "}
+                      empresas atingidas (
+                      {calcPct(
+                        empresasNaPilha,
+                        atingidosEmpresas?.features?.length ?? 0
+                      )}
+                      ) estão num mesmo ponto: o geocodificador colocou
+                      endereços diferentes no centro da cidade. Os totais de
+                      empresas, vínculos e VAB deste cenário dependem desse
+                      ponto.
+                    </>
+                  ) : (
+                    <>
+                      {formatoBr(pilhaEmpresas.n, 0)} empresas da base (
+                      {calcPct(
+                        pilhaEmpresas.n,
+                        baseEmpresas?.features?.length ?? 0
+                      )}
+                      ) têm localização aproximada e ficam fora da mancha deste
+                      cenário: o total atingido pode estar subestimado.
+                    </>
+                  )}{" "}
+                  <a
+                    href="/metodologia#limitacoes"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-bold underline"
+                  >
+                    Saiba mais ↗
+                  </a>
+                </div>
+              )}
               {setoresChart.length > 0 &&
                 (() => {
                   const totalBase = metricasEmp.base.estab
@@ -4567,9 +4559,8 @@ export default function Dashboard() {
                   ["EJA", "eja"],
                   ["Especial", "esp"],
                 ] as [string, string][]
-                const src = isCenarioAtivo
-                  ? metricasEdu.impacto
-                  : metricasEdu.base
+                // Dado filtrado (dependência administrativa), igual ao que o mapa exibe.
+                const src = renderEduMetrics
                 const pieData = NIVEIS.map(([name, key]) => ({
                   name,
                   value: (src as any)[key] as number,
@@ -4577,7 +4568,7 @@ export default function Dashboard() {
                 const totalAlunos = pieData.reduce((s, d) => s + d.value, 0)
                 const baseAlunos = NIVEIS.reduce(
                   (s, [, key]) =>
-                    s + (((metricasEdu.base as any)[key] as number) || 0),
+                    s + (((baseEduFiltMetrics as any)[key] as number) || 0),
                   0
                 )
                 if (pieData.length === 0) return null
@@ -5384,7 +5375,7 @@ export default function Dashboard() {
                           className="mt-3 border-t pt-2 text-[9px] italic"
                           style={{ color: C.muted, borderColor: C.border }}
                         >
-                          Fonte: MapaBiomas — Coleção 10
+                          Fonte: MapBiomas — Coleção 10
                         </p>
                       </>
                     )
@@ -5558,7 +5549,7 @@ export default function Dashboard() {
                           className="mt-3 border-t pt-2 text-[9px] italic"
                           style={{ color: C.muted, borderColor: C.border }}
                         >
-                          Fonte: MapaBiomas — Coleção 10
+                          Fonte: MapBiomas — Coleção 10
                         </p>
                       </>
                     )
