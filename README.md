@@ -36,8 +36,8 @@ A aplicação é um dashboard de página única construído com **Next.js + Type
 | **Quadras** | Prefeitura de Rio Grande | Quadras urbanas com código e área |
 | **Terrenos** | Prefeitura de Rio Grande | Lotes com informações de saneamento (água, esgoto, coleta de lixo) |
 | **Patrimônio Histórico** | Levantamento de Patrimônio Histórico — Rio Grande/RS | Bens tombados/inventariados (355 pontos) com nome, endereço e tipologia arquitetônica |
-| **Uso e Cobertura da Terra** | MapaBiomas Coleção 10 (2024) | Classes: Silvicultura, Campo Alagado, Formação Campestre, Mosaico de Usos, Restinga Arbórea, Restinga Herbácea |
-| **Agricultura** | MapaBiomas Coleção 10 (2024) | Culturas: Soja, Arroz, Outras Lavouras Temporárias |
+| **Uso e Cobertura da Terra** | MapBiomas Coleção 10 (2024) | Classes: Silvicultura, Campo Alagado, Formação Campestre, Mosaico de Usos, Restinga Arbórea, Restinga Herbácea |
+| **Agricultura** | MapBiomas Coleção 10 (2024) | Culturas: Soja, Arroz, Outras Lavouras Temporárias |
 | **População** | WorldPop | Grade populacional (hab./pixel) renderizada como heatmap raster; população total e atingida por cenário pré-computadas |
 | **Cenários de inundação** | Modelagem hidrológica | Manchas de inundação vetoriais dos eventos de Setembro de 2023, Maio de 2024 e cenário de sensibilidade "Maio 2024 + 50%" (Maio 2024 com a água 60 cm mais alta; o "+50%" é só o nome herdado do cenário) |
 | **Mancha de altura da lâmina d'água** | Simulação hidrológica por bacias — plataforma Economia Azul (GPEA/FURG) | Nível da Lagoa (16/05/2024, 20h) + Chuva Acumulada (60,8mm) combinados: rasters de profundidade por bacia hidrográfica, estilizados por rampa de cor QGIS (`.qml`) |
@@ -112,7 +112,7 @@ A área de cada feição vetorial $f_i$ é calculada pelo `@turf/turf` (elipsoid
 
 $$a_i = \frac{\text{area}(f_i)}{10000}$$
 
-O ruído de vetorização do raster MapaBiomas (fragmentos $< 0{,}5\;\text{ha}$) é removido offline, polígono a polígono e em hectares reais (EPSG:31982), por `scripts/filtro_ruido.py`, antes de dissolver por classe; o navegador não aplica mais corte. A área total atingida por classe ou cultura $k$ é:
+O ruído de vetorização do raster MapBiomas (fragmentos $< 0{,}5\;\text{ha}$) é removido offline, polígono a polígono e em hectares reais (EPSG:31982), por `scripts/filtro_ruido.py`, antes de dissolver por classe; o navegador não aplica mais corte. A área total atingida por classe ou cultura $k$ é:
 
 $$A_k = \sum_{\substack{i \,\in\, \hat{N},\; k_i = k}} a_i \qquad \%\,\text{área}_k = \frac{A_{k,\,\hat{N}}}{A_{k,\,N}} \times 100$$
 
@@ -225,11 +225,11 @@ pnpm install
 | `shapely` | Operações geométricas (dependência do geopandas) |
 | `pandas` | Manipulação tabular |
 | `numpy` | Operações numéricas |
-| `rasterio` | Leitura e vetorização de rasters GeoTIFF (MapaBiomas) |
+| `rasterio` | Leitura e vetorização de rasters GeoTIFF (MapBiomas) |
 
 Instalar com:
 ```bash
-pip install geopandas shapely pandas numpy rasterio
+pip install geopandas shapely pandas numpy rasterio pillow scipy
 ```
 
 ---
@@ -270,7 +270,7 @@ public/
     rio_grande/     — GeoJSON, FGB e populacao.png prontos para consumo pelo browser
 ```
 
-> Os conversores Python (GeoPandas/Rasterio) e a documentação de processo ficam nas pastas locais `scripts/` e `docs/` (`converter_*.py`, `gerar_*.py`, `docs/auditoria-2026-11-08.md`), **ignoradas pelo git** (`.gitignore`): não vêm num clone do repositório. Referências a `scripts/...` e `docs/...` neste README apontam para esses arquivos locais.
+> Os conversores Python (GeoPandas/Rasterio), seus testes e a documentação de processo ficam em `scripts/` (`converter_*.py`, `gerar_*.py`, `sincronizar_dados_externos.py`, `tests/`) e `docs/` (`dados-externos-rio-grande.md`, `auditoria-2026-11-08.md`, `sensibilidade-limiares-mancha-16-05.md`). Os insumos grandes (rasters do MapBiomas e outros) não estão no git: veja `scripts/data/LEIA-ME.md`. `pnpm test` roda os testes de `lib/` e os de `scripts/tests/`.
 
 ---
 
@@ -295,5 +295,5 @@ Doutorando em Economia Aplicada — Universidade Federal do Rio Grande do Sul (U
 
 Desenvolvido com apoio da **Prefeitura Municipal de Rio Grande/RS**.
 
-Dados de uso e cobertura da terra: [MapaBiomas](https://mapbiomas.org/) — Coleção 10 (2024).
+Dados de uso e cobertura da terra: [MapBiomas](https://mapbiomas.org/) — Coleção 10 (2024).
 Dados de grade populacional: [WorldPop](https://www.worldpop.org/).
