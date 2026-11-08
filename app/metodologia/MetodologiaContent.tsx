@@ -406,7 +406,7 @@ export function MetodologiaContent() {
                 },
                 {
                   label: "Atributo ponderado",
-                  tex: "Q_a = \\sum_{i=1}^{N_t} q_i \\cdot \\chi_i \\quad (q_i = \\text{empregados, matrículas, etc.})",
+                  tex: "Q_a = \\sum_{i=1}^{N_t} q_i \\cdot \\chi_i \\quad (q_i = \\text{vínculos, matrículas, etc.})",
                 },
                 {
                   label: "Percentual ponderado",
@@ -492,7 +492,7 @@ export function MetodologiaContent() {
                 ["municipio (ibge6)", "Filtragem de Rio Grande"],
                 [
                   "qtd_vinc_ativos",
-                  "Contagem de vínculos ativos = empregados expostos",
+                  "Contagem de vínculos ativos (no painel, \"empregados\"): uma pessoa com dois vínculos conta duas vezes",
                 ],
                 [
                   "vl_remun_media_nom",
@@ -570,6 +570,16 @@ export function MetodologiaContent() {
               ]}
             />
 
+            <Note type="info">
+              <strong>Terminologia.</strong> &ldquo;Empregados&rdquo; no painel
+              são <em>vínculos</em> formais da RAIS: uma pessoa com dois
+              vínculos conta duas vezes. &ldquo;Atingido&rdquo; e
+              &ldquo;exposto&rdquo; são usados para o que está dentro da
+              mancha e não indicam dano efetivo. Os setores do gráfico são as
+              <em> seções</em> da CNAE (letras), e a tabela de labor share usa
+              as <em>divisões</em> (dois dígitos).
+            </Note>
+
             <SubTitle>Indicadores calculados</SubTitle>
             <DataTable
               rows={[
@@ -606,7 +616,7 @@ export function MetodologiaContent() {
                 ],
                 [
                   "Distribuição por setor",
-                  "Participação de cada divisão CNAE no total de estabelecimentos e empregados atingidos",
+                  "Participação de cada seção CNAE no total de estabelecimentos e vínculos atingidos",
                 ],
               ]}
             />
@@ -614,7 +624,7 @@ export function MetodologiaContent() {
             <Note type="info">
               Para estimativas causais de perdas no mercado de trabalho formal
               (comparando municípios atingidos com controles similares antes e
-              após o evento), ver Teixeira et al. (2025), que aplica o método
+              após o evento), ver Teixeira et al. (2025; referência completa a confirmar), que aplica o método
               Diferenças em Diferenças sobre microdados RAIS mensais. Os
               indicadores deste painel medem a <em>exposição estática</em>{" "}
               (snap-shot de 2023), não o efeito causal.
@@ -670,13 +680,11 @@ export function MetodologiaContent() {
               <ExtLink href="https://brasil.mapbiomas.org/downloads/mapas-para-download-geotiff/">
                 MapBiomas Coleção 10
               </ExtLink>{" "}
-              fornece rasters anuais de uso e cobertura do solo com resolução de
-              30 m. Para cada cenário, o ano do raster é selecionado conforme o
-              período do evento:
+              fornece rasters anuais de uso e cobertura do solo com resolução de 30 m. As camadas desenhadas no mapa do CIEX usam <strong>um único raster, o de 2024</strong>, em todos os cenários. As estatísticas de área agrícola usadas nas perdas vêm de uma fonte externa que, segundo sua documentação (não verificada aqui), seleciona o ano conforme o evento:
             </p>
             <DataTable
               rows={[
-                ["Cenário", "Ano do raster MapBiomas", "Justificativa"],
+                ["Cenário", "Ano do raster (estatísticas externas)", "Justificativa"],
                 [
                   "Maio 2024",
                   "2024",
@@ -705,8 +713,7 @@ export function MetodologiaContent() {
             <p>
               Lavouras perenes (café, citros, dendê e outras; códigos 36, 46,
               47, 35 e 48) ficam fora da camada. Como o raster é referenciado em
-              graus, a área de cada pixel depende da latitude: cerca de 0,078 ha
-              nas regiões-foco, e não os 0,09 ha nominais de 30 × 30 m.
+              graus, a área de cada pixel depende da latitude: cerca de 0,078 ha em Rio Grande, e não os 0,09 ha nominais de 30 × 30 m.
             </p>
             <MathBlock
               exprs={[
@@ -833,7 +840,7 @@ export function MetodologiaContent() {
                   "MapBiomas: Códigos da legenda da Coleção 10",
                   "https://brasil.mapbiomas.org/wp-content/uploads/sites/4/2025/08/Legenda-Colecao-10-Legend-Code.pdf",
                 ],
-                ["CONAB: Preços Mínimos 2024", ""],
+                ["CONAB: Preços Mínimos 2024", "https://www.conab.gov.br"],
               ]}
             />
 
@@ -1356,8 +1363,7 @@ export function MetodologiaContent() {
                 interseção da mancha de inundação com o limite municipal; mesma
                 operação de soma. A interseção é necessária porque algumas
                 manchas se estendem sobre municípios vizinhos (a mancha pode
-                ultrapassar o limite municipal), cuja população não pertence à
-                região-foco.
+                ultrapassar o limite municipal), cuja população não pertence ao município.
               </li>
               <li>
                 <strong>Heatmap</strong>: raster recortado pelo limite municipal
@@ -1997,6 +2003,14 @@ export function MetodologiaContent() {
               A. Por cenário
             </h3>
 
+            <p className="text-sm text-slate-700">
+              <strong>Cenários independentes.</strong> Maio 2024 está contido em Maio 2024 + 50% sem exceções
+              (empresas, escolas, unidades de saúde e patrimônio), como se espera de um mesmo evento com a água
+              mais alta. Setembro 2023 e o 16/05/2024 são eventos diferentes e não precisam ser subconjuntos de
+              nenhum outro: por exemplo, uma empresa (id 48100) está em Setembro 2023 e não em Maio 2024, a cerca
+              de 4 m da borda das duas manchas, e 99 empresas de Maio 2024 ficam fora do 16/05.
+            </p>
+
             <SubTitle>Cenário Setembro 2023</SubTitle>
             <ul className="ml-1 list-inside list-disc space-y-1.5 text-sm text-slate-700">
               <li>A mancha e os pontos atingidos de empresas, educação, saúde, logradouros e agricultura vêm de uma fonte externa ao CIEX; patrimônio, quadras, terrenos e cobertura da terra são gerados pelo CIEX.</li>
@@ -2027,6 +2041,7 @@ export function MetodologiaContent() {
               <li>Cenário exclusivo do CIEX: a atualização dos dados externos nunca o sobrescreve e não há totais externos para conferir.</li>
               <li>A mancha é a união de duas simulações com unidades diferentes: a Lagoa em centímetros (≥ 45 cm) e a Chuva Acumulada em unidade do modelo (faixa 86–253; valores ≥ 254 são tratados como água pré-existente e ficam fora). O corte de 86 corresponde a cerca de 10 cm segundo a fonte, não a uma conversão verificada.</li>
               <li>A mancha publicada (6,35 km²) é cerca de 10% maior que o limiar bruto (5,76 km²), por causa do fechamento de vãos de até ~16 m. Antes da correção da redução de resolução, era 39% maior.</li>
+              <li><strong>Sensibilidade dos limiares.</strong> Sobre os rasters brutos, subir o limiar da Lagoa de 45 para 60 cm reduz a mancha em ~9% (para 100 cm, ~34%) e baixá-lo para 30 cm a aumenta em ~6,5%. O limite inferior da faixa da Chuva (70 a 120) muda a mancha em menos de 0,3%, mas incluir os valores &ge; 254, hoje tratados como água pré-existente, a multiplicaria por ~3 (de 5,8 para 17,9 km²): a exclusão dos 254+ é uma decisão de modelagem com grande efeito e não é confirmada pela fonte. Tabela completa em <code>docs/sensibilidade-limiares-mancha-16-05.md</code>.</li>
               <li>As mesmas 777 empresas da pilha de geocodificação entram aqui pelo ponto falso, e o VAB de empresas (R$ 379,0 mi) depende delas.</li>
               <li>A população atingida (18.000 hab., 9,1%) é uma <strong>estimativa</strong> por proxy do heatmap, calibrada nos três cenários com valor exato; a faixa de incerteza é de 15.900 a 19.000 hab.</li>
               <li>As perdas agrícolas são R$ 0 (nenhuma cultura acima do filtro de 0,5 ha na mancha).</li>
@@ -2121,7 +2136,8 @@ export function MetodologiaContent() {
               <li><strong>Pilhas de geocodificação.</strong> 777 das 3.220 empresas (24%, 14.854 de 43.568 vínculos), 40 de 140 escolas e 164 de 462 unidades de saúde estão no mesmo ponto, apesar de terem ruas e CEPs diferentes (as empresas vêm de 395 ruas e 106 bairros): é o ponto em que o geocodificador cai quando não acha o endereço. Esse ponto fica fora da mancha em Setembro 2023 e Maio 2024 e dentro em Maio 2024 + 50% e 16/05/2024, e por isso os totais desses dois cenários são os mais sensíveis; no Danos Físicos, o valor sobe em degraus quando cada pilha entra de uma vez. A base é mantida como reportada pela fonte; uma proposta de realocação por CEP e por rua e bairro está em <code>docs/realocacao-pilhas-geocodificacao.csv</code> para a fonte aplicar no geocodificador.</li>
               <li><strong>Pontos fora do município.</strong> 102 empresas, 1 escola e 5 unidades de saúde estão fora do município ou do raster e são excluídas da exposição por cota.</li>
               <li><strong>Sem profundidade.</strong> Rio Grande não tem raster de profundidade por cota, só máscaras molhado/seco; por isso não há dano físico em R$.</li>
-              <li><strong>Datas das bases.</strong> RAIS 2023, Censo Escolar 2024, CNES de abril/2024, MapBiomas 2024 e população total de 198.418 habitantes. Mudanças posteriores a essas datas não estão refletidas.</li>
+              <li><strong>Datas das bases.</strong> RAIS 2023, Censo Escolar 2024, CNES de abril/2024, MapBiomas 2024 e população total de 198.418 habitantes. Os cenários de 2023 usam as mesmas bases mais recentes (Setembro 2023 usa o Censo Escolar 2024 e o CNES de abril/2024), e a produção do SUS (jan–jul/2024) inclui o período da cheia de maio; nenhum dado é do ano do evento. Mudanças posteriores a essas datas não estão refletidas.</li>
+              <li><strong>Qualidade dos cadastros.</strong> <code>staff_diag_lab_imagem</code> é zero nas 462 unidades de saúde (nenhum profissional de diagnóstico e imagem registrado); 87 códigos CNES têm 6 dígitos (zero à esquerda perdido, tratado com preenchimento no cálculo das perdas); 42% das quadras não têm número válido (marcador &ldquo;NULLnn&rdquo;); o campo <code>Nome</code> é nulo em 211 dos 355 bens do patrimônio.</li>
               <li><strong>Origem dos dados.</strong> Parte dos dados vem de uma fonte externa e é copiada sem alteração, exceto a coordenada da Secretaria Municipal de Saúde, corrigida pelo CIEX.</li>
             </ul>
           </Section>
@@ -2161,7 +2177,7 @@ export function MetodologiaContent() {
               <RefBlock title="Dados Agrícolas e de Cobertura">
                 <RefItem
                   href="https://brasil.mapbiomas.org/colecoes-mapbiomas-1/"
-                  label="MapaBiomas: Coleção 10"
+                  label="MapBiomas: Coleção 10"
                   desc="Mapeamento anual de uso e cobertura do solo em raster de 30 m, com classes de agricultura e cobertura da terra."
                 />
               </RefBlock>
