@@ -116,6 +116,11 @@
       "Cenario Setembro 2023": {
         "pop_atingida": 7844,
         "pct_atingida": 4.0
+      },
+      "Nivel da Lagoa + Chuva Acumulada – 16/05/2024": {
+        "pop_atingida": 18000,
+        "pct_atingida": 9.1,
+        "_metodologia": "estimado: proxy do alfa de populacao.png dividido pelo fator de calibracao 0.54 (medido nos 3 cenarios com valor exato; faixa 15900 a 19000) -- ver scripts/estimar_populacao_atingida.py"
       }
     }
   }
