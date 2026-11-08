@@ -8,6 +8,10 @@ const nextConfig = {
   turbopack: {
     root: __dirname,
   },
+  // /perdas passou a ser /danos (abas Operacionais e Físicos); preserva links antigos.
+  async redirects() {
+    return [{ source: "/perdas", destination: "/danos", permanent: true }];
+  },
 };
 
 export default nextConfig;

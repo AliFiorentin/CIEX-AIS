@@ -12,7 +12,8 @@
     "start": "next start",
     "lint": "eslint",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "node --test lib/*.test.ts && { [ ! -d scripts/tests ] || python3 -m unittest discover -s scripts/tests -p 'test_*.py'; }"
   },
   "dependencies": {
     "@turf/turf": "^7.4.0",
