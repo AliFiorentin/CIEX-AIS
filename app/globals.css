@@ -3,7 +3,6 @@
 @import "shadcn/tailwind.css";
 @import "katex/dist/katex.min.css";
 
-@custom-variant dark (&:is(.dark *));
 
 /* Tamanho mínimo do Dashboard: 1150 x 650 px. Abaixo disso (variante "telefone") só aparece o aviso
    de tamanho, sem rolagem e sem reduzir o layout. */

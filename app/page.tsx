@@ -610,8 +610,6 @@ export default function Dashboard() {
       fetch("/dados_convertidos/rio_grande/saude_BASE.geojson", {
         signal,
       }).then((r) => (r.ok ? r.json() : null)),
-      loadFGB("/dados_convertidos/rio_grande/cobertura_BASE.fgb", signal),
-      loadFGB("/dados_convertidos/rio_grande/agricultura_BASE.fgb", signal),
       fetch("/dados_convertidos/rio_grande/patrimonio_BASE.geojson", {
         signal,
       }).then((r) => (r.ok ? r.json() : null)),
@@ -655,8 +653,6 @@ export default function Dashboard() {
           emp,
           edu,
           sau,
-          cob,
-          agr,
           patr,
           mancha,
           aEmp,
@@ -676,8 +672,6 @@ export default function Dashboard() {
           setBaseEmpresas(emp)
           setBaseEducacao(edu)
           setBaseSaude(sau)
-          setBaseCobertura(cob)
-          setBaseAgricultura(agr)
           setBasePatrimonio(patr)
           setManchaCenario(mancha)
           setAtingidosEmpresas(aEmp)
@@ -698,6 +692,25 @@ export default function Dashboard() {
           initialLoadDoneRef.current = true
           setBaseReady(true)
           setIsLoading(false)
+
+          // Uso do solo e agricultura (BASE): ~16 MB, a maior parte da carga. Só começam depois dos dados
+          // principais, para não disputar banda com eles (antes o seletor de cenário só aparecia depois de baixar
+          // tudo). Cada camada aparece por conta própria; as abas de Cobertura e Agricultura mostram esqueleto
+          // enquanto `baseCobertura`/`baseAgricultura` são null.
+          loadFGB("/dados_convertidos/rio_grande/agricultura_BASE.fgb", signal)
+            .then((agr) => {
+              if (!signal.aborted) setBaseAgricultura(agr)
+            })
+            .catch((e) => {
+              if ((e as Error).name !== "AbortError") console.error(e)
+            })
+          loadFGB("/dados_convertidos/rio_grande/cobertura_BASE.fgb", signal)
+            .then((cob) => {
+              if (!signal.aborted) setBaseCobertura(cob)
+            })
+            .catch((e) => {
+              if ((e as Error).name !== "AbortError") console.error(e)
+            })
 
           requestAnimationFrame(() => {
             const map = mapRef.current?.getMap()
@@ -932,10 +945,14 @@ export default function Dashboard() {
     return () => ctrl.abort()
   }, [cenario]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Bases de infra
+  // Bases de infra (geometria completa; Terrenos sozinho tem ~17 MB). Espera os dados principais (baseReady) para
+  // não disputar banda com eles. Com um cenário ativo o mapa desenha só os atingidos, então a base carrega sem
+  // trazer o painel de volta ao esqueleto.
   useEffect(() => {
+    if (!baseReady) return
     const ctrl = new AbortController()
     const { signal } = ctrl
+    const precisaDaBase = !cenario || cenario === "(nenhum)"
 
     setBaseInfra((prev) => {
       const u = { ...prev }
@@ -947,7 +964,7 @@ export default function Dashboard() {
 
     const toLoad = infraAtivas.filter((i) => !baseInfra[i])
     if (!toLoad.length) return
-    setIsLoading(true)
+    if (precisaDaBase) setIsLoading(true)
 
     Promise.all(
       toLoad.map((infra) => {
@@ -964,7 +981,7 @@ export default function Dashboard() {
       results.forEach((r) => {
         if (r?.d) setBaseInfra((prev) => ({ ...prev, [r.infra]: r.d }))
       })
-      setIsLoading(false)
+      if (precisaDaBase) setIsLoading(false)
     })
 
     if (cenario && cenario !== "(nenhum)") {
@@ -987,7 +1004,7 @@ export default function Dashboard() {
     }
 
     return () => ctrl.abort()
-  }, [infraAtivas]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [infraAtivas, baseReady]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Permalink (leitura do `?cenario=` inicial acontece na inicialização do ref, acima)
   useEffect(() => {
