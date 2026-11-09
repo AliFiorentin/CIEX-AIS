@@ -3452,18 +3452,24 @@ export default function Dashboard() {
       )}
 
       {/* Cenário "Todas as cotas": slider vertical ao lado do Painel (cota alta em cima), com play/pause.
-          Segue o Painel (397 px de borda direita + folga) e vai para a esquerda, abaixo do botão "Abrir Painel", quando ele está oculto. */}
+          Acoplado à borda direita do Painel (397 px = 12 + 385, sem folga; mesma superfície de vidro) e, com o Painel oculto,
+          vai para a esquerda, abaixo do botão "Abrir Painel". O aviso de erro continua uma caixa pequena e solta. */}
       {cotas.cotasAtivo &&
         (cotas.cotaRaster.erro || cotas.cotaRaster.cota !== null) && (
           <div
-            className={`absolute bottom-1.5 z-20 rounded-xl px-2 py-3 transition-[left] duration-300 ${
-              showPainelAnalise ? "left-[405px]" : "left-3"
+            className={`absolute bottom-1.5 z-20 px-2 py-3 transition-[left] duration-300 ${
+              showPainelAnalise && !cotas.cotaRaster.erro
+                ? "left-[397px] rounded-r-xl border-l border-slate-300/50 shadow-2xl" // acoplado ao Painel (12 + 385 px)
+                : showPainelAnalise
+                  ? "left-[405px] rounded-xl"
+                  : "left-3 rounded-xl"
             } ${cotas.cotaRaster.erro ? "max-w-[140px]" : "w-[68px]"}`}
             style={{
               top: showPainelAnalise ? panelTop : panelTop + 44,
               // aviso de erro: caixa só do tamanho do texto, não a coluna inteira
               ...(cotas.cotaRaster.erro ? { bottom: "auto" } : {}),
-              ...glassStyle(0.8),
+              // acoplado: mesmo vidro do Painel, para os dois formarem uma superfície só
+              ...glassStyle(showPainelAnalise && !cotas.cotaRaster.erro ? 0.6 : 0.8),
             }}
           >
             {cotas.cotaRaster.erro ? (
@@ -3483,7 +3489,14 @@ export default function Dashboard() {
       {/* ── Painel de Análise (esquerda flutuante) ─────────────────────── */}
       {showPainelAnalise && (
         <div
-          className="absolute bottom-1.5 left-3 z-20 flex w-[385px] flex-col overflow-hidden rounded-xl p-4 shadow-2xl"
+          className={`absolute bottom-1.5 left-3 z-20 flex w-[385px] flex-col overflow-hidden p-4 shadow-2xl ${
+            // com o trilho de cotas acoplado à direita, o canto direito fica reto (o trilho continua a superfície)
+            cotas.cotasAtivo &&
+            !cotas.cotaRaster.erro &&
+            cotas.cotaRaster.cota !== null
+              ? "rounded-l-xl"
+              : "rounded-xl"
+          }`}
           style={{
             top: panelTop,
             ...glassStyle(0.6),
