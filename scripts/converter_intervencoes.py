@@ -28,6 +28,7 @@ import warnings
 from pathlib import Path
 
 import numpy as np
+import rasterio
 from PIL import Image
 from rasterio.transform import array_bounds
 
@@ -82,6 +83,18 @@ def localizar_bacias(pasta: Path) -> dict[int, Path]:
     if faltam:
         raise FileNotFoundError(f"Faltam as bacias {faltam} em {pasta}")
     return {n: achadas[n] for n in BACIAS}
+
+
+def validar_bacias(bacias: dict[int, Path]) -> None:
+    """Falha se alguma bacia nao tem nenhum pixel com dado (exportacao vazia/corrompida).
+
+    Precisa ser por bacia: depois do mosaico (np.fmax ignora NaN), uma bacia toda NaN some sem aviso quando as outras
+    tem agua e o dano evitado sai inflado."""
+    for n, caminho in bacias.items():
+        with rasterio.open(caminho) as ds:
+            banda = ds.read(1)
+        if not np.isfinite(banda).any():
+            raise ValueError(f"bacia {n} ({caminho}) nao tem nenhum pixel com dado (toda NaN)")
 
 
 def mascara_atingido(prof_cm: np.ndarray) -> np.ndarray:
@@ -140,6 +153,7 @@ def converter_conjunto(evento: str, variante: str) -> dict:
     sslug = scenario_slug(nome)
     print(f"\n{'=' * 70}\n  {nome}\n{'=' * 70}")
     bacias = localizar_bacias(SIM_INTERVENCOES / evento / variante)
+    validar_bacias(bacias)  # antes de qualquer escrita; ver a docstring
     paths = [bacias[n] for n in BACIAS]
 
     print("1. Mosaico das 6 bacias (maior profundidade nas sobreposicoes)...")

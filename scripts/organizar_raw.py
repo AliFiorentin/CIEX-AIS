@@ -126,13 +126,23 @@ def _sha256(p: Path) -> str:
     return h.hexdigest()
 
 
-def _mover(origem: Path, destino: Path) -> None:
+def _mover(origem: Path, destino: Path, sha_origem: str) -> None:
+    """Move `origem` para `destino`. No mesmo volume e uma renomeacao atomica (o arquivo e o mesmo, nada a conferir).
+    Em outro volume copia para `<destino>.parte`, confere o sha256 e so entao renomeia para o destino e apaga a
+    origem: o original nunca e apagado antes de a copia estar conferida, e `destino` nunca fica parcial."""
     destino.parent.mkdir(parents=True, exist_ok=True)
     try:
-        os.rename(origem, destino)  # atomica no mesmo volume
+        os.rename(origem, destino)
+        return
     except OSError:
-        shutil.copy2(origem, destino)  # outro volume: copia, (o chamador confere o sha256) e so entao apaga
-        origem.unlink()
+        pass
+    parcial = destino.with_name(destino.name + ".parte")
+    shutil.copy2(origem, parcial)
+    if _sha256(parcial) != sha_origem:
+        parcial.unlink(missing_ok=True)
+        raise SystemExit(f"sha256 da copia difere; a origem foi mantida: {origem}")
+    os.replace(parcial, destino)
+    origem.unlink()
 
 
 def _limpar_vazias(origem: Path) -> None:
@@ -161,9 +171,7 @@ def aplicar(mov: list[Movimento], manifesto: Path) -> None:
         for m in mov:
             antes = _sha256(m.origem)
             tamanho = m.origem.stat().st_size
-            _mover(m.origem, m.destino)
-            if _sha256(m.destino) != antes:
-                raise SystemExit(f"sha256 difere depois de mover: {m.destino}")
+            _mover(m.origem, m.destino, antes)  # confere a copia quando ha copia; rename nao precisa
             w.writerow([str(m.destino.relative_to(manifesto.parent)), str(m.origem), antes, tamanho])
             f.flush()
             _limpar_vazias(m.origem)

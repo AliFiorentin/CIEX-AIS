@@ -9,6 +9,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -163,6 +164,51 @@ class TestPlano(unittest.TestCase):
         linhas = _ler_manifesto(self.raw / "MANIFESTO.csv")
         self.assertEqual(len(linhas), len(mov))
         self.assertEqual(len({l["caminho_novo"] for l in linhas}), len(mov))
+
+
+class TestMoverEntreVolumes(unittest.TestCase):
+    """Achado da revisao final: com RAW em outro volume, a origem era apagada ANTES de conferir o sha256 da copia."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._tmp.name)
+        self.origem = _tocar(self.tmp / "origem" / "a.tif", b"conteudo original")
+        self.destino = self.tmp / "RAW" / "a.tif"
+        self.sha = hashlib.sha256(b"conteudo original").hexdigest()
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _outro_volume(self):
+        # simula EXDEV: o rename falha e o codigo cai no caminho copia + confere + apaga
+        return mock.patch.object(o.os, "rename", side_effect=OSError(18, "Invalid cross-device link"))
+
+    def test_copia_corrompida_mantem_a_origem_e_nao_deixa_destino(self):
+        def copia_ruim(src, dst, **kw):
+            Path(dst).write_bytes(b"corrompido")
+
+        with self._outro_volume(), mock.patch.object(o.shutil, "copy2", side_effect=copia_ruim):
+            with self.assertRaises(SystemExit):
+                o._mover(self.origem, self.destino, self.sha)
+        self.assertTrue(self.origem.exists(), "o original nao pode ser apagado antes de conferir a copia")
+        self.assertEqual(self.origem.read_bytes(), b"conteudo original")
+        self.assertFalse(self.destino.exists())
+        self.assertEqual(list(self.destino.parent.glob("*.parte")), [])
+
+    def test_copia_boa_move_e_apaga_a_origem(self):
+        with self._outro_volume():
+            o._mover(self.origem, self.destino, self.sha)
+        self.assertFalse(self.origem.exists())
+        self.assertEqual(self.destino.read_bytes(), b"conteudo original")
+        self.assertEqual(list(self.destino.parent.glob("*.parte")), [])
+
+    def test_retoma_apos_copia_interrompida(self):
+        # uma interrupcao no meio da copia deixa so o ".parte"; a segunda execucao termina o trabalho
+        _tocar(self.destino.with_name("a.tif.parte"), b"meio")
+        with self._outro_volume():
+            o._mover(self.origem, self.destino, self.sha)
+        self.assertEqual(self.destino.read_bytes(), b"conteudo original")
+        self.assertFalse(self.origem.exists())
 
 
 SCRIPTS = Path(__file__).resolve().parent.parent

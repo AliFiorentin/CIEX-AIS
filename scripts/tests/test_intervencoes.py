@@ -116,6 +116,20 @@ class TestBacias(unittest.TestCase):
             ci.exigir_agua(np.full((4, 4), 5.0, dtype="float32"), "teste")  # tudo abaixo de 10 cm
         self.assertTrue(ci.exigir_agua(np.array([[np.nan, 12.0]], dtype="float32"), "teste")[0, 1])
 
+    def test_bacia_toda_nan_falha_com_o_numero_da_bacia(self):
+        # Achado da revisao final: com as outras 5 bacias molhadas, o mosaico passava na checagem e a bacia 3 sumia sem aviso.
+        bacias = {}
+        for n in (1, 2, 3, 4, 5, 7):
+            vals = np.full((4, 4), np.nan if n == 3 else 40.0)
+            bacias[n] = _gravar(self.pasta / f"bacia{n}.tif", vals, 392000 + 10 * n, 6454010)
+        with self.assertRaises(ValueError) as cm:
+            ci.validar_bacias(bacias)
+        self.assertIn("bacia 3", str(cm.exception))
+
+    def test_validar_bacias_aceita_bacias_com_dados(self):
+        bacias = {n: _gravar(self.pasta / f"bacia{n}.tif", np.full((4, 4), 40.0), 392000 + 10 * n, 6454010) for n in (1, 2, 3, 4, 5, 7)}
+        ci.validar_bacias(bacias)  # nao levanta
+
     def test_mosaico_usa_maior_profundidade(self):
         # A (30 cm) cobre x 392000-392010; B (80 cm) cobre x 392005-392015: sobrepoem-se em 392005-392010.
         a = _gravar(self.pasta / "a.tif", np.full((10, 10), 30.0), 392000, 6454010)
