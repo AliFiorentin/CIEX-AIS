@@ -32,6 +32,8 @@ export function FisicosView({
     return (
       <div className="mx-auto max-w-[1440px] px-6 py-10">
         <Note type="warning">Dados de exposição por cota indisponíveis.</Note>
+        {/* As intervenções vêm de outro arquivo (comparativo): seguem visíveis sem a exposição por cota. */}
+        <IntervencoesFisicos comparativo={comparativo} num={1} />
       </div>
     )
   }

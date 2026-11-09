@@ -139,7 +139,7 @@ export function DanoEvitadoPainel({
   evento: string
   intervencao: IntervencaoId
 }) {
-  const { dados, carregando, erro } = useComparativo(true)
+  const { dados, carregando, erro } = useComparativo()
   const ev = EVENTOS_SIMULACAO.find((e) => e.nome === evento)
   const rotuloInterv =
     INTERVENCOES.find((i) => i.id === intervencao)?.rotulo ?? ""

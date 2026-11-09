@@ -269,6 +269,8 @@ const urlParaCenario = (codigo: string, intervencao?: string | null) => {
     : nome
 }
 
+const MOTIVO_SEM_INTERVENCAO =
+  "Disponível nas simulações de 29/09/2023, 29/11/2023, 21/05/2024 e 28/06/2025"
 const AVISO_SIMULACAO =
   'Simulação hidrodinâmica (modelo TELEMAC): não é previsão nem dado observado. Área atingida = lâmina d\'água ≥ 10 cm. "Sem intervenção" é a base de comparação das intervenções (dano evitado), não o evento real.'
 const avisoDoCenario = (cenario: string) =>
@@ -586,6 +588,9 @@ export default function Dashboard() {
   // Evita que o effect de cenário refaça o fetch/animação logo após a carga inicial
   // (a carga inicial já buscou os dados e ajustou o mapa para o cenário inicial).
   const skipInitialScenarioRef = useRef(false)
+  // Evento (sem a intervenção) da última carga de uma simulação: trocar só a intervenção dentro do mesmo evento
+  // não precisa do voo da câmera nem dos 5 s de espera (a mancha e os atingidos já estão no mesmo enquadramento).
+  const eventoCarregadoRef = useRef<string | null>(null)
 
   const [cursor, setCursor] = useState("grab")
   const [popupInfo, setPopupInfo] = useState<{
@@ -713,6 +718,11 @@ export default function Dashboard() {
           setInfraStats(infraStatsJson)
 
           skipInitialScenarioRef.current = true
+          eventoCarregadoRef.current = temIntervencao(
+            desmontarEfetivo(initialCenario).evento
+          )
+            ? desmontarEfetivo(initialCenario).evento
+            : null
           setCenario(initialCenario)
           initialLoadDoneRef.current = true
           setBaseReady(true)
@@ -806,6 +816,7 @@ export default function Dashboard() {
       return
     }
     if (cenario === COTAS_CENARIO) {
+      eventoCarregadoRef.current = null
       // Sem mancha nem arquivos de cenário: a água vem do raster de cotas (hooks/useCotas.ts).
       setManchaCenario(null)
       setAtingidosCobertura(null)
@@ -824,6 +835,7 @@ export default function Dashboard() {
       return
     }
     if (!cenario || cenario === "(nenhum)") {
+      eventoCarregadoRef.current = null
       const map = mapRef.current?.getMap()
       if (map)
         map.flyTo({ center: [-52.22, -32.09], zoom: 10.8, duration: 5000 })
@@ -844,6 +856,13 @@ export default function Dashboard() {
     const ctrl = new AbortController()
     const { signal } = ctrl
     const sSlug = scenarioSlug(cenario)
+    const eventoDoCenario = desmontarEfetivo(cenario).evento
+    const mesmoEvento =
+      temIntervencao(eventoDoCenario) &&
+      eventoCarregadoRef.current === eventoDoCenario
+    eventoCarregadoRef.current = temIntervencao(eventoDoCenario)
+      ? eventoDoCenario
+      : null
     setIsLoading(true)
     // Limpa já os resultados do cenário anterior: a câmera leva ~5 s antes de os novos chegarem, e nesse tempo o
     // painel mostraria os números antigos sob o título do cenário novo (ex.: 601 empresas de Maio 2024 sob "+50%").
@@ -862,6 +881,9 @@ export default function Dashboard() {
         if (signal.aborted) return
         // A mancha nova aparece já durante o voo da câmera; os atingidos entram depois.
         setManchaCenario(mancha)
+
+        // Só troca de intervenção no mesmo evento: o enquadramento é o mesmo; não voa nem espera.
+        if (mesmoEvento) return mancha
 
         // Câmera fixa do cenário (CENARIO_VISTA); sem entrada, enquadra a mancha.
         const map = mapRef.current?.getMap()
@@ -3153,13 +3175,25 @@ export default function Dashboard() {
 
         {/* Intervenção — só nas simulações (29/09/2023, 29/11/2023, 21/05/2024 e 28/06/2025); nos demais cenários fica desabilitado */}
         <div
-          className="flex w-[calc(var(--select-w)+var(--section-gap))] shrink-0 flex-col gap-0 border-r border-white/20 pr-[var(--section-gap)] max-[1999px]:w-auto max-[1999px]:min-w-[var(--select-w)] max-[1999px]:flex-1 max-[1999px]:border-r-0 max-[1999px]:pr-0"
-          title={
-            temIntervencao(eventoSel)
-              ? undefined
-              : "Disponível nas simulações de 29/09/2023, 29/11/2023, 21/05/2024 e 28/06/2025"
-          }
+          className="group relative flex w-[calc(var(--select-w)+var(--section-gap))] shrink-0 flex-col gap-0 border-r border-white/20 pr-[var(--section-gap)] max-[1999px]:w-auto max-[1999px]:min-w-[var(--select-w)] max-[1999px]:flex-1 max-[1999px]:border-r-0 max-[1999px]:pr-0"
+          // Desabilitado, o seletor não recebe foco e o `title` não aparece por teclado nem leitor de tela: o próprio
+          // bloco passa a ser focável, com o motivo no aria-label e num aviso visível ao focar ou passar o mouse.
+          {...(temIntervencao(eventoSel)
+            ? {}
+            : {
+                tabIndex: 0,
+                role: "group",
+                "aria-label": `Intervenção indisponível neste cenário. ${MOTIVO_SEM_INTERVENCAO}`,
+              })}
         >
+          {!temIntervencao(eventoSel) && (
+            <span
+              role="tooltip"
+              className="pointer-events-none absolute top-full left-0 z-30 mt-1 hidden w-56 rounded-md bg-slate-900 px-2 py-1 text-[10px] leading-snug font-medium text-white normal-case shadow-lg group-hover:block group-focus:block"
+            >
+              {MOTIVO_SEM_INTERVENCAO}
+            </span>
+          )}
           <label
             className="font-bold tracking-wider whitespace-nowrap text-white/70 uppercase"
             style={{ fontSize: "var(--select-label)" }}

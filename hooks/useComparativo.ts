@@ -7,10 +7,10 @@ const URL_COMPARATIVO = "/dados_convertidos/intervencoes_comparativo.json"
 let cache: Comparativo | null = null // o JSON é o mesmo para todas as trocas de cenário: carrega uma vez
 
 /**
- * Carrega o comparativo de dano evitado só quando `ativo` (uma simulação com intervenção está selecionada).
+ * Carrega o comparativo de dano evitado (o componente só monta numa simulação com intervenção selecionada).
  * `erro` cobre falha de rede e arquivo ausente; a interface mostra "dado ausente" em vez de ficar em branco.
  */
-export function useComparativo(ativo: boolean): {
+export function useComparativo(): {
   dados: Comparativo | null
   carregando: boolean
   erro: boolean
@@ -19,7 +19,7 @@ export function useComparativo(ativo: boolean): {
   const [erro, setErro] = useState(false)
 
   useEffect(() => {
-    if (!ativo || cache) return
+    if (cache) return
     const ctrl = new AbortController()
     fetch(URL_COMPARATIVO, { signal: ctrl.signal })
       .then((r) => {
@@ -35,7 +35,7 @@ export function useComparativo(ativo: boolean): {
         if (e?.name !== "AbortError") setErro(true)
       })
     return () => ctrl.abort()
-  }, [ativo])
+  }, [])
 
-  return { dados, carregando: ativo && !dados && !erro, erro }
+  return { dados, carregando: !dados && !erro, erro }
 }
