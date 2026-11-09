@@ -165,5 +165,42 @@ class TestPlano(unittest.TestCase):
         self.assertEqual(len({l["caminho_novo"] for l in linhas}), len(mov))
 
 
+SCRIPTS = Path(__file__).resolve().parent.parent
+# script -> constantes de raw_paths que ele deve usar
+USO = {
+    "converter_manchas_altura.py": ["SIM_16_05"],
+    "gerar_cota_mapa.py": ["COTAS_PICO"],
+    "converter_cobertura_rio_grande.py": ["MAPBIOMAS"],
+    "converter_agricultura_rio_grande.py": ["MAPBIOMAS"],
+}
+
+
+class TestScriptsApontamParaRaw(unittest.TestCase):
+    def test_scripts_usam_raw_paths_e_nao_os_caminhos_antigos(self):
+        for nome, constantes in USO.items():
+            src = (SCRIPTS / nome).read_text(encoding="utf-8")
+            self.assertIn("from raw_paths import", src, nome)
+            for c in constantes:
+                self.assertIn(c, src.split("from raw_paths import", 1)[1].splitlines()[0], f"{nome}: {c}")
+            self.assertNotIn('"dados-brutos"', src, nome)
+            self.assertNotIn('"pico210524_evolucaoPorCota"', src, nome)
+            self.assertNotIn("scripts/data/cobertura_30m", src, nome)
+            self.assertNotIn("scripts/data/agricultura_30m", src, nome)
+
+    def test_scripts_apontam_para_raw_existente(self):
+        import raw_paths as rp
+
+        if not rp.RAW_DIR.is_dir():
+            self.skipTest("RAW/ ainda nao existe (rode organizar_raw.py --apply)")
+        for caminho in (
+            rp.SIM_16_05 / "2024-05-16_nivel-lagoa-20h",
+            rp.SIM_16_05 / "2024-05-16_chuva-acumulada-60-8mm",
+            rp.COTAS_PICO,
+            rp.MAPBIOMAS / "cobertura_30m_mapbiomas.tif",
+            rp.MAPBIOMAS / "agricultura_30m_mapbiomas.tif",
+        ):
+            self.assertTrue(caminho.exists(), caminho)
+
+
 if __name__ == "__main__":
     unittest.main()

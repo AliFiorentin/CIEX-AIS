@@ -52,13 +52,14 @@ from rasterio.warp import Resampling, calculate_default_transform, reproject
 from scipy.ndimage import gaussian_filter
 from shapely.geometry import shape
 from filtro_ruido import reparar_geometrias
+from raw_paths import SIM_16_05
 
 warnings.filterwarnings("ignore")
 
 # ─── Paths ───────────────────────────────────────────────────────────────────
 
 ROOT     = Path(__file__).parent.parent
-SIM_DIR  = ROOT.parent / "dados-brutos" / "plataforma-economia-azul"
+SIM_DIR  = SIM_16_05  # RAW/simulacoes-2024-05-16 (ver scripts/raw_paths.py)
 DASH     = ROOT / "public" / "dados_convertidos" / "rio_grande"
 CENARIOS_DIR = DASH / "cenarios"
 INFRA_DIR    = DASH / "infraestrutura"

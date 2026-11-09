@@ -13,7 +13,7 @@ celula alaga (maximo acumulado entre cotas), alfa = 255 onde alaga. A grade (bou
 
 Uso:
   RASTER_DIR=/caminho/pico210524_evolucaoPorCota python3 scripts/gerar_cota_mapa.py
-  (padrao: ~/Downloads/pico210524_evolucaoPorCota; requer numpy, rasterio, Pillow)
+  (padrao: RAW/cotas-pico-2024-05-21, ver scripts/raw_paths.py; requer numpy, rasterio, Pillow)
 """
 
 import glob
@@ -27,9 +27,11 @@ from PIL import Image
 from rasterio.transform import from_bounds
 from rasterio.warp import Resampling, reproject
 
+from raw_paths import COTAS_PICO
+
 ROOT = Path(__file__).resolve().parent.parent
 RIO_GRANDE = ROOT / "public" / "dados_convertidos" / "rio_grande"
-RASTER_DIR = Path(os.environ.get("RASTER_DIR", Path.home() / "Downloads" / "pico210524_evolucaoPorCota"))
+RASTER_DIR = Path(os.environ.get("RASTER_DIR", COTAS_PICO))
 LIMIAR = 0.5  # fracao minima molhada da celula para ela alagar
 
 

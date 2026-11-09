@@ -47,7 +47,7 @@ geocodificador da origem colocou fora do lugar. Hoje há uma:
   `patrimonio_`, `cobertura_` e `agricultura_ATINGIDOS` do CIEX vêm de conversores próprios (rasters e
   shapefiles externos) e foram **mantidos**; podem estar defasados em relação à nova mancha até serem
   regenerados com os conversores de `scripts/`.
-- Os rasters brutos por cota (`pico210524_evolucaoPorCota`, 6 bacias × 6 cotas, máscaras binárias de 1 m em EPSG:31982) não
+- Os rasters brutos por cota (`RAW/cotas-pico-2024-05-21`, antes `pico210524_evolucaoPorCota`, 6 bacias × 6 cotas, máscaras binárias de 1 m em EPSG:31982) não
   ficam no repositório; informe a pasta em `RASTER_DIR` ao rodar `scripts/gerar_cota_mapa.py`.
 - Rio Grande é `sem_profundidade` na origem: as cotas trazem exposição, sem dano físico em R$.
 

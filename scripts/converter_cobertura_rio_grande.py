@@ -37,12 +37,14 @@ from rasterio.features import shapes
 from rasterio.mask import mask as rasterio_mask
 from shapely.geometry import shape
 
+from raw_paths import MAPBIOMAS
+
 from filtro_ruido import MIN_FRAGMENTO_HA, remover_fragmentos
 
 # -- Configuracao --------------------------------------------------------------
 
 ROOT     = Path(__file__).parent.parent
-TIFF     = ROOT / "scripts/data/cobertura_30m_mapbiomas.tif"
+TIFF     = MAPBIOMAS / "cobertura_30m_mapbiomas.tif"  # RAW/mapbiomas (ver scripts/raw_paths.py)
 LIMITE   = ROOT / "scripts/data/rio_grande_limite.geojson"
 OUT_BASE     = ROOT / "public/dados_convertidos/rio_grande/cobertura_BASE.fgb"
 CENARIOS_DIR = ROOT / "public/dados_convertidos/rio_grande/cenarios"
