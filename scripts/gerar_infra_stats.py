@@ -22,6 +22,8 @@ from pathlib import Path
 import geopandas as gpd
 import pandas as pd
 
+from cenarios_intervencao import nome_cenario, todos
+
 ROOT = Path(__file__).parent.parent
 DASH = ROOT / "public" / "dados_convertidos" / "rio_grande"
 CENARIOS_DIR = DASH / "cenarios"
@@ -34,6 +36,9 @@ CENARIOS = [
     "Cenário Maio 2024 + 50%",
     "Nível da Lagoa + Chuva Acumulada – 16/05/2024",
 ]
+# Os 12 cenarios de intervencao (nomes efetivos). Rode converter_intervencoes.py antes: sem os ATINGIDOS,
+# as estatisticas desses cenarios saem zeradas.
+CENARIOS += [nome_cenario(e, v) for e, v in todos()]
 
 INFRA_FILES = {
     "Logradouros": ("logradouros_BASE.geojson", "geojson"),
