@@ -28,8 +28,13 @@ Uso:  python scripts/calcular_perdas_rio_grande.py [--dias 30]
 import argparse
 import json
 import re
+import sys
 import unicodedata
 from pathlib import Path
+
+# Permite importar modulos irmaos mesmo quando este arquivo e carregado por importlib (testes).
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from cenarios_intervencao import EVENTOS, nome_cenario, slug_cenario, todos  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Configuracao -- restrita a Rio Grande
@@ -53,6 +58,10 @@ CENARIO_PERIODO = {
     # mesmo periodo/parametros DaLA do evento de Maio 2024 (ver converter_manchas_altura.py)
     "nivel_da_lagoa_chuva_acumulada_16_05_2024": "maio_2024",
 }
+# Simulacoes de intervencao (12 cenarios): o periodo DaLA vem do evento (29/09/2023 -> setembro_2023; os demais usam
+# os parametros de maio_2024, premissa declarada na Metodologia).
+CENARIO_PERIODO.update({slug_cenario(e, v): EVENTOS[e]["periodo_dala"] for e, v in todos()})
+CENARIOS_INTERVENCAO = [nome_cenario(e, v) for e, v in todos()]
 
 INTERRUPCAO_DALA = {
     "maio_2024":     {"dias_agudo": 30, "dias_recuperacao": 60},
@@ -206,7 +215,8 @@ def _dala_params(periodo, dias_override):
 # Main
 # ---------------------------------------------------------------------------
 
-def calcular_perdas(dias=None):
+def calcular_perdas(dias=None, cenarios=None, arquivo=None):
+    """Calcula as perdas dos `cenarios` (padrao: CENARIOS) e grava `arquivo` (padrao: perdas_operacionais.json)."""
     modo = f"--dias {dias} (plano)" if dias is not None else "DaLA (curva linear por periodo)"
     print(f"\n{'='*70}\n  Perdas Operacionais — Rio Grande — {modo}\n{'='*70}")
 
@@ -219,7 +229,7 @@ def calcular_perdas(dias=None):
 
     resultados = {}
 
-    for cen in CENARIOS:
+    for cen in (cenarios or CENARIOS):
         cen_slug = slugify(cen)
         periodo = CENARIO_PERIODO.get(cen_slug)
         f_interrup, da, dias_ef_int, label_modo = _dala_params(periodo, dias)
@@ -263,7 +273,8 @@ def calcular_perdas(dias=None):
             "total":                    round(total, 2),
         }
 
-    nome_arq = "perdas_operacionais.json" if dias is None else f"perdas_operacionais_sens_{dias}d.json"
+    base_arq = Path(arquivo or "perdas_operacionais.json").stem
+    nome_arq = f"{base_arq}.json" if dias is None else f"{base_arq}_sens_{dias}d.json"
     out_path = DASH_DATA / nome_arq
     DASH_DATA.mkdir(parents=True, exist_ok=True)
     with open(out_path, "w", encoding="utf-8") as f:
@@ -278,8 +289,15 @@ def main():
         "--dias", type=int, default=None,
         help="Dias de interrupcao plana (sensibilidade). Omitir para usar curva DaLA por cenario.",
     )
+    parser.add_argument(
+        "--intervencoes", action="store_true",
+        help="Calcula os 12 cenarios de intervencao e grava perdas_intervencoes.json (perdas_operacionais.json nao muda).",
+    )
     args = parser.parse_args()
-    calcular_perdas(dias=args.dias)
+    if args.intervencoes:
+        calcular_perdas(dias=args.dias, cenarios=CENARIOS_INTERVENCAO, arquivo="perdas_intervencoes.json")
+    else:
+        calcular_perdas(dias=args.dias)
 
 
 if __name__ == "__main__":
