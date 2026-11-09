@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { CotaMapa } from "@/components/CotaMapa"
 import { KpiRow, Section, DataTable, Note } from "@/components/doc-kit"
 import type { ExposicaoSetor, ExposicaoMun } from "./types"
@@ -11,13 +12,7 @@ const MUN = "Rio Grande"
 const MAPA_SLUG = "rio_grande"
 const PRIMARY = "#1E404A"
 
-export function FisicosView({
-  expo,
-  irOperacionais,
-}: {
-  expo: ExposicaoMun | null
-  irOperacionais: () => void
-}) {
+export function FisicosView({ expo }: { expo: ExposicaoMun | null }) {
   const mun = MUN
   const cotasLista0 = expo
     ? Object.keys(expo.por_cota).sort((a, b) => parseFloat(a) - parseFloat(b))
@@ -181,13 +176,13 @@ export function FisicosView({
             O resultado é, portanto, um <strong>teto</strong>: o que se perderia
             se tudo o que molha fosse perdido por completo. O dano real fica
             entre zero e esse valor. Ele <strong>não deve ser somado</strong>{" "}
-            aos Danos Operacionais (
-            <button
-              onClick={() => irOperacionais()}
+            às Perdas Operacionais (
+            <Link
+              href="/perdas-operacionais"
               className="font-bold underline underline-offset-2"
             >
               DaLA
-            </button>
+            </Link>
             ), que medem outra coisa: a produção e os serviços interrompidos
             durante e depois da cheia.
           </Note>
@@ -365,7 +360,7 @@ export function FisicosView({
               )}
               <li>
                 <strong>Lembrete:</strong> são valores de exposição (teto), não
-                perdas. Não somar aos Danos Operacionais.
+                perdas. Não somar às Perdas Operacionais.
               </li>
             </ul>
           </div>

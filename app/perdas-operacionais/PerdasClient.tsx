@@ -1,8 +1,8 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+import React, { useState } from "react"
 import Link from "next/link"
-import { TrendingDown, Waves } from "lucide-react"
+import { TrendingDown } from "lucide-react"
 import {
   KpiRow,
   Section,
@@ -10,10 +10,8 @@ import {
   DataTable,
   Note,
 } from "@/components/doc-kit"
-import { HeaderLogos } from "@/components/HeaderLogos"
-import { FisicosView } from "./FisicosView"
-import { fmtCompacto, escalaAgradavel } from "./helpers"
-import type { CotasData, ExposicaoMun } from "./types"
+import { Banner } from "@/components/danos/Banner"
+import { fmtCompacto, escalaAgradavel } from "../danos/helpers"
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 export interface CenarioPerdas {
@@ -810,155 +808,25 @@ function DiasBadge({ dias }: { dias: number }) {
   )
 }
 
-// ─── Página Danos: abas Operacionais / Físicos ────────────────────────────────
+// ─── Página ───────────────────────────────────────────────────────────────────
 
-/** Tudo que a página lê no servidor (ver get-data.ts). Os campos de cota podem faltar. */
-export interface DanosData {
-  perdas: PerdasData
-  /** Exposição por cota (com o detalhe por categoria em `expo.detalhe`); null se o arquivo faltar. */
-  expo: ExposicaoMun | null
-  cotas: CotasData | null
-}
+const lista = (xs: string[]) =>
+  xs.length <= 1 ? xs.join("") : `${xs.slice(0, -1).join(", ")} e ${xs[xs.length - 1]}`
 
-type Aba = "operacionais" | "fisicos"
-const ABAS: [Aba, string][] = [
-  ["operacionais", "Danos Operacionais"],
-  ["fisicos", "Danos Físicos"],
-]
-
-const BANNER: Record<
-  Aba,
-  {
-    titulo: string
-    subtitulo: string
-    nota: string
-    icone: typeof TrendingDown
-  }
-> = {
-  operacionais: {
-    titulo: "Danos Operacionais",
-    subtitulo:
-      "Estimativa de Perdas Econômicas: Cenários de Inundação em Rio Grande (RS)",
-    nota: "Metodologia DaLA (CEPAL) · Setembro 2023, Maio 2024, Maio 2024 + 50% e 16/05/2024",
-    icone: TrendingDown,
-  },
-  fisicos: {
-    titulo: "Danos Físicos",
-    subtitulo: "Exposição por cota do pico de 21/05/2024 em Rio Grande (RS)",
-    nota: "Máscaras molhado/seco · sem profundidade, sem R$ de dano",
-    icone: Waves,
-  },
-}
-
-/** Banner de título da página, com os botões que alternam entre Danos Operacionais e Físicos. */
-function DanosBanner({
-  aba,
-  trocarAba,
-}: {
-  aba: Aba
-  trocarAba: (a: Aba) => void
-}) {
-  const { titulo, subtitulo, nota, icone: Icone } = BANNER[aba]
-  const linkNav =
-    "flex items-center gap-1.5 rounded-full border border-white/20 px-3 py-1 text-[10px] font-bold text-white/70 transition-colors hover:border-white/40 hover:text-white"
-  return (
-    <header
-      className="px-6 py-10 text-white"
-      style={{ backgroundColor: PRIMARY }}
-    >
-      <div className="mx-auto flex max-w-[1440px] items-start justify-between gap-6">
-        <div className="min-w-0">
-          <div className="mb-5 flex items-center gap-2">
-            <Link href="/" className={linkNav}>
-              ← Dashboard
-            </Link>
-            <Link href="/metodologia" className={linkNav}>
-              Metodologia →
-            </Link>
-          </div>
-          <p className="mb-2 text-[11px] font-semibold tracking-[0.18em] uppercase opacity-60">
-            CIEX · GPEA · FURG
-          </p>
-          <h1 className="mb-2 flex items-center gap-3 text-4xl leading-none font-black tracking-tight">
-            <Icone
-              size={36}
-              strokeWidth={2.5}
-              className="shrink-0 opacity-80"
-            />
-            {titulo}
-          </h1>
-          <p className="text-base font-medium opacity-75">{subtitulo}</p>
-          <p className="mt-3 font-mono text-[11px] opacity-50">{nota}</p>
-          <div
-            className="mt-5 flex flex-wrap gap-2"
-            role="tablist"
-            aria-label="Tipo de dano"
-          >
-            {ABAS.map(([id, rotulo]) => (
-              <button
-                key={id}
-                role="tab"
-                aria-selected={aba === id}
-                onClick={() => trocarAba(id)}
-                className="rounded-full border px-4 py-1.5 text-[11px] font-black transition-all duration-150"
-                style={
-                  aba === id
-                    ? {
-                        backgroundColor: "#fff",
-                        color: PRIMARY,
-                        borderColor: "#fff",
-                      }
-                    : {
-                        backgroundColor: "rgba(255,255,255,0.08)",
-                        color: "rgba(255,255,255,0.85)",
-                        borderColor: "rgba(255,255,255,0.3)",
-                      }
-                }
-              >
-                {rotulo}
-              </button>
-            ))}
-          </div>
-        </div>
-        <HeaderLogos />
-      </div>
-    </header>
+/** Perdas Operacionais (DaLA): banner + visão. O banner lista os cenários presentes nos dados (não há lista fixa). */
+export function PerdasClient({ dados }: { dados: PerdasData }) {
+  const nomes = Object.keys(dados["Rio Grande"] ?? {}).map((n) =>
+    n.replace(/^Cenário /, "")
   )
-}
-
-export function DanosClient({ dados }: { dados: DanosData }) {
-  const [aba, setAba] = useState<Aba>("operacionais")
-
-  // Permalink ?aba=fisico (lido depois do primeiro render, sem useSearchParams/Suspense).
-  useEffect(() => {
-    if (new URLSearchParams(window.location.search).get("aba") === "fisico")
-      setAba("fisicos")
-  }, [])
-
-  const trocarAba = (nova: Aba) => {
-    setAba(nova)
-    const params = new URLSearchParams(window.location.search)
-    if (nova === "fisicos") params.set("aba", "fisico")
-    else params.delete("aba")
-    const qs = params.toString()
-    window.history.replaceState(
-      null,
-      "",
-      qs ? `?${qs}` : window.location.pathname
-    )
-  }
-
   return (
     <div className="min-h-screen bg-[#eef3f4] font-sans text-slate-800">
-      <DanosBanner aba={aba} trocarAba={trocarAba} />
-      {aba === "operacionais" ? (
-        <OperacionaisView dados={dados.perdas} />
-      ) : (
-        <FisicosView
-          expo={dados.expo}
-          irOperacionais={() => trocarAba("operacionais")}
-        />
-      )}
+      <Banner
+        ativa="perdas"
+        titulo="Perdas Operacionais"
+        subtitulo="Estimativa de Perdas Econômicas: Cenários de Inundação em Rio Grande (RS)"
+        nota={`Metodologia DaLA (CEPAL) · ${lista(nomes)}`}
+      />
+      <OperacionaisView dados={dados} />
     </div>
   )
 }

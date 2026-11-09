@@ -28,7 +28,7 @@ const INDICE: [string, string][] = [
   ["#patrimonio", "7. Patrimônio Histórico"],
   ["#infraestrutura", "8. Infraestrutura"],
   ["#populacao", "9. População Exposta"],
-  ["#danos", "10. Danos Operacionais (DaLA)"],
+  ["#danos", "10. Perdas Operacionais (DaLA)"],
   ["#dano-fisico", "11. Danos Físicos (Por Cota)"],
   ["#limitacoes", "12. Limitações"],
   ["#fontes", "13. Fontes e Referências"],
@@ -52,7 +52,7 @@ export function MetodologiaContent() {
                 ← Dashboard
               </Link>
               <Link
-                href="/danos"
+                href="/perdas-operacionais"
                 className="flex items-center gap-1.5 rounded-full border border-white/20 px-3 py-1 text-[10px] font-bold text-white/70 transition-colors hover:border-white/40 hover:text-white"
               >
                 Danos →
@@ -960,7 +960,7 @@ export function MetodologiaContent() {
                 href="#danos"
                 className="font-semibold text-[#1E404A] underline-offset-4 hover:underline"
               >
-                Seção 10: Danos Operacionais
+                Seção 10: Perdas Operacionais
               </a>
               .
             </Note>
@@ -1143,7 +1143,7 @@ export function MetodologiaContent() {
                 href="#danos"
                 className="font-semibold text-[#1E404A] underline-offset-4 hover:underline"
               >
-                Seção 10: Danos Operacionais
+                Seção 10: Perdas Operacionais
               </a>
               .
             </Note>
@@ -1314,7 +1314,7 @@ export function MetodologiaContent() {
               <ExtLink href="https://data.humdata.org/dataset/worldpop-population-counts-for-brazil">
                 WorldPop
               </ExtLink>
-              . Esse dado complementa as estimativas de danos operacionais com a
+              . Esse dado complementa as estimativas de perdas operacionais com a
               perspectiva humana direta:{" "}
               <strong>quantas pessoas vivem na área afetada</strong>.
             </p>
@@ -1462,7 +1462,7 @@ export function MetodologiaContent() {
           <Section
             id="danos"
             num="10"
-            title="Danos Operacionais: Metodologia DaLA"
+            title="Perdas Operacionais: Metodologia DaLA"
           >
             <p>
               A estimativa de perdas econômicas segue a metodologia{" "}
@@ -1554,12 +1554,12 @@ export function MetodologiaContent() {
               A análise de sensibilidade do painel permite testar d<sub>ef</sub>{" "}
               = 30, 45 ou 60 dias para todos os cenários: ver{" "}
               <a
-                href="/danos"
+                href="/perdas-operacionais"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-semibold text-[#1E404A] underline-offset-4 hover:underline"
               >
-                página de Danos Operacionais ↗
+                página de Perdas Operacionais ↗
               </a>
               .
             </Note>
@@ -1635,7 +1635,7 @@ export function MetodologiaContent() {
               Estabelecimentos CNAE 84 (Administração Pública) são incluídos no
               cálculo; ver a nota e as limitações sobre esse ponto na{" "}
               <a
-                href="/danos#notas"
+                href="/perdas-operacionais#notas"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-semibold text-[#1E404A] underline-offset-4 hover:underline"
@@ -1892,7 +1892,7 @@ export function MetodologiaContent() {
               Operacionais (Seção 10), que medem produção e serviço
               interrompidos. Os resultados estão na aba{" "}
               <Link
-                href="/danos?aba=fisico"
+                href="/danos-fisicos"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-semibold underline-offset-4 hover:underline"
@@ -1993,7 +1993,7 @@ export function MetodologiaContent() {
               resultados do painel, organizadas em três eixos: por{" "}
               <a href="#lim-cenarios" className="font-semibold underline underline-offset-4">cenário</a>, por{" "}
               <a href="#lim-metodologia" className="font-semibold underline underline-offset-4">metodologia</a> e por{" "}
-              <a href="#lim-municipio" className="font-semibold underline underline-offset-4">município</a>. As páginas de Danos Operacionais e Danos Físicos
+              <a href="#lim-municipio" className="font-semibold underline underline-offset-4">município</a>. As páginas de Perdas Operacionais e Danos Físicos
               não repetem estas ressalvas.
             </p>
 
@@ -2109,7 +2109,7 @@ export function MetodologiaContent() {
               <li>Um teste com o raster de densidade a ~1 km foi descartado, porque manchas pequenas dependem de poucos pixels (Setembro de 2023 saía 15,5% contra 4,0% exato).</li>
             </ul>
 
-            <SubTitle>Danos Operacionais (Seção 10)</SubTitle>
+            <SubTitle>Perdas Operacionais (Seção 10)</SubTitle>
             <ul className="ml-1 list-inside list-disc space-y-1.5 text-sm text-slate-700">
               <li>O DaLA estima fluxo de produção e serviço interrompido, não danos ao estoque (edificações, equipamentos): é uma metodologia de perdas, diferente de dano físico.</li>
               <li>A curva de recuperação é linear (fase aguda a 100% + recuperação a 50%) e os parâmetros (labor share, VAAT-MIN, coeficientes agrícolas) vêm de fontes externas aplicadas igualmente a todos os cenários.</li>

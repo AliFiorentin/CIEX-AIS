@@ -3081,7 +3081,7 @@ export default function Dashboard() {
         {/* Perdas Operacionais / Metodologia — empilhados, empurram o resto para a direita (mr-auto) */}
         <div className="grid shrink-0 grid-cols-2 gap-0.5 min-[2000px]:mr-auto max-[1999px]:flex max-[1999px]:flex-row max-[1999px]:gap-1">
           <Link
-            href="/danos"
+            href="/perdas-operacionais"
             className={NAV_LINK_CLASS}
             style={NAV_LINK_STYLE}
             title="Ver perdas operacionais (DaLA)"
@@ -3091,7 +3091,7 @@ export default function Dashboard() {
             <span className="max-[1999px]:hidden">Perdas Operacionais</span>
           </Link>
           <Link
-            href="/danos?aba=fisico"
+            href="/danos-fisicos"
             className={NAV_LINK_CLASS}
             style={NAV_LINK_STYLE}
             title="Ver danos físicos (exposição por cota)"

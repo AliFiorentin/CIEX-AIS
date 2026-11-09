@@ -143,8 +143,8 @@ export function DanoEvitadoPainel({ evento, intervencao }: { evento: string; int
       <p className="text-[9px] leading-snug text-slate-500">
         Perdas com os parâmetros DaLA do evento
         {ev && ev.id !== "2023-09-29" ? " (maio/2024, premissa para este evento)" : ""}. Detalhes por evento em{" "}
-        <Link href="/danos" className="font-bold underline">Perdas Operacionais</Link>,{" "}
-        <Link href="/danos?aba=fisico" className="font-bold underline">Danos Físicos</Link> e na{" "}
+        <Link href="/perdas-operacionais" className="font-bold underline">Perdas Operacionais</Link>,{" "}
+        <Link href="/danos-fisicos" className="font-bold underline">Danos Físicos</Link> e na{" "}
         <Link href="/metodologia#dano-evitado" className="font-bold underline">Metodologia</Link>.
       </p>
     </div>
