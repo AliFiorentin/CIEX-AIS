@@ -51,9 +51,12 @@ def compute_shared_grid(all_tif_paths: list[Path]):
     )
     return src_crs, dst_transform, w, h
 
-def reproject_group(tif_paths: list[Path], src_crs, dst_transform, w: int, h: int) -> np.ndarray:
-    """Reprojeta e combina (ultimo valido vence) um grupo de TIFFs de bacia na
-    grade compartilhada. Nao usa rasterio.merge.merge(): nesta instalacao
+def reproject_group(
+    tif_paths: list[Path], src_crs, dst_transform, w: int, h: int, combinar: str = "ultimo"
+) -> np.ndarray:
+    """Reprojeta e combina um grupo de TIFFs de bacia na grade compartilhada. Nas sobreposicoes, `combinar="ultimo"`
+    (padrao, usado pelo 16/05) deixa o ultimo valor valido vencer; `combinar="max"` fica com o maior valor
+    (profundidade). Nao usa rasterio.merge.merge(): nesta instalacao
     (rasterio 1.5.1) ela retorna um array zerado mesmo para um unico arquivo
     de entrada (bug verificado isoladamente)."""
     dst = np.full((h, w), np.nan, dtype=np.float32)
@@ -73,8 +76,11 @@ def reproject_group(tif_paths: list[Path], src_crs, dst_transform, w: int, h: in
                 dst_nodata=np.nan,
                 resampling=Resampling.nearest,
             )
-        m = ~np.isnan(tmp)
-        dst[m] = tmp[m]
+        if combinar == "max":
+            dst = np.fmax(dst, tmp)  # fmax ignora NaN: um lado seco nao apaga o outro
+        else:
+            m = ~np.isnan(tmp)
+            dst[m] = tmp[m]
     return dst
 
 def smooth_band(band: np.ndarray, sigma: float) -> np.ndarray:
