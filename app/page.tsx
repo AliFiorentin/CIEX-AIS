@@ -59,6 +59,19 @@ import { CotaCanvasLayer } from "@/components/CotaCanvasLayer"
 import { CotaControle } from "@/components/CotaControle"
 import { useCotas, useCotaAtingidos } from "@/hooks/useCotas"
 import { COTAS_CENARIO } from "@/lib/cotas"
+import {
+  ALTURA_SIMULACAO,
+  EVENTOS_SIMULACAO,
+  INTERVENCOES,
+  desmontarEfetivo,
+  lerIntervencao,
+  nomeEfetivo,
+  scenarioSlug,
+  slugify,
+  temIntervencao,
+  todosNomesEfetivos,
+  type IntervencaoId,
+} from "@/lib/cenarios"
 import { detectarPilha, pontosNaPilha } from "@/lib/pilhas"
 import { calcEmp, calcEdu, calcSau, STAFF_COLS } from "@/lib/metricas"
 
@@ -205,6 +218,8 @@ const CENARIOS = [
   "Cenário Maio 2024",
   "Cenário Maio 2024 + 50%",
   "Nível da Lagoa + Chuva Acumulada – 16/05/2024",
+  // Simulações com intervenção (a intervenção é escolhida no seletor ao lado; ver lib/cenarios.ts)
+  ...EVENTOS_SIMULACAO.map((e) => e.nome),
   COTAS_CENARIO, // água avançando por cota (só exposição; ver hooks/useCotas.ts)
 ]
 // Cenário inicial ao carregar sem permalink — independente da posição no
@@ -220,6 +235,7 @@ const CENARIO_URL_SLUGS: Record<string, string> = {
   "Cenário Maio 2024 + 50%": "maio-2024-mais-50",
   "Cenário Setembro 2023": "setembro-2023",
   "Nível da Lagoa + Chuva Acumulada – 16/05/2024": "lagoa-chuva-16-05-2024",
+  ...Object.fromEntries(EVENTOS_SIMULACAO.map((e) => [e.nome, e.codigo])),
   [COTAS_CENARIO]: "todas-as-cotas",
 }
 const cenarioParaUrl = (nome: string) =>
@@ -240,8 +256,20 @@ const CENARIO_VISTA: Record<
   },
   [COTAS_CENARIO]: { lng: -52.16756, lat: -32.05942, zoom: 11.8 },
 }
-const urlParaCenario = (codigo: string) =>
-  CENARIOS.find((c) => CENARIO_URL_SLUGS[c] === codigo)
+// Código de URL → cenário (nome efetivo nas simulações, combinando com `?intervencao=`; inválido cai no padrão).
+const urlParaCenario = (codigo: string, intervencao?: string | null) => {
+  const nome = CENARIOS.find((c) => CENARIO_URL_SLUGS[c] === codigo)
+  return nome && temIntervencao(nome)
+    ? nomeEfetivo(nome, lerIntervencao(intervencao))
+    : nome
+}
+
+const AVISO_SIMULACAO =
+  "Simulação hidrodinâmica (modelo TELEMAC): não é previsão nem dado observado. Área atingida = lâmina d'água ≥ 10 cm. \"Sem intervenção\" é a base de comparação das intervenções (dano evitado), não o evento real."
+const avisoDoCenario = (cenario: string) =>
+  temIntervencao(desmontarEfetivo(cenario).evento)
+    ? AVISO_SIMULACAO
+    : AVISO_MANCHA_BINARIA
 
 const AVISO_MANCHA_BINARIA =
   "Mancha binária: áreas com lâmina d'água ≥ 10 cm decorrente de acúmulo de chuva. Não indica extensão de alagamento contínuo nem profundidade além do limiar mínimo."
@@ -282,6 +310,10 @@ const ALTURA_MANCHAS: Record<
       { label: "Chuva acumulada ≥10cm", cor: "#ba82e6" },
     ],
   },
+  // as 12 simulações com intervenção compartilham limites e legenda (lib/cenarios.ts)
+  ...Object.fromEntries(
+    todosNomesEfetivos().map((nome) => [nome, ALTURA_SIMULACAO])
+  ),
 }
 
 const INFRA_LAYERS = ["Logradouros", "Quadras", "Terrenos"]
@@ -350,16 +382,7 @@ async function loadFGB(url: string, signal?: AbortSignal): Promise<any> {
   return { type: "FeatureCollection", features }
 }
 
-const slugify = (str: string) =>
-  str
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "")
-
-const scenarioSlug = (cen: string) => `rio_grande___${slugify(cen)}`
+// slugify e scenarioSlug vêm de @/lib/cenarios (mesma regra de scripts/cenarios_intervencao.py)
 
 const normalizeDep = (val: string) => DEP_LABELS[val] || val
 
@@ -477,11 +500,19 @@ export default function Dashboard() {
       ? null
       : new URLSearchParams(window.location.search).get("cenario")
   )
+  // `?intervencao=` (só vale nas simulações; inválido cai em "sem-intervencao"), lido junto do `?cenario=`
+  const permalinkIntervencaoRef = useRef<string | null>(
+    typeof window === "undefined"
+      ? null
+      : new URLSearchParams(window.location.search).get("intervencao")
+  )
   const headerRef = useRef<HTMLElement>(null)
   // Deslocamento vertical dos painéis flutuantes; acompanha a altura do header
   // (que cresce quando os botões de camada quebram linha em telas menores).
   const [panelTop, setPanelTop] = useState(90)
 
+  // Nas simulações `cenario` é o nome efetivo ("Simulação 29/09/2023 – Diques"): tudo que deriva dele (slug dos
+  // arquivos, raster, vista, aviso) segue igual. O evento e a intervenção são derivados logo antes do `return`.
   const [cenario, setCenario] = useState<string>("(nenhum)")
   // Aviso metodológico temporário ao selecionar cenários com mancha binária
   // (ex.: o componente de chuva acumulada da mancha combinada) — some sozinho
@@ -591,7 +622,8 @@ export default function Dashboard() {
     // `desired` é o código amigável da URL (CENARIO_URL_SLUGS) — ver o efeito
     // que escreve `?cenario=`, mais abaixo.
     const initialCenario =
-      (desired && urlParaCenario(desired)) || DEFAULT_CENARIO
+      (desired && urlParaCenario(desired, permalinkIntervencaoRef.current)) ||
+      DEFAULT_CENARIO
     const sSlug = scenarioSlug(initialCenario)
     const defaultInfra = ["Logradouros", "Terrenos"] // deve bater com infraAtivas inicial
 
@@ -1018,7 +1050,13 @@ export default function Dashboard() {
   // Permalink (leitura do `?cenario=` inicial acontece na inicialização do ref, acima)
   useEffect(() => {
     const params = new URLSearchParams()
-    if (cenario !== "(nenhum)") params.set("cenario", cenarioParaUrl(cenario))
+    if (cenario !== "(nenhum)") {
+      // nas simulações o cenário é o nome efetivo: `?cenario=` leva o evento e `?intervencao=` a variante
+      const { evento, intervencao } = desmontarEfetivo(cenario)
+      params.set("cenario", cenarioParaUrl(evento))
+      if (intervencao !== "sem-intervencao")
+        params.set("intervencao", intervencao)
+    }
     const qs = params.toString()
     window.history.replaceState(
       null,
@@ -1039,7 +1077,7 @@ export default function Dashboard() {
   }, [])
 
   useEffect(() => {
-    if (ALTURA_MANCHAS[cenario]) mostrarAvisoMancha(AVISO_MANCHA_BINARIA)
+    if (ALTURA_MANCHAS[cenario]) mostrarAvisoMancha(avisoDoCenario(cenario))
     else setAvisoMancha(null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cenario])
@@ -1778,6 +1816,10 @@ export default function Dashboard() {
     camadas.includes("Educação") ||
     camadas.includes("Saúde") ||
     camadas.includes("Patrimônio Histórico")
+
+  // Evento e intervenção escolhidos (derivados do nome efetivo); usados pelos seletores do cabeçalho e pelo Painel.
+  const { evento: eventoSel, intervencao: intervencaoSel } =
+    desmontarEfetivo(cenario)
 
   return (
     <div
@@ -2871,7 +2913,8 @@ export default function Dashboard() {
                             ? "Altura da lâmina d'água"
                             : "Cenário",
                           corpo: ALTURA_MANCHAS[cenario] ? (
-                            ALTURA_MANCHAS[cenario].legenda.map(
+                            <>
+                              {ALTURA_MANCHAS[cenario].legenda.map(
                               ({ label, cor }) => (
                                 <LegendItem
                                   key={`altura-${label}`}
@@ -2880,7 +2923,17 @@ export default function Dashboard() {
                                   area
                                 />
                               )
-                            )
+                            )}
+                              {temIntervencao(eventoSel) && (
+                                <p
+                                  className="mt-1 text-[8px] leading-tight"
+                                  style={{ color: C.muted }}
+                                >
+                                  10–44 cm: lâmina rasa. Simulação, não
+                                  observação.
+                                </p>
+                              )}
+                            </>
                           ) : (
                             <LegendItem
                               cor={COLORS.cenario}
@@ -3061,7 +3114,7 @@ export default function Dashboard() {
 
         {/* Cenário */}
         <div
-          className="flex w-[calc(var(--select-w)+var(--section-gap))] shrink-0 flex-col gap-0 border-r border-white/20 pr-[var(--section-gap)] max-[1999px]:w-auto max-[1999px]:min-w-[var(--select-w)] max-[1999px]:flex-1 max-[1999px]:border-r-0 max-[1999px]:pr-0"
+          className="flex w-[var(--select-w)] shrink-0 flex-col gap-0 max-[1999px]:w-auto max-[1999px]:min-w-[var(--select-w)] max-[1999px]:flex-1"
         >
           <label
             className="font-bold tracking-wider whitespace-nowrap text-white/70 uppercase"
@@ -3069,7 +3122,10 @@ export default function Dashboard() {
           >
             Cenário de Inundação
           </label>
-          <Select value={cenario} onValueChange={setCenario}>
+          <Select
+            value={eventoSel}
+            onValueChange={(v) => setCenario(nomeEfetivo(v, intervencaoSel))}
+          >
             <SelectTrigger
               aria-label="Cenário de inundação"
               className="w-full min-w-0 border-white/20 text-white"
@@ -3088,6 +3144,49 @@ export default function Dashboard() {
               {CENARIOS.map((c) => (
                 <SelectItem key={c} value={c}>
                   {c}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Intervenção — só nas simulações (29/09/2023, 29/11/2023, 21/05/2024 e 28/06/2025); nos demais cenários fica desabilitado */}
+        <div
+          className="flex w-[calc(var(--select-w)+var(--section-gap))] shrink-0 flex-col gap-0 border-r border-white/20 pr-[var(--section-gap)] max-[1999px]:w-auto max-[1999px]:min-w-[var(--select-w)] max-[1999px]:flex-1 max-[1999px]:border-r-0 max-[1999px]:pr-0"
+          title={
+            temIntervencao(eventoSel)
+              ? undefined
+              : "Disponível nas simulações de 29/09/2023, 29/11/2023, 21/05/2024 e 28/06/2025"
+          }
+        >
+          <label
+            className="font-bold tracking-wider whitespace-nowrap text-white/70 uppercase"
+            style={{ fontSize: "var(--select-label)" }}
+          >
+            Intervenção
+          </label>
+          <Select
+            value={intervencaoSel}
+            onValueChange={(v) =>
+              setCenario(nomeEfetivo(eventoSel, v as IntervencaoId))
+            }
+            disabled={!temIntervencao(eventoSel)}
+          >
+            <SelectTrigger
+              aria-label="Intervenção"
+              className="w-full min-w-0 border-white/20 text-white disabled:opacity-50"
+              style={{
+                backgroundColor: `${C.field}cc`,
+                fontSize: "var(--select-trigger)",
+                height: "var(--select-h)",
+              }}
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent position="popper" align="start" sideOffset={4}>
+              {INTERVENCOES.map((i) => (
+                <SelectItem key={i.id} value={i.id}>
+                  {i.rotulo}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -3512,8 +3611,12 @@ export default function Dashboard() {
               <div className="flex gap-1">
                 {ALTURA_MANCHAS[cenario] && (
                   <button
-                    onClick={() => mostrarAvisoMancha(AVISO_MANCHA_BINARIA)}
-                    title="Sobre a mancha binária"
+                    onClick={() => mostrarAvisoMancha(avisoDoCenario(cenario))}
+                    title={
+                      temIntervencao(eventoSel)
+                        ? "Sobre as simulações"
+                        : "Sobre a mancha binária"
+                    }
                     className="active-press hover-lift flex h-6 w-6 items-center justify-center rounded-md bg-slate-200/80 text-slate-700 hover:bg-slate-300"
                   >
                     <Info size={12} strokeWidth={2.5} />

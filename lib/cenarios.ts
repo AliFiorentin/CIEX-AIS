@@ -44,6 +44,14 @@ export function nomeEfetivo(evento: string, intervencao: IntervencaoId): string 
   return `${evento} – ${rotulo}`
 }
 
+/** Inverso de nomeEfetivo: o nome efetivo de uma simulação vira {evento, intervencao}; os demais cenários voltam iguais. */
+export function desmontarEfetivo(cenario: string): { evento: string; intervencao: IntervencaoId } {
+  for (const e of EVENTOS_SIMULACAO)
+    for (const i of INTERVENCOES)
+      if (nomeEfetivo(e.nome, i.id) === cenario) return { evento: e.nome, intervencao: i.id }
+  return { evento: cenario, intervencao: INTERVENCAO_PADRAO }
+}
+
 /** Os 12 nomes efetivos (4 eventos × 3 intervenções). */
 export const todosNomesEfetivos = (): string[] =>
   EVENTOS_SIMULACAO.flatMap((e) => INTERVENCOES.map((i) => nomeEfetivo(e.nome, i.id)))

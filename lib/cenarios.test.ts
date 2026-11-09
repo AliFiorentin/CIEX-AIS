@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs"
 import {
   ALTURA_SIMULACAO,
   EVENTOS_SIMULACAO,
+  desmontarEfetivo,
   INTERVENCOES,
   abaDoPainel,
   eventoDoCodigo,
@@ -45,6 +46,15 @@ test("a intervenção é ignorada em cenário antigo", () => {
   assert.equal(temIntervencao("Todas as cotas"), false)
   assert.equal(temIntervencao("(nenhum)"), false)
   assert.equal(temIntervencao(SIM), true)
+})
+
+test("desmontarEfetivo é o inverso de nomeEfetivo nos 12 cenários e identidade nos demais", () => {
+  for (const e of EVENTOS_SIMULACAO)
+    for (const i of INTERVENCOES)
+      assert.deepEqual(desmontarEfetivo(nomeEfetivo(e.nome, i.id)), { evento: e.nome, intervencao: i.id })
+  assert.deepEqual(desmontarEfetivo("Cenário Maio 2024"), { evento: "Cenário Maio 2024", intervencao: "sem-intervencao" })
+  assert.deepEqual(desmontarEfetivo("Todas as cotas"), { evento: "Todas as cotas", intervencao: "sem-intervencao" })
+  assert.deepEqual(desmontarEfetivo("(nenhum)"), { evento: "(nenhum)", intervencao: "sem-intervencao" })
 })
 
 test("abaDoPainel: Dano Evitado só com simulação e intervenção diferente de sem-intervencao", () => {
