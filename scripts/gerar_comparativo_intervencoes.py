@@ -69,6 +69,7 @@ def indicadores(evento: str, variante: str, com_exposicao: bool = True) -> dict:
     emp = _ler(CENARIOS_DIR / f"empresas_ATINGIDOS_{sslug}.geojson")
     edu = _ler(CENARIOS_DIR / f"educacao_ATINGIDOS_{sslug}.geojson")
     sau = _ler(CENARIOS_DIR / f"saude_ATINGIDOS_{sslug}.geojson")
+    pat = _ler(CENARIOS_DIR / f"patrimonio_ATINGIDOS_{sslug}.geojson")
     infra = _ler(CENARIOS_DIR / f"infra_stats_{sslug}.json")
 
     out = {
@@ -81,6 +82,7 @@ def indicadores(evento: str, variante: str, com_exposicao: bool = True) -> dict:
         "escolas": len(edu["features"]),
         "matriculas": _soma(edu, "qtd_mat_total"),
         "unidades_saude": len(sau["features"]),
+        "patrimonio": len(pat["features"]),
         "logradouros": infra["Logradouros"]["ruas_atingidas"],
         "quadras": infra["Quadras"]["atingidas"],
         "perdas_total": perdas["total"],

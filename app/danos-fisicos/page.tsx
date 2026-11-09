@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { FisicosClient } from "./FisicosClient"
-import { getFisicosData } from "../danos/get-data"
+import { getComparativoData, getFisicosData } from "../danos/get-data"
 
 export const metadata: Metadata = {
   title: "Danos Físicos — Rio Grande (RS)",
@@ -9,5 +9,5 @@ export const metadata: Metadata = {
 }
 
 export default function DanosFisicosPage() {
-  return <FisicosClient expo={getFisicosData()} />
+  return <FisicosClient expo={getFisicosData()} comparativo={getComparativoData()} />
 }

@@ -17,6 +17,7 @@ export interface Indicadores {
   escolas: number
   matriculas: number
   unidades_saude: number
+  patrimonio: number
   logradouros: number
   quadras: number
   perdas_total: number

@@ -18,6 +18,7 @@ const ind = (p: Partial<Indicadores>): Indicadores => ({
   escolas: 0,
   matriculas: 0,
   unidades_saude: 0,
+  patrimonio: 0,
   logradouros: 0,
   quadras: 0,
   perdas_total: 0,

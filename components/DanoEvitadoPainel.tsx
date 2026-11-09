@@ -34,6 +34,7 @@ const CARTOES: Cartao[] = [
   { rotulo: "Escolas", tipo: "n", chave: "escolas", valor: (i) => i.escolas },
   { rotulo: "Alunos", tipo: "n", chave: "matriculas", valor: (i) => i.matriculas },
   { rotulo: "Unidades de saúde", tipo: "n", chave: "unidades_saude", valor: (i) => i.unidades_saude },
+  { rotulo: "Patrimônio histórico", tipo: "n", chave: "patrimonio", valor: (i) => i.patrimonio },
   { rotulo: "Ruas atingidas", tipo: "n", chave: "logradouros", valor: (i) => i.logradouros },
   { rotulo: "Quadras atingidas", tipo: "n", chave: "quadras", valor: (i) => i.quadras },
   {

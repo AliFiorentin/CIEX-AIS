@@ -7,12 +7,20 @@ import { KpiRow, Section, DataTable, Note } from "@/components/doc-kit"
 import type { ExposicaoSetor, ExposicaoMun } from "./types"
 import { SETOR_LABEL, SETOR_COLORS, fmtBRL, fmtN, fmtPct } from "./helpers"
 import { DetalhePorCategoria } from "./DetalhePorCategoria"
+import { IntervencoesFisicos } from "../danos-fisicos/IntervencoesFisicos"
+import type { Comparativo } from "@/lib/comparativo"
 
 const MUN = "Rio Grande"
 const MAPA_SLUG = "rio_grande"
 const PRIMARY = "#1E404A"
 
-export function FisicosView({ expo }: { expo: ExposicaoMun | null }) {
+export function FisicosView({
+  expo,
+  comparativo,
+}: {
+  expo: ExposicaoMun | null
+  comparativo: Comparativo | null
+}) {
   const mun = MUN
   const cotasLista0 = expo
     ? Object.keys(expo.por_cota).sort((a, b) => parseFloat(a) - parseFloat(b))
@@ -91,6 +99,7 @@ export function FisicosView({ expo }: { expo: ExposicaoMun | null }) {
         ] as [string, string][])
       : []),
     ["c-mapa", "Mapa por cota"],
+    ["c-intervencoes", "Intervenções e exposição evitada"],
   ]
   const numDe = (id: string) => itens.findIndex(([i]) => i === id) + 1
 
@@ -502,6 +511,11 @@ export function FisicosView({ expo }: { expo: ExposicaoMun | null }) {
           </p>
           <CotaMapa slug={MAPA_SLUG} cotaInicial={cotaAtiva} />
         </Section>
+
+        <IntervencoesFisicos
+          comparativo={comparativo}
+          num={numDe("c-intervencoes")}
+        />
       </main>
     </div>
   )

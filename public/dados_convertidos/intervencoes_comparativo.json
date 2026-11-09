@@ -24,6 +24,7 @@
      "escolas": 15,
      "matriculas": 6105,
      "unidades_saude": 29,
+     "patrimonio": 9,
      "logradouros": 229,
      "quadras": 367,
      "perdas_total": 25682752.14,
@@ -55,6 +56,7 @@
      "escolas": 8,
      "matriculas": 3959,
      "unidades_saude": 13,
+     "patrimonio": 6,
      "logradouros": 179,
      "quadras": 268,
      "perdas_total": 16176048.03,
@@ -86,6 +88,7 @@
      "escolas": 8,
      "matriculas": 3959,
      "unidades_saude": 13,
+     "patrimonio": 6,
      "logradouros": 179,
      "quadras": 267,
      "perdas_total": 16176048.03,
@@ -133,6 +136,10 @@
      "unidades_saude": {
       "valor": 16,
       "pct": 0.551724
+     },
+     "patrimonio": {
+      "valor": 3,
+      "pct": 0.333333
      },
      "logradouros": {
       "valor": 50,
@@ -212,6 +219,10 @@
       "valor": 16,
       "pct": 0.551724
      },
+     "patrimonio": {
+      "valor": 3,
+      "pct": 0.333333
+     },
      "logradouros": {
       "valor": 50,
       "pct": 0.218341
@@ -280,6 +291,7 @@
      "escolas": 15,
      "matriculas": 6105,
      "unidades_saude": 32,
+     "patrimonio": 12,
      "logradouros": 237,
      "quadras": 381,
      "perdas_total": 54973895.67,
@@ -311,6 +323,7 @@
      "escolas": 9,
      "matriculas": 4464,
      "unidades_saude": 14,
+     "patrimonio": 6,
      "logradouros": 190,
      "quadras": 283,
      "perdas_total": 34384014.6,
@@ -342,6 +355,7 @@
      "escolas": 9,
      "matriculas": 4464,
      "unidades_saude": 14,
+     "patrimonio": 6,
      "logradouros": 190,
      "quadras": 281,
      "perdas_total": 34021862.05,
@@ -389,6 +403,10 @@
      "unidades_saude": {
       "valor": 18,
       "pct": 0.5625
+     },
+     "patrimonio": {
+      "valor": 6,
+      "pct": 0.5
      },
      "logradouros": {
       "valor": 47,
@@ -468,6 +486,10 @@
       "valor": 18,
       "pct": 0.5625
      },
+     "patrimonio": {
+      "valor": 6,
+      "pct": 0.5
+     },
      "logradouros": {
       "valor": 47,
       "pct": 0.198312
@@ -536,6 +558,7 @@
      "escolas": 81,
      "matriculas": 22334,
      "unidades_saude": 256,
+     "patrimonio": 53,
      "logradouros": 373,
      "quadras": 817,
      "perdas_total": 462414339.77,
@@ -567,6 +590,7 @@
      "escolas": 15,
      "matriculas": 6105,
      "unidades_saude": 30,
+     "patrimonio": 11,
      "logradouros": 232,
      "quadras": 368,
      "perdas_total": 51380960.41,
@@ -598,6 +622,7 @@
      "escolas": 15,
      "matriculas": 6105,
      "unidades_saude": 29,
+     "patrimonio": 9,
      "logradouros": 229,
      "quadras": 365,
      "perdas_total": 51365504.27,
@@ -645,6 +670,10 @@
      "unidades_saude": {
       "valor": 226,
       "pct": 0.882812
+     },
+     "patrimonio": {
+      "valor": 42,
+      "pct": 0.792453
      },
      "logradouros": {
       "valor": 141,
@@ -724,6 +753,10 @@
       "valor": 227,
       "pct": 0.886719
      },
+     "patrimonio": {
+      "valor": 44,
+      "pct": 0.830189
+     },
      "logradouros": {
       "valor": 144,
       "pct": 0.386059
@@ -792,6 +825,7 @@
      "escolas": 9,
      "matriculas": 4464,
      "unidades_saude": 13,
+     "patrimonio": 6,
      "logradouros": 189,
      "quadras": 273,
      "perdas_total": 34194246.98,
@@ -823,6 +857,7 @@
      "escolas": 6,
      "matriculas": 3294,
      "unidades_saude": 8,
+     "patrimonio": 6,
      "logradouros": 159,
      "quadras": 214,
      "perdas_total": 27939363.46,
@@ -854,6 +889,7 @@
      "escolas": 6,
      "matriculas": 3294,
      "unidades_saude": 8,
+     "patrimonio": 6,
      "logradouros": 159,
      "quadras": 214,
      "perdas_total": 27939363.46,
@@ -901,6 +937,10 @@
      "unidades_saude": {
       "valor": 5,
       "pct": 0.384615
+     },
+     "patrimonio": {
+      "valor": 0,
+      "pct": 0.0
      },
      "logradouros": {
       "valor": 30,
@@ -979,6 +1019,10 @@
      "unidades_saude": {
       "valor": 5,
       "pct": 0.384615
+     },
+     "patrimonio": {
+      "valor": 0,
+      "pct": 0.0
      },
      "logradouros": {
       "valor": 30,

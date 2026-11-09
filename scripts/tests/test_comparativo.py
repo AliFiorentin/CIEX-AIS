@@ -74,6 +74,7 @@ class TestMontar(unittest.TestCase):
             self._gj(f"empresas_ATINGIDOS_{slug}.geojson", [_pt(qtd_vinculos=10, massa_salarial=1000.0, setor="COMERCIO") for _ in range(n)])
             self._gj(f"educacao_ATINGIDOS_{slug}.geojson", [_pt(qtd_mat_total=100, qtd_mat_fundamental=644) for _ in range(n)])
             self._gj(f"saude_ATINGIDOS_{slug}.geojson", [_pt(qtd_profissionais=6, leitos_total=4, co_cnes=str(i)) for i in range(n)])
+            self._gj(f"patrimonio_ATINGIDOS_{slug}.geojson", [_pt(nome=f"p{i}") for i in range(n)])
             (self.cen / f"infra_stats_{slug}.json").write_text(
                 json.dumps({"Logradouros": {"ruas_atingidas": 10 * n}, "Quadras": {"atingidas": 5 * n}}), encoding="utf-8")
             meta[slug] = {"area_ha": 100.0 * n, "prof_max_cm": 50.0 + n, "area_por_faixa_ha": {"10-44": 60.0 * n, "45-64": 40.0 * n}, "bounds": [0, 0, 1, 1]}
@@ -120,6 +121,7 @@ class TestMontar(unittest.TestCase):
         self.assertEqual(i["escolas"], 3)
         self.assertEqual(i["matriculas"], 300)
         self.assertEqual(i["unidades_saude"], 3)
+        self.assertEqual(i["patrimonio"], 3)
         self.assertEqual(i["logradouros"], 30)
         self.assertEqual(i["quadras"], 15)
         self.assertEqual(i["area_ha"], 300.0)
