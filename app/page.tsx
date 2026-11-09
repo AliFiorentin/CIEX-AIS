@@ -33,6 +33,7 @@ import {
   Info,
   BookOpen,
   Waves,
+  ShieldCheck,
   LayoutGrid,
   Stethoscope,
   LandPlot,
@@ -59,10 +60,13 @@ import { CotaCanvasLayer } from "@/components/CotaCanvasLayer"
 import { CotaControle } from "@/components/CotaControle"
 import { useCotas, useCotaAtingidos } from "@/hooks/useCotas"
 import { COTAS_CENARIO } from "@/lib/cotas"
+import { DanoEvitadoPainel } from "@/components/DanoEvitadoPainel"
+import { calcPct, compactoBr, formatoBr } from "@/lib/formatos"
 import {
   ALTURA_SIMULACAO,
   EVENTOS_SIMULACAO,
   INTERVENCOES,
+  abaDoPainel,
   desmontarEfetivo,
   lerIntervencao,
   nomeEfetivo,
@@ -418,28 +422,7 @@ const SETOR_LABELS: Record<string, string> = {
 }
 const normalizeSetor = (val: string) => SETOR_LABELS[val] || val
 
-const formatoBr = (num: number, casas = 0) =>
-  num.toLocaleString("pt-BR", {
-    minimumFractionDigits: casas,
-    maximumFractionDigits: casas,
-  })
-
-const compactoBr = (n: number, casas = 1) => {
-  if (n === undefined || n === null || isNaN(n)) return "0"
-  const abs = Math.abs(n)
-  const sinal = n < 0 ? "-" : ""
-  // Arredonda antes de escolher a unidade: 999.950 não pode virar "1.000,0 Mil".
-  const arred = (d: number) => Number((abs / d).toFixed(casas))
-  if (abs >= 1e9 || arred(1e6) >= 1000)
-    return `${sinal}${formatoBr(abs / 1e9, casas)} Bi`
-  if (abs >= 1e6 || arred(1e3) >= 1000)
-    return `${sinal}${formatoBr(abs / 1e6, casas)} Mi`
-  if (abs >= 1e3) return `${sinal}${formatoBr(abs / 1e3, casas)} Mil`
-  return `${sinal}${formatoBr(abs, casas)}`
-}
-
-const calcPct = (parte: number, total: number) =>
-  !total ? "0%" : `${formatoBr((parte / total) * 100, 0)}%`
+// formatoBr, compactoBr e calcPct vêm de @/lib/formatos (compartilhados com as páginas de Perdas e Danos)
 
 // ─── Métricas ────────────────────────────────────────────────────────────────
 
@@ -1778,6 +1761,22 @@ export default function Dashboard() {
     if (tabAtiva === "patrimonio" && !camadas.includes("Patrimônio Histórico"))
       setTabAtiva("empresas")
   }, [camadas, infraAtivas, tabAtiva])
+
+  // Ao escolher uma intervenção numa simulação, a aba ativa vira "Dano Evitado" (que substitui o "Resumo");
+  // ao sair desse modo, volta a "Resumo". Só reage à mudança de modo, não a cada troca de cenário.
+  const modoAba = useMemo(() => {
+    const { evento, intervencao } = desmontarEfetivo(cenario)
+    return abaDoPainel(evento, intervencao)
+  }, [cenario])
+  useEffect(() => {
+    setTabAtiva((atual) =>
+      modoAba === "dano-evitado"
+        ? "dano-evitado"
+        : atual === "dano-evitado"
+          ? "resumo"
+          : atual
+    )
+  }, [modoAba])
 
   // ─── Render ───────────────────────────────────────────────────────────────
 
@@ -3647,11 +3646,18 @@ export default function Dashboard() {
             >
               {(
                 [
-                  {
-                    value: "resumo",
-                    label: "Resumo",
-                    icon: <LayoutGrid size={11} strokeWidth={2.5} />,
-                  },
+                  // numa simulação com intervenção, "Dano Evitado" substitui "Resumo" (lib/cenarios.ts: abaDoPainel)
+                  abaDoPainel(eventoSel, intervencaoSel) === "dano-evitado"
+                    ? {
+                        value: "dano-evitado",
+                        label: "Dano Evitado",
+                        icon: <ShieldCheck size={11} strokeWidth={2.5} />,
+                      }
+                    : {
+                        value: "resumo",
+                        label: "Resumo",
+                        icon: <LayoutGrid size={11} strokeWidth={2.5} />,
+                      },
                   {
                     value: "empresas",
                     label: "Empresas",
@@ -4053,6 +4059,19 @@ export default function Dashboard() {
                   )
                 })()}
               </FitHeight>
+            </TabsContent>
+
+            {/* Dano Evitado — substitui o Resumo nas simulações com intervenção (components/DanoEvitadoPainel.tsx) */}
+            <TabsContent
+              value="dano-evitado"
+              className="mt-4 flex-1 overflow-y-auto pr-2 pb-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-track]:bg-transparent"
+            >
+              {modoAba === "dano-evitado" && (
+                <DanoEvitadoPainel
+                  evento={eventoSel}
+                  intervencao={intervencaoSel}
+                />
+              )}
             </TabsContent>
 
             {/* Empresas */}
