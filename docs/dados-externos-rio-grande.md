@@ -51,6 +51,25 @@ geocodificador da origem colocou fora do lugar. Hoje há uma:
   ficam no repositório; informe a pasta em `RASTER_DIR` ao rodar `scripts/gerar_cota_mapa.py`.
 - Rio Grande é `sem_profundidade` na origem: as cotas trazem exposição, sem dano físico em R$.
 
+## Simulações de intervenção (2026-11-09)
+
+Gerados por `scripts/converter_intervencoes.py` a partir de `RAW/simulacoes-intervencoes/` (4 eventos × sem intervenção,
+diques e diques + barragens), com `scripts/calcular_perdas_rio_grande.py --intervencoes` (`perdas_intervencoes.json`) e
+`scripts/gerar_comparativo_intervencoes.py` (`intervencoes_comparativo.json`). Os arquivos `*simulacao_*` em
+`rio_grande/cenarios/` somam **41,9 MB** (12 cenários × 12 arquivos). Limiar: profundidade ≥ 10 cm; nas sobreposições entre bacias
+vale a maior profundidade (a soma por bacia contaria a sobreposição em dobro: 21/05/2024 com diques dá 465,7 ha por soma e 333 ha pelo mosaico).
+
+| Evento | Sem intervenção | Diques | Diques + barragens |
+|---|---|---|---|
+| 29/09/2023 | 333,1 ha · 324 empresas · R$ 25,7 mi | 221,9 ha · 128 · R$ 16,2 mi | 222,7 ha · 128 · R$ 16,2 mi |
+| 29/11/2023 | 352,2 ha · 339 · R$ 55,0 mi | 247,0 ha · 143 · R$ 34,4 mi | 244,6 ha · 141 · R$ 34,0 mi |
+| 21/05/2024 | 654,9 ha · 2.075 · R$ 462,4 mi | 333,2 ha · 325 · R$ 51,4 mi | 327,3 ha · 324 · R$ 51,4 mi |
+| 28/06/2025 | 253,6 ha · 140 · R$ 34,2 mi | 192,7 ha · 99 · R$ 27,9 mi | 192,1 ha · 99 · R$ 27,9 mi |
+
+Perdas no DaLA do evento (29/09/2023: `setembro_2023`; os demais usam os parâmetros de `maio_2024`, premissa). Os modelos
+das simulações (TELEMAC) **não são comparáveis** aos cenários antigos: o baseline de 21/05/2024 tem perdas de R$ 462 mi contra
+R$ 96 mi do "Cenário Maio 2024". A exposição em R$ (`valor_reposicao.py`) reproduz os totais do CLIMADA (empresas ao centavo; educação e saúde com razão 1,0000).
+
 ## Auditoria de 2026-11-08: o que foi medido e deixado como está
 
 - **ATINGIDOS de empresas, educação, saúde e patrimônio × mancha atual.** Conferido ponto a ponto contra

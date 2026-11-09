@@ -10,6 +10,7 @@ count_ruas_unicas), que depende de geopandas e por isso nao e importado.
 """
 
 import json
+import sys
 import unittest
 from pathlib import Path
 
@@ -23,6 +24,12 @@ SLUGS = [
     "cenario_maio_2024_50",
     "nivel_da_lagoa_chuva_acumulada_16_05_2024",
 ]
+# Os 12 cenarios de intervencao (so entram se ja foram gerados; ver converter_intervencoes.py).
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from cenarios_intervencao import slug_cenario, todos  # noqa: E402
+
+SLUGS_INTERVENCAO = [slug_cenario(e, v) for e, v in todos()]
+SLUGS += SLUGS_INTERVENCAO
 CHAVES_LOGRADOURO = {"tipo", "nome", "drenagem", "iluminacao"}
 
 
@@ -104,6 +111,42 @@ class Aninhamento(unittest.TestCase):
                 maio = _pontos_atingidos(camada, "cenario_maio_2024")
                 mais50 = _pontos_atingidos(camada, "cenario_maio_2024_50")
                 self.assertEqual(maio - mais50, set(), f"{camada}: pontos de Maio 2024 fora do +50%")
+
+
+CAMADAS_ATINGIDOS = [
+    "empresas_ATINGIDOS_rio_grande___{slug}.geojson",
+    "educacao_ATINGIDOS_rio_grande___{slug}.geojson",
+    "saude_ATINGIDOS_rio_grande___{slug}.geojson",
+    "patrimonio_ATINGIDOS_rio_grande___{slug}.geojson",
+    "infra_logradouros_ATINGIDOS_rio_grande___{slug}.geojson",
+    "infra_quadras_ATINGIDOS_rio_grande___{slug}.fgb",
+    "infra_terrenos_ATINGIDOS_rio_grande___{slug}.fgb",
+    "cobertura_ATINGIDOS_rio_grande___{slug}.fgb",
+    "rio_grande___{slug}.geojson",
+    "altura_raster_rio_grande___{slug}.png",
+    "agricultura_stats_rio_grande___{slug}.json",
+    "infra_stats_rio_grande___{slug}.json",
+]
+
+
+class SimulacoesDeIntervencao(unittest.TestCase):
+    """Os 12 cenarios de intervencao tem todos os arquivos que o app pede e pontos com atributos."""
+
+    def test_todos_os_arquivos_existem(self):
+        for slug in SLUGS_INTERVENCAO:
+            for modelo in CAMADAS_ATINGIDOS:
+                nome = modelo.format(slug=slug)
+                with self.subTest(arquivo=nome):
+                    self.assertTrue((CENARIOS_DIR / nome).exists(), nome)
+
+    def test_pontos_atingidos_tem_propriedades(self):
+        for slug in SLUGS_INTERVENCAO:
+            for camada in ("empresas", "educacao", "saude"):
+                with self.subTest(cenario=slug, camada=camada):
+                    p = CENARIOS_DIR / f"{camada}_ATINGIDOS_rio_grande___{slug}.geojson"
+                    feats = json.loads(p.read_text(encoding="utf-8"))["features"]
+                    vazias = [f for f in feats if not f.get("properties")]
+                    self.assertEqual(len(vazias), 0, f"{len(vazias)} de {len(feats)} feicoes sem properties")
 
 
 if __name__ == "__main__":

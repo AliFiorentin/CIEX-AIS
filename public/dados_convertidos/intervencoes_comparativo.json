@@ -1,0 +1,1031 @@
+{
+ "limiar_cm": 10,
+ "exposicao_disponivel": true,
+ "populacao_disponivel": false,
+ "eventos": {
+  "2023-09-29": {
+   "rotulo": "29/09/2023",
+   "variantes": {
+    "sem-intervencao": {
+     "area_ha": 333.0842,
+     "prof_max_cm": 137.3,
+     "area_por_faixa_ha": {
+      "10-44": 122.7285,
+      "105-124": 30.1512,
+      "125-144": 13.619,
+      "145+": 0.0,
+      "45-64": 70.3783,
+      "65-84": 55.7269,
+      "85-104": 40.4804
+     },
+     "empresas": 324,
+     "vinculos": 2618,
+     "massa_salarial": 7890920.91,
+     "escolas": 15,
+     "matriculas": 6105,
+     "unidades_saude": 29,
+     "logradouros": 229,
+     "quadras": 367,
+     "perdas_total": 25682752.14,
+     "perdas_empresas": 17911518.23,
+     "perdas_educacao": 7766668.06,
+     "perdas_saude": 4565.85,
+     "perdas_agricultura": 0,
+     "perdas_dias_efetivos": 30,
+     "exposicao_empresas": 110232439.56,
+     "exposicao_educacao": 55839197.91,
+     "exposicao_saude": 13708997.28,
+     "exposicao_total": 179780634.75
+    },
+    "diques": {
+     "area_ha": 221.9145,
+     "prof_max_cm": 110.2,
+     "area_por_faixa_ha": {
+      "10-44": 111.1963,
+      "105-124": 5.0946,
+      "125-144": 0.0,
+      "145+": 0.0,
+      "45-64": 44.5283,
+      "65-84": 35.116,
+      "85-104": 25.9794
+     },
+     "empresas": 128,
+     "vinculos": 1419,
+     "massa_salarial": 4347287.43,
+     "escolas": 8,
+     "matriculas": 3959,
+     "unidades_saude": 13,
+     "logradouros": 179,
+     "quadras": 268,
+     "perdas_total": 16176048.03,
+     "perdas_empresas": 11139481.47,
+     "perdas_educacao": 5036566.56,
+     "perdas_saude": 0.0,
+     "perdas_agricultura": 0,
+     "perdas_dias_efetivos": 30,
+     "exposicao_empresas": 55646124.12,
+     "exposicao_educacao": 34172513.39,
+     "exposicao_saude": 5641313.04,
+     "exposicao_total": 95459950.55
+    },
+    "diques-barragens": {
+     "area_ha": 222.7215,
+     "prof_max_cm": 110.5,
+     "area_por_faixa_ha": {
+      "10-44": 110.0686,
+      "105-124": 5.0946,
+      "125-144": 0.0,
+      "145+": 0.0,
+      "45-64": 46.0219,
+      "65-84": 35.0734,
+      "85-104": 26.463
+     },
+     "empresas": 128,
+     "vinculos": 1419,
+     "massa_salarial": 4347287.43,
+     "escolas": 8,
+     "matriculas": 3959,
+     "unidades_saude": 13,
+     "logradouros": 179,
+     "quadras": 267,
+     "perdas_total": 16176048.03,
+     "perdas_empresas": 11139481.47,
+     "perdas_educacao": 5036566.56,
+     "perdas_saude": 0.0,
+     "perdas_agricultura": 0,
+     "perdas_dias_efetivos": 30,
+     "exposicao_empresas": 55646124.12,
+     "exposicao_educacao": 34172513.39,
+     "exposicao_saude": 5641313.04,
+     "exposicao_total": 95459950.55
+    }
+   },
+   "evitado": {
+    "diques": {
+     "area_ha": {
+      "valor": 111.1697,
+      "pct": 0.333759
+     },
+     "prof_max_cm": {
+      "valor": 27.1,
+      "pct": 0.197378
+     },
+     "empresas": {
+      "valor": 196,
+      "pct": 0.604938
+     },
+     "vinculos": {
+      "valor": 1199,
+      "pct": 0.457983
+     },
+     "massa_salarial": {
+      "valor": 3543633.48,
+      "pct": 0.449077
+     },
+     "escolas": {
+      "valor": 7,
+      "pct": 0.466667
+     },
+     "matriculas": {
+      "valor": 2146,
+      "pct": 0.351515
+     },
+     "unidades_saude": {
+      "valor": 16,
+      "pct": 0.551724
+     },
+     "logradouros": {
+      "valor": 50,
+      "pct": 0.218341
+     },
+     "quadras": {
+      "valor": 99,
+      "pct": 0.269755
+     },
+     "perdas_total": {
+      "valor": 9506704.11,
+      "pct": 0.370159
+     },
+     "perdas_empresas": {
+      "valor": 6772036.76,
+      "pct": 0.378083
+     },
+     "perdas_educacao": {
+      "valor": 2730101.5,
+      "pct": 0.351515
+     },
+     "perdas_saude": {
+      "valor": 4565.85,
+      "pct": 1.0
+     },
+     "perdas_agricultura": {
+      "valor": 0,
+      "pct": null
+     },
+     "exposicao_empresas": {
+      "valor": 54586315.44,
+      "pct": 0.495193
+     },
+     "exposicao_educacao": {
+      "valor": 21666684.52,
+      "pct": 0.388019
+     },
+     "exposicao_saude": {
+      "valor": 8067684.24,
+      "pct": 0.588496
+     },
+     "exposicao_total": {
+      "valor": 84320684.2,
+      "pct": 0.46902
+     }
+    },
+    "diques-barragens": {
+     "area_ha": {
+      "valor": 110.3627,
+      "pct": 0.331336
+     },
+     "prof_max_cm": {
+      "valor": 26.8,
+      "pct": 0.195193
+     },
+     "empresas": {
+      "valor": 196,
+      "pct": 0.604938
+     },
+     "vinculos": {
+      "valor": 1199,
+      "pct": 0.457983
+     },
+     "massa_salarial": {
+      "valor": 3543633.48,
+      "pct": 0.449077
+     },
+     "escolas": {
+      "valor": 7,
+      "pct": 0.466667
+     },
+     "matriculas": {
+      "valor": 2146,
+      "pct": 0.351515
+     },
+     "unidades_saude": {
+      "valor": 16,
+      "pct": 0.551724
+     },
+     "logradouros": {
+      "valor": 50,
+      "pct": 0.218341
+     },
+     "quadras": {
+      "valor": 100,
+      "pct": 0.27248
+     },
+     "perdas_total": {
+      "valor": 9506704.11,
+      "pct": 0.370159
+     },
+     "perdas_empresas": {
+      "valor": 6772036.76,
+      "pct": 0.378083
+     },
+     "perdas_educacao": {
+      "valor": 2730101.5,
+      "pct": 0.351515
+     },
+     "perdas_saude": {
+      "valor": 4565.85,
+      "pct": 1.0
+     },
+     "perdas_agricultura": {
+      "valor": 0,
+      "pct": null
+     },
+     "exposicao_empresas": {
+      "valor": 54586315.44,
+      "pct": 0.495193
+     },
+     "exposicao_educacao": {
+      "valor": 21666684.52,
+      "pct": 0.388019
+     },
+     "exposicao_saude": {
+      "valor": 8067684.24,
+      "pct": 0.588496
+     },
+     "exposicao_total": {
+      "valor": 84320684.2,
+      "pct": 0.46902
+     }
+    }
+   }
+  },
+  "2023-11-29": {
+   "rotulo": "29/11/2023",
+   "variantes": {
+    "sem-intervencao": {
+     "area_ha": 352.2383,
+     "prof_max_cm": 145.2,
+     "area_por_faixa_ha": {
+      "10-44": 123.4445,
+      "105-124": 32.0439,
+      "125-144": 20.9014,
+      "145+": 1.6646,
+      "45-64": 76.4195,
+      "65-84": 56.6902,
+      "85-104": 41.0741
+     },
+     "empresas": 339,
+     "vinculos": 2949,
+     "massa_salarial": 8682987.88,
+     "escolas": 15,
+     "matriculas": 6105,
+     "unidades_saude": 32,
+     "logradouros": 237,
+     "quadras": 381,
+     "perdas_total": 54973895.67,
+     "perdas_empresas": 39431427.86,
+     "perdas_educacao": 15533336.12,
+     "perdas_saude": 9131.69,
+     "perdas_agricultura": 0,
+     "perdas_dias_efetivos": 60,
+     "exposicao_empresas": 125748501.48,
+     "exposicao_educacao": 55839197.91,
+     "exposicao_saude": 14315590.08,
+     "exposicao_total": 195903289.47
+    },
+    "diques": {
+     "area_ha": 247.0398,
+     "prof_max_cm": 120.2,
+     "area_por_faixa_ha": {
+      "10-44": 114.9262,
+      "105-124": 15.9538,
+      "125-144": 0.0,
+      "145+": 0.0,
+      "45-64": 49.7531,
+      "65-84": 38.6835,
+      "85-104": 27.7232
+     },
+     "empresas": 143,
+     "vinculos": 1487,
+     "massa_salarial": 4490441.08,
+     "escolas": 9,
+     "matriculas": 4464,
+     "unidades_saude": 14,
+     "logradouros": 190,
+     "quadras": 283,
+     "perdas_total": 34384014.6,
+     "perdas_empresas": 23025978.17,
+     "perdas_educacao": 11358036.44,
+     "perdas_saude": 0.0,
+     "perdas_agricultura": 0,
+     "perdas_dias_efetivos": 60,
+     "exposicao_empresas": 58833713.88,
+     "exposicao_educacao": 37462759.65,
+     "exposicao_saude": 5823290.88,
+     "exposicao_total": 102119764.41
+    },
+    "diques-barragens": {
+     "area_ha": 244.5753,
+     "prof_max_cm": 119.6,
+     "area_por_faixa_ha": {
+      "10-44": 114.2921,
+      "105-124": 14.8921,
+      "125-144": 0.0,
+      "145+": 0.0,
+      "45-64": 48.2822,
+      "65-84": 39.4352,
+      "85-104": 27.6738
+     },
+     "empresas": 141,
+     "vinculos": 1451,
+     "massa_salarial": 4410946.08,
+     "escolas": 9,
+     "matriculas": 4464,
+     "unidades_saude": 14,
+     "logradouros": 190,
+     "quadras": 281,
+     "perdas_total": 34021862.05,
+     "perdas_empresas": 22663825.62,
+     "perdas_educacao": 11358036.44,
+     "perdas_saude": 0.0,
+     "perdas_agricultura": 0,
+     "perdas_dias_efetivos": 60,
+     "exposicao_empresas": 57146166.36,
+     "exposicao_educacao": 37462759.65,
+     "exposicao_saude": 5823290.88,
+     "exposicao_total": 100432216.89
+    }
+   },
+   "evitado": {
+    "diques": {
+     "area_ha": {
+      "valor": 105.1985,
+      "pct": 0.298657
+     },
+     "prof_max_cm": {
+      "valor": 25.0,
+      "pct": 0.172176
+     },
+     "empresas": {
+      "valor": 196,
+      "pct": 0.578171
+     },
+     "vinculos": {
+      "valor": 1462,
+      "pct": 0.495761
+     },
+     "massa_salarial": {
+      "valor": 4192546.8,
+      "pct": 0.482846
+     },
+     "escolas": {
+      "valor": 6,
+      "pct": 0.4
+     },
+     "matriculas": {
+      "valor": 1641,
+      "pct": 0.268796
+     },
+     "unidades_saude": {
+      "valor": 18,
+      "pct": 0.5625
+     },
+     "logradouros": {
+      "valor": 47,
+      "pct": 0.198312
+     },
+     "quadras": {
+      "valor": 98,
+      "pct": 0.257218
+     },
+     "perdas_total": {
+      "valor": 20589881.07,
+      "pct": 0.374539
+     },
+     "perdas_empresas": {
+      "valor": 16405449.69,
+      "pct": 0.41605
+     },
+     "perdas_educacao": {
+      "valor": 4175299.68,
+      "pct": 0.268796
+     },
+     "perdas_saude": {
+      "valor": 9131.69,
+      "pct": 1.0
+     },
+     "perdas_agricultura": {
+      "valor": 0,
+      "pct": null
+     },
+     "exposicao_empresas": {
+      "valor": 66914787.6,
+      "pct": 0.532132
+     },
+     "exposicao_educacao": {
+      "valor": 18376438.26,
+      "pct": 0.329096
+     },
+     "exposicao_saude": {
+      "valor": 8492299.2,
+      "pct": 0.59322
+     },
+     "exposicao_total": {
+      "valor": 93783525.06,
+      "pct": 0.478724
+     }
+    },
+    "diques-barragens": {
+     "area_ha": {
+      "valor": 107.663,
+      "pct": 0.305654
+     },
+     "prof_max_cm": {
+      "valor": 25.6,
+      "pct": 0.176309
+     },
+     "empresas": {
+      "valor": 198,
+      "pct": 0.584071
+     },
+     "vinculos": {
+      "valor": 1498,
+      "pct": 0.507969
+     },
+     "massa_salarial": {
+      "valor": 4272041.8,
+      "pct": 0.492001
+     },
+     "escolas": {
+      "valor": 6,
+      "pct": 0.4
+     },
+     "matriculas": {
+      "valor": 1641,
+      "pct": 0.268796
+     },
+     "unidades_saude": {
+      "valor": 18,
+      "pct": 0.5625
+     },
+     "logradouros": {
+      "valor": 47,
+      "pct": 0.198312
+     },
+     "quadras": {
+      "valor": 100,
+      "pct": 0.262467
+     },
+     "perdas_total": {
+      "valor": 20952033.62,
+      "pct": 0.381127
+     },
+     "perdas_empresas": {
+      "valor": 16767602.24,
+      "pct": 0.425234
+     },
+     "perdas_educacao": {
+      "valor": 4175299.68,
+      "pct": 0.268796
+     },
+     "perdas_saude": {
+      "valor": 9131.69,
+      "pct": 1.0
+     },
+     "perdas_agricultura": {
+      "valor": 0,
+      "pct": null
+     },
+     "exposicao_empresas": {
+      "valor": 68602335.12,
+      "pct": 0.545552
+     },
+     "exposicao_educacao": {
+      "valor": 18376438.26,
+      "pct": 0.329096
+     },
+     "exposicao_saude": {
+      "valor": 8492299.2,
+      "pct": 0.59322
+     },
+     "exposicao_total": {
+      "valor": 95471072.58,
+      "pct": 0.487338
+     }
+    }
+   }
+  },
+  "2024-05-21": {
+   "rotulo": "21/05/2024",
+   "variantes": {
+    "sem-intervencao": {
+     "area_ha": 654.8956,
+     "prof_max_cm": 192.3,
+     "area_por_faixa_ha": {
+      "10-44": 169.8947,
+      "105-124": 78.3897,
+      "125-144": 58.4513,
+      "145+": 84.8038,
+      "45-64": 85.4398,
+      "65-84": 88.118,
+      "85-104": 89.7983
+     },
+     "empresas": 2075,
+     "vinculos": 25348,
+     "massa_salarial": 94126183.4,
+     "escolas": 81,
+     "matriculas": 22334,
+     "unidades_saude": 256,
+     "logradouros": 373,
+     "quadras": 817,
+     "perdas_total": 462414339.77,
+     "perdas_empresas": 402162431.96,
+     "perdas_educacao": 56825803.24,
+     "perdas_saude": 3426104.57,
+     "perdas_agricultura": 0,
+     "perdas_dias_efetivos": 60,
+     "exposicao_empresas": 1124083371.24,
+     "exposicao_educacao": 226596954.19,
+     "exposicao_saude": 209213856.72,
+     "exposicao_total": 1559894182.15
+    },
+    "diques": {
+     "area_ha": 333.2194,
+     "prof_max_cm": 135.3,
+     "area_por_faixa_ha": {
+      "10-44": 120.6139,
+      "105-124": 30.5487,
+      "125-144": 11.9144,
+      "145+": 0.0,
+      "45-64": 73.464,
+      "65-84": 54.3181,
+      "85-104": 42.3604
+     },
+     "empresas": 325,
+     "vinculos": 2620,
+     "massa_salarial": 7894313.64,
+     "escolas": 15,
+     "matriculas": 6105,
+     "unidades_saude": 30,
+     "logradouros": 232,
+     "quadras": 368,
+     "perdas_total": 51380960.41,
+     "perdas_empresas": 35838492.61,
+     "perdas_educacao": 15533336.12,
+     "perdas_saude": 9131.69,
+     "perdas_agricultura": 0,
+     "perdas_dias_efetivos": 60,
+     "exposicao_empresas": 110326192.2,
+     "exposicao_educacao": 55839197.91,
+     "exposicao_saude": 14194271.52,
+     "exposicao_total": 180359661.63
+    },
+    "diques-barragens": {
+     "area_ha": 327.3298,
+     "prof_max_cm": 134.0,
+     "area_por_faixa_ha": {
+      "10-44": 123.057,
+      "105-124": 28.6876,
+      "125-144": 10.3522,
+      "145+": 0.0,
+      "45-64": 70.4132,
+      "65-84": 53.866,
+      "85-104": 40.9539
+     },
+     "empresas": 324,
+     "vinculos": 2618,
+     "massa_salarial": 7890920.91,
+     "escolas": 15,
+     "matriculas": 6105,
+     "unidades_saude": 29,
+     "logradouros": 229,
+     "quadras": 365,
+     "perdas_total": 51365504.27,
+     "perdas_empresas": 35823036.47,
+     "perdas_educacao": 15533336.12,
+     "perdas_saude": 9131.69,
+     "perdas_agricultura": 0,
+     "perdas_dias_efetivos": 60,
+     "exposicao_empresas": 110232439.56,
+     "exposicao_educacao": 55839197.91,
+     "exposicao_saude": 13708997.28,
+     "exposicao_total": 179780634.75
+    }
+   },
+   "evitado": {
+    "diques": {
+     "area_ha": {
+      "valor": 321.6762,
+      "pct": 0.491187
+     },
+     "prof_max_cm": {
+      "valor": 57.0,
+      "pct": 0.296412
+     },
+     "empresas": {
+      "valor": 1750,
+      "pct": 0.843373
+     },
+     "vinculos": {
+      "valor": 22728,
+      "pct": 0.896639
+     },
+     "massa_salarial": {
+      "valor": 86231869.76,
+      "pct": 0.916131
+     },
+     "escolas": {
+      "valor": 66,
+      "pct": 0.814815
+     },
+     "matriculas": {
+      "valor": 16229,
+      "pct": 0.72665
+     },
+     "unidades_saude": {
+      "valor": 226,
+      "pct": 0.882812
+     },
+     "logradouros": {
+      "valor": 141,
+      "pct": 0.378016
+     },
+     "quadras": {
+      "valor": 449,
+      "pct": 0.549572
+     },
+     "perdas_total": {
+      "valor": 411033379.36,
+      "pct": 0.888885
+     },
+     "perdas_empresas": {
+      "valor": 366323939.35,
+      "pct": 0.910886
+     },
+     "perdas_educacao": {
+      "valor": 41292467.12,
+      "pct": 0.72665
+     },
+     "perdas_saude": {
+      "valor": 3416972.88,
+      "pct": 0.997335
+     },
+     "perdas_agricultura": {
+      "valor": 0,
+      "pct": null
+     },
+     "exposicao_empresas": {
+      "valor": 1013757179.04,
+      "pct": 0.901852
+     },
+     "exposicao_educacao": {
+      "valor": 170757756.28,
+      "pct": 0.753575
+     },
+     "exposicao_saude": {
+      "valor": 195019585.2,
+      "pct": 0.932154
+     },
+     "exposicao_total": {
+      "valor": 1379534520.52,
+      "pct": 0.884377
+     }
+    },
+    "diques-barragens": {
+     "area_ha": {
+      "valor": 327.5658,
+      "pct": 0.50018
+     },
+     "prof_max_cm": {
+      "valor": 58.3,
+      "pct": 0.303172
+     },
+     "empresas": {
+      "valor": 1751,
+      "pct": 0.843855
+     },
+     "vinculos": {
+      "valor": 22730,
+      "pct": 0.896718
+     },
+     "massa_salarial": {
+      "valor": 86235262.49,
+      "pct": 0.916167
+     },
+     "escolas": {
+      "valor": 66,
+      "pct": 0.814815
+     },
+     "matriculas": {
+      "valor": 16229,
+      "pct": 0.72665
+     },
+     "unidades_saude": {
+      "valor": 227,
+      "pct": 0.886719
+     },
+     "logradouros": {
+      "valor": 144,
+      "pct": 0.386059
+     },
+     "quadras": {
+      "valor": 452,
+      "pct": 0.553244
+     },
+     "perdas_total": {
+      "valor": 411048835.5,
+      "pct": 0.888919
+     },
+     "perdas_empresas": {
+      "valor": 366339395.49,
+      "pct": 0.910924
+     },
+     "perdas_educacao": {
+      "valor": 41292467.12,
+      "pct": 0.72665
+     },
+     "perdas_saude": {
+      "valor": 3416972.88,
+      "pct": 0.997335
+     },
+     "perdas_agricultura": {
+      "valor": 0,
+      "pct": null
+     },
+     "exposicao_empresas": {
+      "valor": 1013850931.68,
+      "pct": 0.901936
+     },
+     "exposicao_educacao": {
+      "valor": 170757756.28,
+      "pct": 0.753575
+     },
+     "exposicao_saude": {
+      "valor": 195504859.44,
+      "pct": 0.934474
+     },
+     "exposicao_total": {
+      "valor": 1380113547.4,
+      "pct": 0.884748
+     }
+    }
+   }
+  },
+  "2025-06-28": {
+   "rotulo": "28/06/2025",
+   "variantes": {
+    "sem-intervencao": {
+     "area_ha": 253.6345,
+     "prof_max_cm": 106.7,
+     "area_por_faixa_ha": {
+      "10-44": 123.4032,
+      "105-124": 0.2332,
+      "125-144": 0.0,
+      "145+": 0.0,
+      "45-64": 57.8775,
+      "65-84": 43.5915,
+      "85-104": 28.5291
+     },
+     "empresas": 140,
+     "vinculos": 1456,
+     "massa_salarial": 4447258.18,
+     "escolas": 9,
+     "matriculas": 4464,
+     "unidades_saude": 13,
+     "logradouros": 189,
+     "quadras": 273,
+     "perdas_total": 34194246.98,
+     "perdas_empresas": 22836210.54,
+     "perdas_educacao": 11358036.44,
+     "perdas_saude": 0.0,
+     "perdas_agricultura": 0,
+     "perdas_dias_efetivos": 60,
+     "exposicao_empresas": 57345365.52,
+     "exposicao_educacao": 37462759.65,
+     "exposicao_saude": 5641313.04,
+     "exposicao_total": 100449438.21
+    },
+    "diques": {
+     "area_ha": 192.6984,
+     "prof_max_cm": 94.7,
+     "area_por_faixa_ha": {
+      "10-44": 107.7019,
+      "105-124": 0.0,
+      "125-144": 0.0,
+      "145+": 0.0,
+      "45-64": 48.7044,
+      "65-84": 32.0591,
+      "85-104": 4.233
+     },
+     "empresas": 99,
+     "vinculos": 1190,
+     "massa_salarial": 3712144.02,
+     "escolas": 6,
+     "matriculas": 3294,
+     "unidades_saude": 8,
+     "logradouros": 159,
+     "quadras": 214,
+     "perdas_total": 27939363.46,
+     "perdas_empresas": 19558231.74,
+     "perdas_educacao": 8381131.72,
+     "perdas_saude": 0.0,
+     "perdas_agricultura": 0,
+     "perdas_dias_efetivos": 60,
+     "exposicao_empresas": 45245680.02,
+     "exposicao_educacao": 29068776.21,
+     "exposicao_saude": 4852742.4,
+     "exposicao_total": 79167198.63
+    },
+    "diques-barragens": {
+     "area_ha": 192.0898,
+     "prof_max_cm": 94.4,
+     "area_por_faixa_ha": {
+      "10-44": 107.7365,
+      "105-124": 0.0,
+      "125-144": 0.0,
+      "145+": 0.0,
+      "45-64": 48.7809,
+      "65-84": 31.4783,
+      "85-104": 4.0942
+     },
+     "empresas": 99,
+     "vinculos": 1190,
+     "massa_salarial": 3712144.02,
+     "escolas": 6,
+     "matriculas": 3294,
+     "unidades_saude": 8,
+     "logradouros": 159,
+     "quadras": 214,
+     "perdas_total": 27939363.46,
+     "perdas_empresas": 19558231.74,
+     "perdas_educacao": 8381131.72,
+     "perdas_saude": 0.0,
+     "perdas_agricultura": 0,
+     "perdas_dias_efetivos": 60,
+     "exposicao_empresas": 45245680.02,
+     "exposicao_educacao": 29068776.21,
+     "exposicao_saude": 4852742.4,
+     "exposicao_total": 79167198.63
+    }
+   },
+   "evitado": {
+    "diques": {
+     "area_ha": {
+      "valor": 60.9361,
+      "pct": 0.240252
+     },
+     "prof_max_cm": {
+      "valor": 12.0,
+      "pct": 0.112465
+     },
+     "empresas": {
+      "valor": 41,
+      "pct": 0.292857
+     },
+     "vinculos": {
+      "valor": 266,
+      "pct": 0.182692
+     },
+     "massa_salarial": {
+      "valor": 735114.16,
+      "pct": 0.165296
+     },
+     "escolas": {
+      "valor": 3,
+      "pct": 0.333333
+     },
+     "matriculas": {
+      "valor": 1170,
+      "pct": 0.262097
+     },
+     "unidades_saude": {
+      "valor": 5,
+      "pct": 0.384615
+     },
+     "logradouros": {
+      "valor": 30,
+      "pct": 0.15873
+     },
+     "quadras": {
+      "valor": 59,
+      "pct": 0.216117
+     },
+     "perdas_total": {
+      "valor": 6254883.52,
+      "pct": 0.182922
+     },
+     "perdas_empresas": {
+      "valor": 3277978.8,
+      "pct": 0.143543
+     },
+     "perdas_educacao": {
+      "valor": 2976904.72,
+      "pct": 0.262097
+     },
+     "perdas_saude": {
+      "valor": 0.0,
+      "pct": null
+     },
+     "perdas_agricultura": {
+      "valor": 0,
+      "pct": null
+     },
+     "exposicao_empresas": {
+      "valor": 12099685.5,
+      "pct": 0.210997
+     },
+     "exposicao_educacao": {
+      "valor": 8393983.44,
+      "pct": 0.224062
+     },
+     "exposicao_saude": {
+      "valor": 788570.64,
+      "pct": 0.139785
+     },
+     "exposicao_total": {
+      "valor": 21282239.58,
+      "pct": 0.21187
+     }
+    },
+    "diques-barragens": {
+     "area_ha": {
+      "valor": 61.5447,
+      "pct": 0.242651
+     },
+     "prof_max_cm": {
+      "valor": 12.3,
+      "pct": 0.115276
+     },
+     "empresas": {
+      "valor": 41,
+      "pct": 0.292857
+     },
+     "vinculos": {
+      "valor": 266,
+      "pct": 0.182692
+     },
+     "massa_salarial": {
+      "valor": 735114.16,
+      "pct": 0.165296
+     },
+     "escolas": {
+      "valor": 3,
+      "pct": 0.333333
+     },
+     "matriculas": {
+      "valor": 1170,
+      "pct": 0.262097
+     },
+     "unidades_saude": {
+      "valor": 5,
+      "pct": 0.384615
+     },
+     "logradouros": {
+      "valor": 30,
+      "pct": 0.15873
+     },
+     "quadras": {
+      "valor": 59,
+      "pct": 0.216117
+     },
+     "perdas_total": {
+      "valor": 6254883.52,
+      "pct": 0.182922
+     },
+     "perdas_empresas": {
+      "valor": 3277978.8,
+      "pct": 0.143543
+     },
+     "perdas_educacao": {
+      "valor": 2976904.72,
+      "pct": 0.262097
+     },
+     "perdas_saude": {
+      "valor": 0.0,
+      "pct": null
+     },
+     "perdas_agricultura": {
+      "valor": 0,
+      "pct": null
+     },
+     "exposicao_empresas": {
+      "valor": 12099685.5,
+      "pct": 0.210997
+     },
+     "exposicao_educacao": {
+      "valor": 8393983.44,
+      "pct": 0.224062
+     },
+     "exposicao_saude": {
+      "valor": 788570.64,
+      "pct": 0.139785
+     },
+     "exposicao_total": {
+      "valor": 21282239.58,
+      "pct": 0.21187
+     }
+    }
+   }
+  }
+ }
+}
