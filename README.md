@@ -160,7 +160,9 @@ O limiar **≥ 45 cm** (primeira classe visível do `.qml`) entra na área ating
 
 **Perdas operacionais.** O cenário combinado foi incluído em `CENARIOS`/`CENARIO_PERIODO` de `calcular_perdas_rio_grande.py`, usando os mesmos parâmetros DaLA (dias agudo/recuperação) e coeficientes agrícolas do período "maio_2024".
 
-**Danos (`/danos`) e cotas.** A antiga página `/perdas` virou `/danos`, com as abas Danos Operacionais (perdas DaLA) e Danos Físicos (exposição por cota; sem R$, porque as máscaras de Rio Grande não têm profundidade). O cenário "Todas as cotas" anima a água por cota (1,00 a 2,6215 m) a partir de arquivos de uma fonte externa ao CIEX. O cálculo de perdas normaliza o CNAE para 5 dígitos.
+**Perdas Operacionais, Danos Físicos e cotas.** A antiga página `/danos` (duas abas) virou duas páginas: `/perdas-operacionais` (perdas DaLA) e `/danos-fisicos` (exposição por cota; sem R$ de dano, porque as máscaras de Rio Grande não têm profundidade). `/perdas`, `/danos` e `/danos?aba=fisico` redirecionam para elas (`next.config.mjs`). O cenário "Todas as cotas" anima a água por cota (1,00 a 2,6215 m) a partir de arquivos de uma fonte externa ao CIEX. O cálculo de perdas normaliza o CNAE para 5 dígitos.
+
+**Simulações com intervenção (Seção 12 da Metodologia).** 12 cenários (4 eventos × sem intervenção, diques e diques + barragens) a partir de rasters de profundidade do modelo TELEMAC. Os originais ficam em `../RAW/` (organizados por `scripts/organizar_raw.py`); `scripts/converter_intervencoes.py` gera as manchas (profundidade ≥ 10 cm) e os `*_ATINGIDOS_*`; `scripts/gerar_comparativo_intervencoes.py` calcula o dano evitado (`intervencoes_comparativo.json`), com perdas DaLA (`calcular_perdas_rio_grande.py --intervencoes`) e exposição em R$ (`valor_reposicao.py`, validada contra o CLIMADA). Na interface: seletor **Intervenção** no cabeçalho, aba **Dano Evitado** no Painel (no lugar do Resumo) e blocos de intervenções nas duas páginas de danos; a lógica fica em `lib/cenarios.ts`.
 
 **Renderização.** Diferente dos demais cenários (preenchimento de cor única + contorno), este cenário é exibido como imagem raster colorida (`Source type="image"`), preservando o gradiente/classificação original — ver `ALTURA_MANCHAS` em [app/page.tsx](app/page.tsx).
 
@@ -253,6 +255,8 @@ pnpm format     # Prettier
 1. Gere os arquivos `_ATINGIDOS_` via scripts Python para o novo cenário.
 2. Adicione o nome do cenário ao array `CENARIOS` em `app/page.tsx`.
 3. Coloque os arquivos em `public/dados_convertidos/rio_grande/cenarios/`.
+
+Para uma nova **simulação com intervenção**, coloque os rasters em `RAW/simulacoes-intervencoes/AAAA-MM-DD/<variante>/bacia{N}.tif`, acrescente o evento em `scripts/cenarios_intervencao.py` e em `lib/cenarios.ts` (o teste confere que os slugs de Python e TypeScript batem) e rode os quatro scripts de intervenção, na ordem: `converter_intervencoes.py`, `gerar_infra_stats.py`, `calcular_perdas_rio_grande.py --intervencoes` e `gerar_comparativo_intervencoes.py`.
 
 ---
 
