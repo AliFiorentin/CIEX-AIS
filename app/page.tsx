@@ -62,10 +62,7 @@ import { useCotas, useCotaAtingidos } from "@/hooks/useCotas"
 import { COTAS_CENARIO } from "@/lib/cotas"
 import { DanoEvitadoPainel } from "@/components/DanoEvitadoPainel"
 import { calcPct, compactoBr, formatoBr } from "@/lib/formatos"
-import {
-  AVISO_MAIO_2024_MAIS_50,
-  rotuloPopulacao,
-} from "@/lib/avisos"
+import { AVISO_MAIO_2024_MAIS_50, rotuloPopulacao } from "@/lib/avisos"
 import {
   ALTURA_SIMULACAO,
   EVENTOS_SIMULACAO,
@@ -273,7 +270,7 @@ const urlParaCenario = (codigo: string, intervencao?: string | null) => {
 }
 
 const AVISO_SIMULACAO =
-  "Simulação hidrodinâmica (modelo TELEMAC): não é previsão nem dado observado. Área atingida = lâmina d'água ≥ 10 cm. \"Sem intervenção\" é a base de comparação das intervenções (dano evitado), não o evento real."
+  'Simulação hidrodinâmica (modelo TELEMAC): não é previsão nem dado observado. Área atingida = lâmina d\'água ≥ 10 cm. "Sem intervenção" é a base de comparação das intervenções (dano evitado), não o evento real.'
 const avisoDoCenario = (cenario: string) =>
   temIntervencao(desmontarEfetivo(cenario).evento)
     ? AVISO_SIMULACAO
@@ -1378,7 +1375,8 @@ export default function Dashboard() {
   const renderEduMetrics = useMemo(() => calcEdu(renderEdu), [renderEdu])
   // Pilha de geocodificação: empresas de CEPs diferentes no mesmo ponto (aviso no painel de Empresas).
   const pilhaEmpresas = useMemo(
-    () => (baseEmpresas?.features ? detectarPilha(baseEmpresas.features) : null),
+    () =>
+      baseEmpresas?.features ? detectarPilha(baseEmpresas.features) : null,
     [baseEmpresas]
   )
   const empresasNaPilha = useMemo(
@@ -2920,15 +2918,15 @@ export default function Dashboard() {
                           corpo: ALTURA_MANCHAS[cenario] ? (
                             <>
                               {ALTURA_MANCHAS[cenario].legenda.map(
-                              ({ label, cor }) => (
-                                <LegendItem
-                                  key={`altura-${label}`}
-                                  cor={cor}
-                                  label={label}
-                                  area
-                                />
-                              )
-                            )}
+                                ({ label, cor }) => (
+                                  <LegendItem
+                                    key={`altura-${label}`}
+                                    cor={cor}
+                                    label={label}
+                                    area
+                                  />
+                                )
+                              )}
                               {temIntervencao(eventoSel) && (
                                 <p
                                   className="mt-1 text-[8px] leading-tight"
@@ -3085,7 +3083,7 @@ export default function Dashboard() {
         </div>
 
         {/* Perdas Operacionais / Metodologia — empilhados, empurram o resto para a direita (mr-auto) */}
-        <div className="grid shrink-0 grid-cols-2 gap-0.5 min-[2000px]:mr-auto max-[1999px]:flex max-[1999px]:flex-row max-[1999px]:gap-1">
+        <div className="grid shrink-0 grid-cols-2 gap-0.5 max-[1999px]:flex max-[1999px]:flex-row max-[1999px]:gap-1 min-[2000px]:mr-auto">
           <Link
             href="/perdas-operacionais"
             className={NAV_LINK_CLASS}
@@ -3118,9 +3116,7 @@ export default function Dashboard() {
         </div>
 
         {/* Cenário */}
-        <div
-          className="flex w-[var(--select-w)] shrink-0 flex-col gap-0 max-[1999px]:w-auto max-[1999px]:min-w-[var(--select-w)] max-[1999px]:flex-1"
-        >
+        <div className="flex w-[var(--select-w)] shrink-0 flex-col gap-0 max-[1999px]:w-auto max-[1999px]:min-w-[var(--select-w)] max-[1999px]:flex-1">
           <label
             className="font-bold tracking-wider whitespace-nowrap text-white/70 uppercase"
             style={{ fontSize: "var(--select-label)" }}
@@ -3573,7 +3569,9 @@ export default function Dashboard() {
               // aviso de erro: caixa só do tamanho do texto, não a coluna inteira
               ...(cotas.cotaRaster.erro ? { bottom: "auto" } : {}),
               // acoplado: mesmo vidro do Painel, para os dois formarem uma superfície só
-              ...glassStyle(showPainelAnalise && !cotas.cotaRaster.erro ? 0.6 : 0.8),
+              ...glassStyle(
+                showPainelAnalise && !cotas.cotaRaster.erro ? 0.6 : 0.8
+              ),
             }}
           >
             {cotas.cotaRaster.erro ? (
@@ -3805,7 +3803,8 @@ export default function Dashboard() {
                                   title={popRotulo?.texto}
                                 >
                                   <div className="mb-0.5 text-[9px] leading-none font-bold tracking-wider text-red-500 uppercase">
-                                    Atingida{popRotulo?.estimado ? " (estimada)" : ""}
+                                    Atingida
+                                    {popRotulo?.estimado ? " (estimada)" : ""}
                                   </div>
                                   <div className="flex items-baseline justify-end gap-0.5">
                                     <span className="text-[13px] font-black text-red-700 tabular-nums">
@@ -5421,9 +5420,13 @@ export default function Dashboard() {
                 className="mt-4 flex-1 overflow-y-auto pr-2 pb-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-track]:bg-transparent"
               >
                 <p className="mb-2 rounded-lg border border-slate-200 bg-white/70 px-2.5 py-1.5 text-[10px] leading-snug text-slate-600">
-                  A área agrícola daqui vem do MapBiomas (filtro de 0,5 ha, em hectares reais) e pode divergir da usada
-                  nas Perdas Operacionais (estatísticas da origem). Ver{" "}
-                  <Link href="/metodologia#limitacoes" className="font-bold underline">
+                  A área agrícola daqui vem do MapBiomas (filtro de 0,5 ha, em
+                  hectares reais) e pode divergir da usada nas Perdas
+                  Operacionais (estatísticas da origem). Ver{" "}
+                  <Link
+                    href="/metodologia#limitacoes"
+                    className="font-bold underline"
+                  >
                     Metodologia, Seção 13
                   </Link>
                   .

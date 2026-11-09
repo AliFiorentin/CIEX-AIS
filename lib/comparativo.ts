@@ -62,7 +62,10 @@ export function formatarEvitado(
 ): { texto: string; tom: TomEvitado } {
   const tom: TomEvitado = valor > 0 ? "evitado" : valor < 0 ? "piora" : "neutro"
   if (pct === null || !Number.isFinite(pct)) return { texto: "—", tom }
-  return { texto: `${formatoBr(Math.abs(pct) * 100, Math.abs(pct) * 100 % 1 === 0 ? 0 : 1)}%`, tom }
+  return {
+    texto: `${formatoBr(Math.abs(pct) * 100, (Math.abs(pct) * 100) % 1 === 0 ? 0 : 1)}%`,
+    tom,
+  }
 }
 
 export interface PerdasPorComponente {
@@ -74,17 +77,30 @@ export interface PerdasPorComponente {
 }
 
 /** Reescala as perdas (DaLA do evento) para `dias` efetivos, como scaleTo da página de Perdas: a agricultura é custo fixo. */
-export function perdasEmDias(ind: Indicadores, dias: number): PerdasPorComponente {
+export function perdasEmDias(
+  ind: Indicadores,
+  dias: number
+): PerdasPorComponente {
   const s = dias / ind.perdas_dias_efetivos
   const empresas = ind.perdas_empresas * s
   const educacao = ind.perdas_educacao * s
   const saude = ind.perdas_saude * s
   const agricultura = ind.perdas_agricultura
-  return { empresas, educacao, saude, agricultura, total: empresas + educacao + saude + agricultura }
+  return {
+    empresas,
+    educacao,
+    saude,
+    agricultura,
+    total: empresas + educacao + saude + agricultura,
+  }
 }
 
 /** Perdas evitadas (R$) por uma intervenção, em `dias` efetivos. */
-export function perdasEvitadasEmDias(base: Indicadores, interv: Indicadores, dias: number): EvitadoValor {
+export function perdasEvitadasEmDias(
+  base: Indicadores,
+  interv: Indicadores,
+  dias: number
+): EvitadoValor {
   const b = perdasEmDias(base, dias).total
   const i = perdasEmDias(interv, dias).total
   const valor = b - i

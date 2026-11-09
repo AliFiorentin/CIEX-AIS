@@ -9,5 +9,7 @@ export const metadata: Metadata = {
 }
 
 export default function PerdasOperacionaisPage() {
-  return <PerdasClient dados={getPerdasData()} comparativo={getComparativoData()} />
+  return (
+    <PerdasClient dados={getPerdasData()} comparativo={getComparativoData()} />
+  )
 }

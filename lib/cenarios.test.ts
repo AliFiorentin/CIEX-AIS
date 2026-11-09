@@ -17,15 +17,24 @@ import {
 } from "./cenarios.ts"
 
 // Os mesmos 12 slugs de scripts/tests/test_cenarios_intervencao.py (paridade Python x TypeScript).
-const SLUGS = ["29_09_2023", "29_11_2023", "21_05_2024", "28_06_2025"].flatMap((data) =>
-  ["sem_intervencao", "diques", "diques_barragens"].map((v) => `rio_grande___simulacao_${data}_${v}`)
+const SLUGS = ["29_09_2023", "29_11_2023", "21_05_2024", "28_06_2025"].flatMap(
+  (data) =>
+    ["sem_intervencao", "diques", "diques_barragens"].map(
+      (v) => `rio_grande___simulacao_${data}_${v}`
+    )
 )
 
 const SIM = "Simulação 29/09/2023"
 
 test("slugify remove acentos e pontuação (igual ao Python)", () => {
-  assert.equal(slugify("Nível da Lagoa + Chuva Acumulada – 16/05/2024"), "nivel_da_lagoa_chuva_acumulada_16_05_2024")
-  assert.equal(scenarioSlug("Cenário Maio 2024 + 50%"), "rio_grande___cenario_maio_2024_50")
+  assert.equal(
+    slugify("Nível da Lagoa + Chuva Acumulada – 16/05/2024"),
+    "nivel_da_lagoa_chuva_acumulada_16_05_2024"
+  )
+  assert.equal(
+    scenarioSlug("Cenário Maio 2024 + 50%"),
+    "rio_grande___cenario_maio_2024_50"
+  )
 })
 
 test("todosNomesEfetivos mapeia exatamente para os 12 slugs de arquivo", () => {
@@ -35,9 +44,18 @@ test("todosNomesEfetivos mapeia exatamente para os 12 slugs de arquivo", () => {
 })
 
 test("nomeEfetivo compõe evento e intervenção", () => {
-  assert.equal(nomeEfetivo(SIM, "diques-barragens"), "Simulação 29/09/2023 – Diques + barragens")
-  assert.equal(nomeEfetivo(SIM, "sem-intervencao"), "Simulação 29/09/2023 – Sem intervenção")
-  assert.equal(nomeEfetivo("Simulação 28/06/2025", "diques"), "Simulação 28/06/2025 – Diques")
+  assert.equal(
+    nomeEfetivo(SIM, "diques-barragens"),
+    "Simulação 29/09/2023 – Diques + barragens"
+  )
+  assert.equal(
+    nomeEfetivo(SIM, "sem-intervencao"),
+    "Simulação 29/09/2023 – Sem intervenção"
+  )
+  assert.equal(
+    nomeEfetivo("Simulação 28/06/2025", "diques"),
+    "Simulação 28/06/2025 – Diques"
+  )
 })
 
 test("a intervenção é ignorada em cenário antigo", () => {
@@ -51,10 +69,22 @@ test("a intervenção é ignorada em cenário antigo", () => {
 test("desmontarEfetivo é o inverso de nomeEfetivo nos 12 cenários e identidade nos demais", () => {
   for (const e of EVENTOS_SIMULACAO)
     for (const i of INTERVENCOES)
-      assert.deepEqual(desmontarEfetivo(nomeEfetivo(e.nome, i.id)), { evento: e.nome, intervencao: i.id })
-  assert.deepEqual(desmontarEfetivo("Cenário Maio 2024"), { evento: "Cenário Maio 2024", intervencao: "sem-intervencao" })
-  assert.deepEqual(desmontarEfetivo("Todas as cotas"), { evento: "Todas as cotas", intervencao: "sem-intervencao" })
-  assert.deepEqual(desmontarEfetivo("(nenhum)"), { evento: "(nenhum)", intervencao: "sem-intervencao" })
+      assert.deepEqual(desmontarEfetivo(nomeEfetivo(e.nome, i.id)), {
+        evento: e.nome,
+        intervencao: i.id,
+      })
+  assert.deepEqual(desmontarEfetivo("Cenário Maio 2024"), {
+    evento: "Cenário Maio 2024",
+    intervencao: "sem-intervencao",
+  })
+  assert.deepEqual(desmontarEfetivo("Todas as cotas"), {
+    evento: "Todas as cotas",
+    intervencao: "sem-intervencao",
+  })
+  assert.deepEqual(desmontarEfetivo("(nenhum)"), {
+    evento: "(nenhum)",
+    intervencao: "sem-intervencao",
+  })
 })
 
 test("abaDoPainel: Dano Evitado só com simulação e intervenção diferente de sem-intervencao", () => {
@@ -87,11 +117,17 @@ test("há 4 eventos e 3 intervenções, com códigos de URL únicos", () => {
 })
 
 test("ALTURA_SIMULACAO: coords são os bounds gravados pelo conversor nos 12 conjuntos e a legenda tem 7 faixas", () => {
-  const meta = JSON.parse(readFileSync(new URL("../scripts/data/intervencoes_mancha_meta.json", import.meta.url), "utf8"))
+  const meta = JSON.parse(
+    readFileSync(
+      new URL("../scripts/data/intervencoes_mancha_meta.json", import.meta.url),
+      "utf8"
+    )
+  )
   const chaves = Object.keys(meta)
   assert.equal(chaves.length, 12)
   const [left, bottom, right, top] = meta[chaves[0]].bounds
-  for (const k of chaves) assert.deepEqual(meta[k].bounds, [left, bottom, right, top], k)
+  for (const k of chaves)
+    assert.deepEqual(meta[k].bounds, [left, bottom, right, top], k)
   assert.deepEqual(ALTURA_SIMULACAO.coords, [
     [left, top],
     [right, top],

@@ -35,5 +35,8 @@ test("a regra de /danos com aba=fisico vem antes da genérica de /danos", async 
 test("nenhum redirecionamento aponta para uma rota que não existe", async () => {
   const regras: Regra[] = await config.redirects()
   const destinos = new Set(regras.map((r) => r.destination))
-  assert.deepEqual([...destinos].sort(), ["/danos-fisicos", "/perdas-operacionais"])
+  assert.deepEqual([...destinos].sort(), [
+    "/danos-fisicos",
+    "/perdas-operacionais",
+  ])
 })

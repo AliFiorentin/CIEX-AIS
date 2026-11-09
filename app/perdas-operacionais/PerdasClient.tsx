@@ -200,12 +200,17 @@ function OperacionaisView({
           <Section id="resumo" num="1" title="Resumo Geral">
             <DiasBadge dias={dias} />
             <Note type="warning">
-              <strong>Perdas operacionais não são exposição física.</strong> Medem a produção e os serviços
-              interrompidos (método DaLA) e <strong>não se somam</strong> à exposição por cota da página{" "}
-              <Link href="/danos-fisicos" className="font-bold underline underline-offset-2">
+              <strong>Perdas operacionais não são exposição física.</strong>{" "}
+              Medem a produção e os serviços interrompidos (método DaLA) e{" "}
+              <strong>não se somam</strong> à exposição por cota da página{" "}
+              <Link
+                href="/danos-fisicos"
+                className="font-bold underline underline-offset-2"
+              >
                 Danos Físicos
               </Link>
-              , que mostra o valor de reposição do que fica sob a água (um teto, não um dano).
+              , que mostra o valor de reposição do que fica sob a água (um teto,
+              não um dano).
             </Note>
 
             {destaque && (
@@ -792,7 +797,9 @@ function DiasBadge({ dias }: { dias: number }) {
 // ─── Página ───────────────────────────────────────────────────────────────────
 
 const lista = (xs: string[]) =>
-  xs.length <= 1 ? xs.join("") : `${xs.slice(0, -1).join(", ")} e ${xs[xs.length - 1]}`
+  xs.length <= 1
+    ? xs.join("")
+    : `${xs.slice(0, -1).join(", ")} e ${xs[xs.length - 1]}`
 
 /** Perdas Operacionais (DaLA): banner + visão. O banner lista os cenários presentes nos dados (não há lista fixa). */
 export function PerdasClient({

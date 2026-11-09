@@ -30,7 +30,10 @@ export function Banner({
   const linkNav =
     "flex items-center gap-1.5 rounded-full border border-white/20 px-3 py-1 text-[10px] font-bold text-white/70 transition-colors hover:border-white/40 hover:text-white"
   return (
-    <header className="px-6 py-10 text-white" style={{ backgroundColor: PRIMARY }}>
+    <header
+      className="px-6 py-10 text-white"
+      style={{ backgroundColor: PRIMARY }}
+    >
       <div className="mx-auto flex max-w-[1440px] items-start justify-between gap-6">
         <div className="min-w-0">
           <div className="mb-5 flex items-center gap-2">
@@ -45,12 +48,19 @@ export function Banner({
             CIEX · GPEA · FURG
           </p>
           <h1 className="mb-2 flex items-center gap-3 text-4xl leading-none font-black tracking-tight">
-            <Icone size={36} strokeWidth={2.5} className="shrink-0 opacity-80" />
+            <Icone
+              size={36}
+              strokeWidth={2.5}
+              className="shrink-0 opacity-80"
+            />
             {titulo}
           </h1>
           <p className="text-base font-medium opacity-75">{subtitulo}</p>
           <p className="mt-3 font-mono text-[11px] opacity-50">{nota}</p>
-          <nav className="mt-5 flex flex-wrap gap-2" aria-label="Páginas de danos">
+          <nav
+            className="mt-5 flex flex-wrap gap-2"
+            aria-label="Páginas de danos"
+          >
             {PAGINAS.map(({ id, href, rotulo }) => (
               <Link
                 key={id}
@@ -59,7 +69,11 @@ export function Banner({
                 className="rounded-full border px-4 py-1.5 text-[11px] font-black transition-all duration-150"
                 style={
                   ativa === id
-                    ? { backgroundColor: "#fff", color: PRIMARY, borderColor: "#fff" }
+                    ? {
+                        backgroundColor: "#fff",
+                        color: PRIMARY,
+                        borderColor: "#fff",
+                      }
                     : {
                         backgroundColor: "rgba(255,255,255,0.08)",
                         color: "rgba(255,255,255,0.85)",

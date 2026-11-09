@@ -9,5 +9,7 @@ export const metadata: Metadata = {
 }
 
 export default function DanosFisicosPage() {
-  return <FisicosClient expo={getFisicosData()} comparativo={getComparativoData()} />
+  return (
+    <FisicosClient expo={getFisicosData()} comparativo={getComparativoData()} />
+  )
 }

@@ -1,6 +1,10 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
-import { AVISO_BASES, AVISO_MAIO_2024_MAIS_50, rotuloPopulacao } from "./avisos.ts"
+import {
+  AVISO_BASES,
+  AVISO_MAIO_2024_MAIS_50,
+  rotuloPopulacao,
+} from "./avisos.ts"
 
 const ESTIMADA = {
   pop_atingida: 18000,
@@ -30,7 +34,11 @@ test("F2: sem população para o cenário o texto diz 'não calculada'", () => {
 })
 
 test("F1: metodologia 'estimado' sem faixa legível ainda marca como estimativa, sem NaN", () => {
-  const r = rotuloPopulacao({ pop_atingida: 1, pct_atingida: 1, _metodologia: "estimado: proxy" })
+  const r = rotuloPopulacao({
+    pop_atingida: 1,
+    pct_atingida: 1,
+    _metodologia: "estimado: proxy",
+  })
   assert.equal(r.estimado, true)
   assert.ok(!/NaN|undefined/.test(r.texto))
 })

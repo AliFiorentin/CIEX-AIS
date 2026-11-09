@@ -31,7 +31,10 @@ const ind = (p: Partial<Indicadores>): Indicadores => ({
 })
 
 test("formatarEvitado: positivo é evitado, negativo é piora, zero é neutro", () => {
-  assert.deepEqual(formatarEvitado(139, 0.4664), { texto: "46,6%", tom: "evitado" })
+  assert.deepEqual(formatarEvitado(139, 0.4664), {
+    texto: "46,6%",
+    tom: "evitado",
+  })
   assert.deepEqual(formatarEvitado(-3.2, -0.02), { texto: "2%", tom: "piora" })
   assert.equal(formatarEvitado(0, 0).tom, "neutro")
 })
@@ -63,8 +66,16 @@ test("perdasEmDias reescala linearmente como scaleTo e mantém a agricultura fix
 })
 
 test("perdasEvitadasEmDias: valor e percentual contra o baseline", () => {
-  const base = ind({ perdas_dias_efetivos: 60, perdas_empresas: 6000, perdas_agricultura: 100 })
-  const dique = ind({ perdas_dias_efetivos: 60, perdas_empresas: 2000, perdas_agricultura: 100 })
+  const base = ind({
+    perdas_dias_efetivos: 60,
+    perdas_empresas: 6000,
+    perdas_agricultura: 100,
+  })
+  const dique = ind({
+    perdas_dias_efetivos: 60,
+    perdas_empresas: 2000,
+    perdas_agricultura: 100,
+  })
   const r = perdasEvitadasEmDias(base, dique, 30)
   assert.equal(r.valor, 2000) // (3000 + 100) - (1000 + 100)
   assert.ok(Math.abs((r.pct as number) - 2000 / 3100) < 1e-9)

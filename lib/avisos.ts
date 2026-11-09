@@ -13,8 +13,12 @@ export interface PopulacaoCenario {
  * F1 e F2: como rotular a população atingida. Uma estimativa por proxy (campo `_metodologia` começando por
  * "estimado") não pode aparecer como valor exato; sem dado para o cenário o texto diz "não calculada".
  */
-export function rotuloPopulacao(popCen: PopulacaoCenario | null | undefined): { estimado: boolean; texto: string } {
-  if (!popCen) return { estimado: false, texto: "não calculada para este cenário" }
+export function rotuloPopulacao(popCen: PopulacaoCenario | null | undefined): {
+  estimado: boolean
+  texto: string
+} {
+  if (!popCen)
+    return { estimado: false, texto: "não calculada para este cenário" }
   const metodo = popCen._metodologia
   if (metodo && /^estimad/i.test(metodo.trim())) {
     const faixa = metodo.match(/faixa\s+(\d+)\s+a\s+(\d+)/i)
@@ -35,6 +39,10 @@ export const AVISO_MAIO_2024_MAIS_50 =
 /** F7: defasagem das bases (RAIS 2023, Censo Escolar 2024, CNES abr/2024) frente ao ano do evento simulado. */
 export function AVISO_BASES(ano: number): string {
   const relacao =
-    ano <= 2023 ? "posteriores ao evento" : ano === 2024 ? "do mesmo período do evento ou anteriores" : "anteriores ao evento"
+    ano <= 2023
+      ? "posteriores ao evento"
+      : ano === 2024
+        ? "do mesmo período do evento ou anteriores"
+        : "anteriores ao evento"
   return `Bases: RAIS 2023, Censo Escolar 2024 e CNES de abril/2024, ${relacao} (evento de ${ano}). Ver Metodologia, Seção 13.`
 }

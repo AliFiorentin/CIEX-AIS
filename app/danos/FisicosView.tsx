@@ -184,8 +184,8 @@ export function FisicosView({
             água em Rio Grande, todo ponto molhado entra com 100% do seu valor.
             O resultado é, portanto, um <strong>teto</strong>: o que se perderia
             se tudo o que molha fosse perdido por completo. O dano real fica
-            entre zero e esse valor. Ele <strong>não deve ser somado</strong>{" "}
-            às Perdas Operacionais (
+            entre zero e esse valor. Ele <strong>não deve ser somado</strong> às
+            Perdas Operacionais (
             <Link
               href="/perdas-operacionais"
               className="font-bold underline underline-offset-2"
