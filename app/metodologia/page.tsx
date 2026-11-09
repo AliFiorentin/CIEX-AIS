@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { MetodologiaContent } from "./MetodologiaContent";
+import { getComparativoData } from "../danos/get-data";
 
 export const metadata: Metadata = {
   title: "Metodologia — Rio Grande (RS)",
@@ -7,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function MetodologiaPage() {
-  return <MetodologiaContent />;
+  return <MetodologiaContent comparativo={getComparativoData()} />;
 }

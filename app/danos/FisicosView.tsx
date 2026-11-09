@@ -302,7 +302,7 @@ export function FisicosView({
               rel="noopener noreferrer"
               className="font-semibold underline underline-offset-2"
             >
-              Seção 12 da Metodologia ↗
+              Seção 13 da Metodologia ↗
             </a>
             .
           </Note>

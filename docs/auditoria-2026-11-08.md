@@ -5,6 +5,8 @@ achado depois das correções. Os problemas que nascem no projeto de origem est�
 `docs/auditoria-ciex-2026-11-08.md` do repositório do projeto de origem; a política de dados da origem está em
 [dados-externos-rio-grande.md](dados-externos-rio-grande.md); as limitações dos resultados estão na Seção 12 da Metodologia.
 
+> **Nota de 2026-11-09:** com a nova Seção 12 (Cenários de Intervenção e Dano Evitado), as Limitações da Metodologia passaram a ser a **Seção 13** e as Fontes a **14**. As menções a "Seção 12" neste documento referem-se às Limitações, como eram em 2026-11-08.
+
 **Legenda:** ✔ corrigido · ◐ documentado (limitação registrada, sem mudar o dado) · ○ pendente · ↗ depende da origem.
 
 ## 1. Corrigir

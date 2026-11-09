@@ -15,6 +15,8 @@ import {
   RefItem,
 } from "@/components/doc-kit"
 import { HeaderLogos } from "@/components/HeaderLogos"
+import type { Comparativo } from "@/lib/comparativo"
+import { ConteudoDanoEvitado } from "./ConteudoDanoEvitado"
 
 const PRIMARY = "#1E404A"
 
@@ -30,11 +32,16 @@ const INDICE: [string, string][] = [
   ["#populacao", "9. População Exposta"],
   ["#danos", "10. Perdas Operacionais (DaLA)"],
   ["#dano-fisico", "11. Danos Físicos (Por Cota)"],
-  ["#limitacoes", "12. Limitações"],
-  ["#fontes", "13. Fontes e Referências"],
+  ["#dano-evitado", "12. Cenários de Intervenção e Dano Evitado"],
+  ["#limitacoes", "13. Limitações"],
+  ["#fontes", "14. Fontes e Referências"],
 ]
 
-export function MetodologiaContent() {
+export function MetodologiaContent({
+  comparativo = null,
+}: {
+  comparativo?: Comparativo | null
+}) {
   return (
     <div className="min-h-screen bg-[#eef3f4] font-sans text-slate-800">
       {/* ── Header ──────────────────────────────────────────────────────────── */}
@@ -176,6 +183,11 @@ export function MetodologiaContent() {
                   "Todas as cotas",
                   "Pico de 21/05/2024 e níveis anteriores",
                   "Água avançando por cota: 1,00 / 1,50 / 2,00 / 2,50 / 2,6215 m (máscaras molhado/seco, união das bacias); só exposição, sem profundidade",
+                ],
+                [
+                  "Simulações de intervenção (12)",
+                  "29/09/2023, 29/11/2023, 21/05/2024 e 28/06/2025",
+                  "4 eventos × sem intervenção, diques e diques + barragens, a partir de rasters de profundidade (modelo TELEMAC); mancha com profundidade ≥ 10 cm. Ver Seção 12",
                 ],
               ]}
             />
@@ -692,6 +704,11 @@ export function MetodologiaContent() {
                   "Setembro 2023",
                   "2023",
                   "Reflete a ocupação agrícola da safra 2022/23",
+                ],
+                [
+                  "Simulações de intervenção",
+                  "2024",
+                  "Usam o raster único de 2024 (MapBiomas Coleção 10), como o mapa; não há raster por evento",
                 ],
               ]}
             />
@@ -1389,7 +1406,7 @@ export function MetodologiaContent() {
               ]}
             />
 
-            <p className="text-[12px] text-slate-600">As limitações desta seção estão reunidas na{" "}<a href="#limitacoes" className="font-semibold underline underline-offset-4">Seção 12: Limitações</a>.</p>
+            <p className="text-[12px] text-slate-600">As limitações desta seção estão reunidas na{" "}<a href="#limitacoes" className="font-semibold underline underline-offset-4">Seção 13: Limitações</a>.</p>
 
             <SectionSources
               links={[
@@ -1429,6 +1446,13 @@ export function MetodologiaContent() {
               quatro coordenadas de canto do JSON. O KPI é lido do JSON, sem
               recálculo no cliente.
             </Note>
+            <SubTitle>Simulações de intervenção</SubTitle>
+            <p>
+              A população atingida <strong>não foi calculada</strong> para as 12 simulações com intervenção: o raster de
+              densidade populacional não está disponível e o método foi descartado na auditoria de 2026-11-08. Por isso o
+              Painel mostra &ldquo;não calculada&rdquo; nesse cartão.
+            </p>
+
             <SubTitle>Cenário combinado: estimativa por proxy</SubTitle>
             <p>
               Para o cenário Nível da Lagoa + Chuva Acumulada não há valor
@@ -1874,7 +1898,7 @@ export function MetodologiaContent() {
                 o VAB ficaria subestimado.
               </li>
             </ul>
-            <p className="text-[12px] text-slate-600">As limitações desta seção estão reunidas na{" "}<a href="#limitacoes" className="font-semibold underline underline-offset-4">Seção 12: Limitações</a>.</p>
+            <p className="text-[12px] text-slate-600">As limitações desta seção estão reunidas na{" "}<a href="#limitacoes" className="font-semibold underline underline-offset-4">Seção 13: Limitações</a>.</p>
           </Section>
 
           {/* ═══ 11. DANOS FÍSICOS ═══ */}
@@ -1970,7 +1994,7 @@ export function MetodologiaContent() {
               físico em R$.
             </Note>
 
-            <p className="text-[12px] text-slate-600">As limitações desta seção estão reunidas na{" "}<a href="#limitacoes" className="font-semibold underline underline-offset-4">Seção 12: Limitações</a>.</p>
+            <p className="text-[12px] text-slate-600">As limitações desta seção estão reunidas na{" "}<a href="#limitacoes" className="font-semibold underline underline-offset-4">Seção 13: Limitações</a>.</p>
 
             <SectionSources
               links={[
@@ -1986,14 +2010,23 @@ export function MetodologiaContent() {
             />
           </Section>
 
-          {/* ═══ 12. LIMITAÇÕES ═══ */}
-          <Section id="limitacoes" num="12" title="Limitações">
+          {/* ═══ 12. CENÁRIOS DE INTERVENÇÃO E DANO EVITADO ═══ */}
+          <Section
+            id="dano-evitado"
+            num="12"
+            title="Cenários de Intervenção e Dano Evitado"
+          >
+            <ConteudoDanoEvitado comparativo={comparativo} />
+          </Section>
+
+          {/* ═══ 13. LIMITAÇÕES ═══ */}
+          <Section id="limitacoes" num="13" title="Limitações">
             <p>
               Esta seção reúne <strong>todas as limitações</strong> dos
-              resultados do painel, organizadas em três eixos: por{" "}
+              resultados do painel, organizadas em quatro eixos: por{" "}
               <a href="#lim-cenarios" className="font-semibold underline underline-offset-4">cenário</a>, por{" "}
-              <a href="#lim-metodologia" className="font-semibold underline underline-offset-4">metodologia</a> e por{" "}
-              <a href="#lim-municipio" className="font-semibold underline underline-offset-4">município</a>. As páginas de Perdas Operacionais e Danos Físicos
+              <a href="#lim-metodologia" className="font-semibold underline underline-offset-4">metodologia</a>, por{" "}
+              <a href="#lim-municipio" className="font-semibold underline underline-offset-4">município</a> e pelas{" "}<a href="#lim-intervencoes" className="font-semibold underline underline-offset-4">simulações de intervenção</a>. As páginas de Perdas Operacionais e Danos Físicos
               não repetem estas ressalvas.
             </p>
 
@@ -2138,10 +2171,23 @@ export function MetodologiaContent() {
               <li><strong>Qualidade dos cadastros.</strong> <code>staff_diag_lab_imagem</code> é zero nas 462 unidades de saúde (nenhum profissional de diagnóstico e imagem registrado); 87 códigos CNES têm 6 dígitos (zero à esquerda perdido, tratado com preenchimento no cálculo das perdas); 42% das quadras não têm número válido (marcador &ldquo;NULLnn&rdquo;); o campo <code>Nome</code> é nulo em 211 dos 355 bens do patrimônio.</li>
               <li><strong>Origem dos dados.</strong> Parte dos dados vem de uma fonte externa e é copiada sem alteração, exceto a coordenada da Secretaria Municipal de Saúde, corrigida pelo CIEX.</li>
             </ul>
+            <h3 id="lim-intervencoes" className="mt-10 scroll-mt-24 text-base font-black" style={{ color: PRIMARY }}>
+              D. Cenários de intervenção
+            </h3>
+            <ul className="list-inside list-disc space-y-1 text-sm text-slate-700">
+              <li><strong>Sem curva de dano.</strong> As simulações têm profundidade, mas não há curva de dano em função dela: o dano físico em R$ não é estimado, só a exposição (um teto), e exposição evitada não é dano evitado.</li>
+              <li><strong>Outro modelo.</strong> As simulações (TELEMAC) não são comparáveis às manchas de Setembro 2023, Maio 2024 e 16/05/2024 (sobreposição de cerca de 50%; totais muito diferentes). Compare uma intervenção só com a base do mesmo evento.</li>
+              <li><strong>Efeito das barragens.</strong> Diques + barragens difere de só diques em até cerca de 2% da área atingida, e em 29/09/2023 a variante com barragens tem área ligeiramente maior. Diferenças desse tamanho podem estar dentro da incerteza do modelo, que não foi estimada.</li>
+              <li><strong>Parâmetros DaLA.</strong> Os eventos de 29/11/2023 e 28/06/2025 usam os parâmetros de maio/2024 (premissa); os valores em R$ mudam se houver parâmetros próprios.</li>
+              <li><strong>Datas das bases.</strong> RAIS 2023, Censo Escolar 2024 e CNES de abril/2024 são aplicados a eventos de 2023 a 2025: em 28/06/2025 as bases são anteriores ao evento; em 2023, posteriores.</li>
+              <li><strong>População.</strong> Não calculada para as simulações (o raster de população não está disponível e o método foi descartado na auditoria de 2026-11-08).</li>
+              <li><strong>Limiar.</strong> A área atingida usa profundidade ≥ 10 cm; o 16/05 usa 45 cm para o nível da lagoa. Lâminas de 10 a 44 cm entram nas simulações e a faixa é rasa.</li>
+            </ul>
           </Section>
 
-          {/* ═══ 13. FONTES ═══ */}
-          <Section id="fontes" num="13" title="Fontes e Referências">
+
+          {/* ═══ 14. FONTES ═══ */}
+          <Section id="fontes" num="14" title="Fontes e Referências">
             <div className="space-y-4">
               <RefBlock title="Manchas de Inundação">
                 <RefItem

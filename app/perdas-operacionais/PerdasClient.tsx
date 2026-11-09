@@ -474,7 +474,7 @@ function OperacionaisView({
                 href="/metodologia#limitacoes"
                 className="font-semibold underline-offset-4 hover:underline"
               >
-                Seção 12 da Metodologia ↗
+                Seção 13 da Metodologia ↗
               </Link>
               . A metodologia completa (curva de recuperação DaLA, fórmulas por
               componente, parâmetros e fontes) está na{" "}
