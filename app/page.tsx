@@ -32,6 +32,7 @@ import {
   TrendingDown,
   Info,
   BookOpen,
+  Waves,
   LayoutGrid,
   Stethoscope,
   LandPlot,
@@ -171,6 +172,14 @@ const HEADER_FLUID = {
   selectLabelSize: "clamp(7px, 0.65vw, 9px)",
   selectTriggerSize: "clamp(9px, 0.85vw, 11px)",
 }
+
+// Botões de navegação do cabeçalho (Perdas · Danos Físicos · Metodologia)
+const NAV_LINK_CLASS =
+  "active-press hover-lift flex items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-2.5 font-black whitespace-nowrap text-white/90 hover:bg-white/20 focus-visible:outline-none"
+const NAV_LINK_STYLE = {
+  fontSize: "var(--btn-size)",
+  height: "var(--btn-h)",
+} as const
 
 // Tipografia fluida dos cards do painel de análise (clamp: min, vh, max) — o painel rola verticalmente
 const PANEL_FLUID = {
@@ -2961,7 +2970,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ── Header — flex-wrap com tamanhos fluidos (.dash-header); em < 1400 px os botões de camada viram grade 2x2; painéis seguem panelTop */}
+      {/* ── Header — flex-wrap com tamanhos fluidos (.dash-header); em < 2000 px o cabeçalho tem 2 linhas (camadas na 2ª); painéis seguem panelTop */}
       <header
         ref={headerRef}
         className="dash-header absolute top-1.5 right-3 left-3 z-20 flex flex-wrap items-center rounded-xl shadow-2xl"
@@ -3018,20 +3027,31 @@ export default function Dashboard() {
         </div>
 
         {/* Perdas Operacionais / Metodologia — empilhados, empurram o resto para a direita (mr-auto) */}
-        <div className="mr-auto flex shrink-0 flex-col gap-0.5">
+        <div className="grid shrink-0 grid-cols-2 gap-0.5 min-[2000px]:mr-auto max-[1999px]:flex max-[1999px]:flex-row max-[1999px]:gap-1">
           <Link
             href="/danos"
-            className="active-press hover-lift flex items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-2.5 font-black whitespace-nowrap text-white/90 hover:bg-white/20 focus-visible:outline-none"
-            style={{ fontSize: "var(--btn-size)", height: "var(--btn-h)" }}
-            title="Ver danos operacionais e físicos"
+            className={NAV_LINK_CLASS}
+            style={NAV_LINK_STYLE}
+            title="Ver perdas operacionais (DaLA)"
           >
             <TrendingDown size={11} strokeWidth={2.5} />
-            Danos
+            <span className="min-[2000px]:hidden">Perdas</span>
+            <span className="max-[1999px]:hidden">Perdas Operacionais</span>
+          </Link>
+          <Link
+            href="/danos?aba=fisico"
+            className={NAV_LINK_CLASS}
+            style={NAV_LINK_STYLE}
+            title="Ver danos físicos (exposição por cota)"
+          >
+            <Waves size={11} strokeWidth={2.5} />
+            <span className="min-[2000px]:hidden">Danos</span>
+            <span className="max-[1999px]:hidden">Danos Físicos</span>
           </Link>
           <Link
             href="/metodologia"
-            className="active-press hover-lift flex items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-2.5 font-black whitespace-nowrap text-white/90 hover:bg-white/20 focus-visible:outline-none"
-            style={{ fontSize: "var(--btn-size)", height: "var(--btn-h)" }}
+            className={`${NAV_LINK_CLASS} min-[2000px]:col-span-2`}
+            style={NAV_LINK_STYLE}
             title="Ver metodologia do painel"
           >
             <BookOpen size={11} strokeWidth={2.5} />
@@ -3041,12 +3061,7 @@ export default function Dashboard() {
 
         {/* Cenário */}
         <div
-          className="flex shrink-0 flex-col gap-0 border-r"
-          style={{
-            borderColor: "rgba(255,255,255,0.2)",
-            paddingRight: "var(--section-gap)",
-            width: "calc(var(--select-w) + var(--section-gap))",
-          }}
+          className="flex w-[calc(var(--select-w)+var(--section-gap))] shrink-0 flex-col gap-0 border-r border-white/20 pr-[var(--section-gap)] max-[1999px]:w-auto max-[1999px]:min-w-[var(--select-w)] max-[1999px]:flex-1 max-[1999px]:border-r-0 max-[1999px]:pr-0"
         >
           <label
             className="font-bold tracking-wider whitespace-nowrap text-white/70 uppercase"
@@ -3079,9 +3094,9 @@ export default function Dashboard() {
           </Select>
         </div>
 
-        {/* Camadas — 1 linha em telas largas; grade 2 colunas abaixo de 1400 px (evita botões na 2ª linha com espaço sobrando) */}
+        {/* Camadas — 1 linha em telas largas; abaixo de 2000 px vão para a 2ª linha do cabeçalho, numa linha só (os botões dividem a largura; abaixo de 1000 px só ícones) */}
         <div
-          className="flex items-center max-[1399px]:grid max-[1399px]:shrink-0 max-[1399px]:grid-cols-2"
+          className="flex items-center max-[1999px]:order-last max-[1999px]:basis-full"
           style={{ gap: "var(--layer-gap)" }}
         >
           {[
@@ -3120,7 +3135,8 @@ export default function Dashboard() {
               key={id}
               onClick={() => toggleCamada(id)}
               aria-pressed={camadas.includes(id)}
-              className={`active-press hover-lift flex shrink-0 items-center justify-center gap-1 rounded-md border font-black whitespace-nowrap focus-visible:ring-2 focus-visible:ring-[#1E404A]/40 focus-visible:ring-offset-1 focus-visible:outline-none max-[1399px]:w-full ${camadas.includes(id) ? "border-[#dce1d8] bg-white text-[#1E404A]" : "border-white/20 text-white/80 hover:bg-white/10"}`}
+              title={label}
+              className={`active-press hover-lift flex shrink-0 items-center justify-center gap-1 rounded-md border font-black whitespace-nowrap focus-visible:ring-2 focus-visible:ring-[#1E404A]/40 focus-visible:ring-offset-1 focus-visible:outline-none max-[1999px]:flex-1 ${camadas.includes(id) ? "border-[#dce1d8] bg-white text-[#1E404A]" : "border-white/20 text-white/80 hover:bg-white/10"}`}
               style={{
                 fontSize: "var(--btn-size)",
                 height: "var(--btn-h)",
@@ -3129,7 +3145,7 @@ export default function Dashboard() {
               }}
             >
               {icon}
-              {label}
+              <span className="max-[999px]:sr-only">{label}</span>
             </button>
           ))}
 
@@ -3137,7 +3153,7 @@ export default function Dashboard() {
           <DropdownMenu>
             <DropdownMenuTrigger
               disabled={!possuiInfra}
-              className={`active-press hover-lift flex shrink-0 items-center justify-center gap-1.5 rounded-md border font-black whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-50 max-[1399px]:col-span-2 max-[1399px]:w-full ${camadas.includes("Infraestrutura") && infraAtivas.length > 0 ? "border-[#dce1d8] bg-white text-[#1E404A]" : "border-white/20 text-white/80 hover:bg-white/10"}`}
+              className={`active-press hover-lift flex shrink-0 items-center justify-center gap-1.5 rounded-md border font-black whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-50 max-[1999px]:flex-1 ${camadas.includes("Infraestrutura") && infraAtivas.length > 0 ? "border-[#dce1d8] bg-white text-[#1E404A]" : "border-white/20 text-white/80 hover:bg-white/10"}`}
               style={{
                 fontSize: "var(--btn-size)",
                 height: "var(--btn-h)",
@@ -3149,7 +3165,7 @@ export default function Dashboard() {
             >
               <span className="flex items-center gap-1">
                 <Wrench size={11} strokeWidth={2.5} />
-                Infraestrutura{" "}
+                <span className="max-[999px]:sr-only">Infraestrutura</span>{" "}
                 {infraAtivas.length > 0 && `(${infraAtivas.length})`}
               </span>
               <span className="text-[7px] opacity-70">▼</span>
