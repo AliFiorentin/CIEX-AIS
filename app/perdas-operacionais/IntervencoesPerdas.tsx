@@ -9,6 +9,7 @@ import {
   type Comparativo,
   type Indicadores,
 } from "@/lib/comparativo"
+import { AVISO_BASES } from "@/lib/avisos"
 import { fmtBRL } from "@/lib/formatos"
 import { CompositionBar } from "./composicao"
 
@@ -80,6 +81,7 @@ export function IntervencoesPerdas({
                 )}
               </div>
 
+              <p className="mb-2 text-[10px] text-slate-500">{AVISO_BASES(Number(id.slice(0, 4)))}</p>
               <div className="mb-3 flex flex-col gap-2">
                 {INTERVENCOES.map(({ id: vid, rotulo }) => {
                   const ind = ev.variantes[vid]

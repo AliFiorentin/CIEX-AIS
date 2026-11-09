@@ -3,6 +3,7 @@
 import { Section, DataTable, Note } from "@/components/doc-kit"
 import { INTERVENCOES, type IntervencaoId } from "@/lib/cenarios"
 import { formatarEvitado, type Comparativo, type ComparativoEvento, type Indicadores, type IntervencaoAtiva } from "@/lib/comparativo"
+import { AVISO_BASES } from "@/lib/avisos"
 import { fmtBRL, formatoBr } from "@/lib/formatos"
 
 // Faixas de profundidade (cm) do raster das simulações; as cores são as do mapa.
@@ -85,7 +86,8 @@ export function IntervencoesFisicos({ comparativo, num }: { comparativo: Compara
             const maxHa = Math.max(1, ...INTERVENCOES.map((i) => ev.variantes[i.id].area_ha))
             return (
               <div key={id} className="my-6">
-                <h3 className="mb-2 text-base font-black text-[#1E404A]">Simulação {ev.rotulo}</h3>
+                <h3 className="mb-1 text-base font-black text-[#1E404A]">Simulação {ev.rotulo}</h3>
+                <p className="mb-2 text-[10px] text-slate-500">{AVISO_BASES(Number(id.slice(0, 4)))}</p>
 
                 <div className="mb-3 flex flex-col gap-2">
                   {INTERVENCOES.map(({ id: vid, rotulo }) => (

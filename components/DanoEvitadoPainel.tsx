@@ -11,6 +11,7 @@ import {
   type IntervencaoAtiva,
   type TomEvitado,
 } from "@/lib/comparativo"
+import { AVISO_BASES } from "@/lib/avisos"
 import { fmtBRL, formatoBr } from "@/lib/formatos"
 import { useComparativo } from "@/hooks/useComparativo"
 
@@ -141,6 +142,7 @@ export function DanoEvitadoPainel({ evento, intervencao }: { evento: string; int
         </div>
       )}
 
+      {ev && <p className="text-[9px] leading-snug text-slate-500">{AVISO_BASES(Number(ev.id.slice(0, 4)))}</p>}
       <p className="text-[9px] leading-snug text-slate-500">
         Perdas com os parâmetros DaLA do evento
         {ev && ev.id !== "2023-09-29" ? " (maio/2024, premissa para este evento)" : ""}. Detalhes por evento em{" "}

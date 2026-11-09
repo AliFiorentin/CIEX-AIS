@@ -63,6 +63,10 @@ import { COTAS_CENARIO } from "@/lib/cotas"
 import { DanoEvitadoPainel } from "@/components/DanoEvitadoPainel"
 import { calcPct, compactoBr, formatoBr } from "@/lib/formatos"
 import {
+  AVISO_MAIO_2024_MAIS_50,
+  rotuloPopulacao,
+} from "@/lib/avisos"
+import {
   ALTURA_SIMULACAO,
   EVENTOS_SIMULACAO,
   INTERVENCOES,
@@ -1061,6 +1065,8 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (ALTURA_MANCHAS[cenario]) mostrarAvisoMancha(avisoDoCenario(cenario))
+    else if (cenario === "Cenário Maio 2024 + 50%")
+      mostrarAvisoMancha(AVISO_MAIO_2024_MAIS_50) // F3: o nome sugere +50% de área; é a água 60 cm mais alta
     else setAvisoMancha(null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cenario])
@@ -3752,6 +3758,9 @@ export default function Dashboard() {
                       cenario !== "(nenhum)"
                         ? popData["Rio Grande"].cenarios?.[cenSlug]
                         : null
+                    // F1/F2: a população do 16/05 é estimativa por proxy; sem dado, "não calculada" (nunca omitir em silêncio)
+                    const popRotulo =
+                      cenario !== "(nenhum)" ? rotuloPopulacao(popCen) : null
                     return (
                       <div
                         className="mt-2 mb-4 shrink-0 overflow-hidden rounded-lg border"
@@ -3782,13 +3791,25 @@ export default function Dashboard() {
                                   </span>
                                 </div>
                               </div>
+                              {!popCen && popRotulo && (
+                                <div
+                                  className="min-w-0 shrink-0 text-right text-[9px] font-bold text-slate-500"
+                                  title={popRotulo.texto}
+                                >
+                                  Atingida: {popRotulo.texto.split(" para ")[0]}
+                                </div>
+                              )}
                               {popCen && (
-                                <div className="min-w-0 shrink-0 text-right">
+                                <div
+                                  className="min-w-0 shrink-0 text-right"
+                                  title={popRotulo?.texto}
+                                >
                                   <div className="mb-0.5 text-[9px] leading-none font-bold tracking-wider text-red-500 uppercase">
-                                    Atingida
+                                    Atingida{popRotulo?.estimado ? " (estimada)" : ""}
                                   </div>
                                   <div className="flex items-baseline justify-end gap-0.5">
                                     <span className="text-[13px] font-black text-red-700 tabular-nums">
+                                      {popRotulo?.estimado ? "~" : ""}
                                       {formatoBr(popCen.pop_atingida)}
                                     </span>
                                     <span className="text-[9px] text-red-400">
@@ -3860,7 +3881,7 @@ export default function Dashboard() {
                     {
                       icon: <Users size={15} strokeWidth={2.5} />,
                       cor: COLORS.empresas,
-                      titulo: "Empregados",
+                      titulo: "Vínculos (RAIS)",
                       valor: isCenarioAtivo
                         ? metricasEmp.impacto.emp
                         : metricasEmp.base.emp,
@@ -4280,7 +4301,7 @@ export default function Dashboard() {
               <div className="animate-fade-in-up flex flex-col gap-2 pb-2">
                 <KPIRow
                   isLoading={isLoading}
-                  titulo="Empregados"
+                  titulo="Vínculos (RAIS)"
                   cor={COLORS.empresas}
                   valor={compactoBr(renderEmpMetrics.emp, 0)}
                   sub={isCenarioAtivo ? "Atingidos" : "Total"}
@@ -5399,6 +5420,14 @@ export default function Dashboard() {
                 value="agricultura"
                 className="mt-4 flex-1 overflow-y-auto pr-2 pb-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-track]:bg-transparent"
               >
+                <p className="mb-2 rounded-lg border border-slate-200 bg-white/70 px-2.5 py-1.5 text-[10px] leading-snug text-slate-600">
+                  A área agrícola daqui vem do MapBiomas (filtro de 0,5 ha, em hectares reais) e pode divergir da usada
+                  nas Perdas Operacionais (estatísticas da origem). Ver{" "}
+                  <Link href="/metodologia#limitacoes" className="font-bold underline">
+                    Metodologia, Seção 13
+                  </Link>
+                  .
+                </p>
                 {!baseAgricultura ? (
                   <div className="flex flex-col gap-3 p-2">
                     <div className="flex items-center justify-center py-4">

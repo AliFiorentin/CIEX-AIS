@@ -13,6 +13,7 @@ import {
 import { Banner } from "@/components/danos/Banner"
 import { COMP_COLORS, CompositionBar } from "./composicao"
 import { IntervencoesPerdas } from "./IntervencoesPerdas"
+import { AVISO_MAIO_2024_MAIS_50 } from "@/lib/avisos"
 import type { Comparativo } from "@/lib/comparativo"
 import { fmtCompacto, escalaAgradavel } from "../danos/helpers"
 
@@ -198,6 +199,14 @@ function OperacionaisView({
         ══════════════════════════════════════════════════════════════════════ */}
           <Section id="resumo" num="1" title="Resumo Geral">
             <DiasBadge dias={dias} />
+            <Note type="warning">
+              <strong>Perdas operacionais não são exposição física.</strong> Medem a produção e os serviços
+              interrompidos (método DaLA) e <strong>não se somam</strong> à exposição por cota da página{" "}
+              <Link href="/danos-fisicos" className="font-bold underline underline-offset-2">
+                Danos Físicos
+              </Link>
+              , que mostra o valor de reposição do que fica sob a água (um teto, não um dano).
+            </Note>
 
             {destaque && (
               <div className="my-5 overflow-hidden rounded-xl border border-[#c7d6d9] bg-white shadow-sm">
@@ -293,6 +302,7 @@ function OperacionaisView({
         ══════════════════════════════════════════════════════════════════════ */}
           <Section id="cenarios" num="2" title="Análise por Cenário">
             <DiasBadge dias={dias} />
+            <Note type="info">{AVISO_MAIO_2024_MAIS_50}</Note>
 
             <div
               className="mt-3 grid gap-4"
