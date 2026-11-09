@@ -1,6 +1,7 @@
 import { readFileSync } from "fs"
 import { join } from "path"
 import type { PerdasData } from "../perdas-operacionais/PerdasClient"
+import type { Comparativo } from "@/lib/comparativo"
 import type { DetalheCota, ExposicaoMun } from "./types"
 
 /** Lê um JSON de public/dados_convertidos; `null` se ausente ou inválido (a página degrada sem quebrar). */
@@ -16,6 +17,11 @@ function lerJson<T>(arquivo: string): T | null {
 /** Dados da página Perdas Operacionais, lidos no servidor. */
 export function getPerdasData(): PerdasData {
   return lerJson<PerdasData>("perdas_operacionais.json") ?? {}
+}
+
+/** Comparativo de dano evitado pelas intervenções (intervencoes_comparativo.json); null se o arquivo faltar. */
+export function getComparativoData(): Comparativo | null {
+  return lerJson<Comparativo>("intervencoes_comparativo.json")
 }
 
 /** Dados da página Danos Físicos (exposição por cota), lidos no servidor; null se o arquivo faltar. */

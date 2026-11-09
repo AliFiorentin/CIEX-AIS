@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { PerdasClient } from "./PerdasClient"
-import { getPerdasData } from "../danos/get-data"
+import { getComparativoData, getPerdasData } from "../danos/get-data"
 
 export const metadata: Metadata = {
   title: "Perdas Operacionais — Rio Grande (RS)",
@@ -9,5 +9,5 @@ export const metadata: Metadata = {
 }
 
 export default function PerdasOperacionaisPage() {
-  return <PerdasClient dados={getPerdasData()} />
+  return <PerdasClient dados={getPerdasData()} comparativo={getComparativoData()} />
 }

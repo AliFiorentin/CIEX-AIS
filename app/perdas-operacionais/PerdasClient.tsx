@@ -11,6 +11,9 @@ import {
   Note,
 } from "@/components/doc-kit"
 import { Banner } from "@/components/danos/Banner"
+import { COMP_COLORS, CompositionBar } from "./composicao"
+import { IntervencoesPerdas } from "./IntervencoesPerdas"
+import type { Comparativo } from "@/lib/comparativo"
 import { fmtCompacto, escalaAgradavel } from "../danos/helpers"
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
@@ -38,12 +41,6 @@ const CEN_COLORS: Record<string, string> = {
   "Nível da Lagoa + Chuva Acumulada – 16/05/2024": "#7c3aed",
 }
 const CEN_FALLBACK = "#3d7a94"
-const COMP_COLORS = {
-  empresas: "#2563eb",
-  educacao: "#16a34a",
-  saude: "#dc2626",
-  agricultura: "#6B8E23",
-}
 const DIAS_OPCOES = [30, 45, 60] as const
 type DiasOpcao = (typeof DIAS_OPCOES)[number]
 
@@ -84,7 +81,13 @@ function scaleTo(v: CenarioPerdas, dias: number): CenarioPerdas {
 }
 
 // ─── Componente principal ─────────────────────────────────────────────────────
-function OperacionaisView({ dados }: { dados: PerdasData }) {
+function OperacionaisView({
+  dados,
+  comparativo,
+}: {
+  dados: PerdasData
+  comparativo: Comparativo | null
+}) {
   const [dias, setDias] = useState<DiasOpcao>(30)
 
   const cenariosOriginais = dados["Rio Grande"] ?? {}
@@ -170,7 +173,8 @@ function OperacionaisView({ dados }: { dados: PerdasData }) {
                     ["#resumo", "1. Resumo Geral"],
                     ["#cenarios", "2. Análise por Cenário"],
                     ["#sensib", "3. Sensibilidade por Duração"],
-                    ["#notas", "4. Limitações"],
+                    ["#intervencoes", "4. Intervenções e dano evitado"],
+                    ["#notas", "5. Limitações"],
                   ] as [string, string][]
                 ).map(([href, label]) => (
                   <li key={href}>
@@ -460,7 +464,9 @@ function OperacionaisView({ dados }: { dados: PerdasData }) {
           {/* ══════════════════════════════════════════════════════════════════════
             SEÇÃO 4 — NOTAS E RESSALVAS
         ══════════════════════════════════════════════════════════════════════ */}
-          <Section id="notas" num="4" title="Limitações">
+          <IntervencoesPerdas comparativo={comparativo} dias={dias} />
+
+          <Section id="notas" num="5" title="Limitações">
             <Note type="info">
               As limitações e ressalvas dos números desta página, por cenário,
               metodologia e município, estão reunidas na{" "}
@@ -495,41 +501,6 @@ function OperacionaisView({ dados }: { dados: PerdasData }) {
 }
 
 // ─── Gráficos SVG ─────────────────────────────────────────────────────────────
-
-function CompositionBar({ v }: { v: CenarioPerdas }) {
-  const comps = [
-    { value: v.empresas_vab, color: COMP_COLORS.empresas },
-    {
-      value: v.educacao_perdas + v.educacao_custo_adicional,
-      color: COMP_COLORS.educacao,
-    },
-    { value: v.saude_producao, color: COMP_COLORS.saude },
-    { value: v.agricultura_perdas, color: COMP_COLORS.agricultura },
-  ].filter((c) => c.value > 0)
-  const total = comps.reduce((s, c) => s + c.value, 0)
-  let offset = 0
-  return (
-    <svg viewBox="0 0 400 14" className="w-full" style={{ height: 14 }}>
-      {comps.map((c, i) => {
-        const w = Math.max((c.value / total) * 400, 1)
-        const x = offset
-        offset += w
-        return (
-          <rect
-            key={i}
-            x={x}
-            y={0}
-            width={w}
-            height={14}
-            fill={c.color}
-            rx={i === 0 || i === comps.length - 1 ? 3 : 0}
-            ry={3}
-          />
-        )
-      })}
-    </svg>
-  )
-}
 
 // Quebra o rótulo por palavra (sem limite de linhas, nomes de cenário longos,
 // ex. "Nível da Lagoa + Chuva Acumulada – 16/05/2024", precisam de 3+ linhas
@@ -814,7 +785,13 @@ const lista = (xs: string[]) =>
   xs.length <= 1 ? xs.join("") : `${xs.slice(0, -1).join(", ")} e ${xs[xs.length - 1]}`
 
 /** Perdas Operacionais (DaLA): banner + visão. O banner lista os cenários presentes nos dados (não há lista fixa). */
-export function PerdasClient({ dados }: { dados: PerdasData }) {
+export function PerdasClient({
+  dados,
+  comparativo,
+}: {
+  dados: PerdasData
+  comparativo: Comparativo | null
+}) {
   const nomes = Object.keys(dados["Rio Grande"] ?? {}).map((n) =>
     n.replace(/^Cenário /, "")
   )
@@ -826,7 +803,7 @@ export function PerdasClient({ dados }: { dados: PerdasData }) {
         subtitulo="Estimativa de Perdas Econômicas: Cenários de Inundação em Rio Grande (RS)"
         nota={`Metodologia DaLA (CEPAL) · ${lista(nomes)}`}
       />
-      <OperacionaisView dados={dados} />
+      <OperacionaisView dados={dados} comparativo={comparativo} />
     </div>
   )
 }

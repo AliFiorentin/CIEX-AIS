@@ -1,11 +1,14 @@
 import { PerdasClient } from "@/app/perdas-operacionais/PerdasClient"
-import { getPerdasData } from "@/app/danos/get-data"
+import { getComparativoData, getPerdasData } from "@/app/danos/get-data"
 import { RouteModal } from "@/components/RouteModal"
 
 export default function PerdasOperacionaisModal() {
   return (
     <RouteModal>
-      <PerdasClient dados={getPerdasData()} />
+      <PerdasClient
+        dados={getPerdasData()}
+        comparativo={getComparativoData()}
+      />
     </RouteModal>
   )
 }
