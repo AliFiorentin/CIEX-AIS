@@ -12,9 +12,9 @@ const description =
   "Dashboard CIEX — Análise de impacto por inundação em Rio Grande (RS)"
 
 export const metadata: Metadata = {
-  metadataBase: process.env.NEXT_PUBLIC_SITE_URL
-    ? new URL(process.env.NEXT_PUBLIC_SITE_URL)
-    : undefined,
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
+  ),
   title,
   description,
   openGraph: {

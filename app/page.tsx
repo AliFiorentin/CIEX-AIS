@@ -81,6 +81,7 @@ import {
   todosNomesEfetivos,
   type IntervencaoId,
 } from "@/lib/cenarios"
+import { detectarPilha, pontosNaPilha } from "@/lib/pilhas"
 import { calcEmp, calcEdu, calcSau, STAFF_COLS } from "@/lib/metricas"
 
 // maplibre-gl 6 is ESM-only: worker is copied to public/ by `pnpm copy:maplibre`.
@@ -672,21 +673,29 @@ export default function Dashboard() {
       // O padrão é uma simulação: precisa do nome efetivo ("... – Sem intervenção"), que é o do arquivo da mancha;
       // com o nome-base a mancha não existia e o painel abria sem cenário até a página ser atualizada.
       nomeEfetivo(DEFAULT_CENARIO, INTERVENCAO_PADRAO)
+    const isCotasInicial = initialCenario === COTAS_CENARIO
     const sSlug = scenarioSlug(initialCenario)
+    const statsSlug = isCotasInicial
+      ? scenarioSlug(nomeEfetivo(DEFAULT_CENARIO, INTERVENCAO_PADRAO))
+      : sSlug
     const defaultInfra = ["Logradouros", "Terrenos"] // deve bater com infraAtivas inicial
 
-    const infraAtingidosPromises = defaultInfra.map((infra) => {
-      const iSlug = slugify(infra)
-      const useFgb = iSlug === "terrenos" || iSlug === "quadras"
-      const url = `/dados_convertidos/rio_grande/cenarios/infra_${iSlug}_ATINGIDOS_${sSlug}.${useFgb ? "fgb" : "geojson"}`
-      return (
-        useFgb
-          ? loadFGB(url, signal)
-          : fetchRobusto(url, { signal }).then((r) => (r.ok ? r.json() : null))
-      )
-        .then((d: any) => ({ infra, d }))
-        .catch(() => ({ infra, d: null }))
-    })
+    const infraAtingidosPromises = isCotasInicial
+      ? []
+      : defaultInfra.map((infra) => {
+          const iSlug = slugify(infra)
+          const useFgb = iSlug === "terrenos" || iSlug === "quadras"
+          const url = `/dados_convertidos/rio_grande/cenarios/infra_${iSlug}_ATINGIDOS_${sSlug}.${useFgb ? "fgb" : "geojson"}`
+          return (
+            useFgb
+              ? loadFGB(url, signal)
+              : fetchRobusto(url, { signal }).then((r) =>
+                  r.ok ? r.json() : null
+                )
+          )
+            .then((d: any) => ({ infra, d }))
+            .catch(() => ({ infra, d: null }))
+        })
 
     Promise.all([
       // Base
@@ -702,38 +711,55 @@ export default function Dashboard() {
       fetchRobusto("/dados_convertidos/rio_grande/patrimonio_BASE.geojson", {
         signal,
       }).then((r) => (r.ok ? r.json() : null)),
-      // Mancha
-      fetchRobusto(`/dados_convertidos/rio_grande/cenarios/${sSlug}.geojson`, {
-        signal,
-      }).then((r) => (r.ok ? r.json() : null)),
+      // Mancha (ausente em Simulação por Cotas, que usa raster dinâmico)
+      isCotasInicial
+        ? Promise.resolve(null)
+        : fetchRobusto(
+            `/dados_convertidos/rio_grande/cenarios/${sSlug}.geojson`,
+            {
+              signal,
+            }
+          ).then((r) => (r.ok ? r.json() : null)),
       // Atingidos
-      fetchRobusto(
-        `/dados_convertidos/rio_grande/cenarios/empresas_ATINGIDOS_${sSlug}.geojson`,
-        { signal }
-      ).then((r) => (r.ok ? r.json() : null)),
-      fetchRobusto(
-        `/dados_convertidos/rio_grande/cenarios/educacao_ATINGIDOS_${sSlug}.geojson`,
-        { signal }
-      ).then((r) => (r.ok ? r.json() : null)),
-      fetchRobusto(
-        `/dados_convertidos/rio_grande/cenarios/saude_ATINGIDOS_${sSlug}.geojson`,
-        { signal }
-      ).then((r) => (r.ok ? r.json() : null)),
-      loadFGB(
-        `/dados_convertidos/rio_grande/cenarios/cobertura_ATINGIDOS_${sSlug}.fgb`,
-        signal
-      ),
-      loadAgriculturaAtingida(sSlug, signal),
-      fetchRobusto(
-        `/dados_convertidos/rio_grande/cenarios/patrimonio_ATINGIDOS_${sSlug}.geojson`,
-        { signal }
-      ).then((r) => (r.ok ? r.json() : null)),
+      isCotasInicial
+        ? Promise.resolve(null)
+        : fetchRobusto(
+            `/dados_convertidos/rio_grande/cenarios/empresas_ATINGIDOS_${sSlug}.geojson`,
+            { signal }
+          ).then((r) => (r.ok ? r.json() : null)),
+      isCotasInicial
+        ? Promise.resolve(null)
+        : fetchRobusto(
+            `/dados_convertidos/rio_grande/cenarios/educacao_ATINGIDOS_${sSlug}.geojson`,
+            { signal }
+          ).then((r) => (r.ok ? r.json() : null)),
+      isCotasInicial
+        ? Promise.resolve(null)
+        : fetchRobusto(
+            `/dados_convertidos/rio_grande/cenarios/saude_ATINGIDOS_${sSlug}.geojson`,
+            { signal }
+          ).then((r) => (r.ok ? r.json() : null)),
+      isCotasInicial
+        ? Promise.resolve(null)
+        : loadFGB(
+            `/dados_convertidos/rio_grande/cenarios/cobertura_ATINGIDOS_${sSlug}.fgb`,
+            signal
+          ),
+      isCotasInicial
+        ? Promise.resolve(null)
+        : loadAgriculturaAtingida(sSlug, signal),
+      isCotasInicial
+        ? Promise.resolve(null)
+        : fetchRobusto(
+            `/dados_convertidos/rio_grande/cenarios/patrimonio_ATINGIDOS_${sSlug}.geojson`,
+            { signal }
+          ).then((r) => (r.ok ? r.json() : null)),
       fetchRobusto("/dados_convertidos/populacao_atingida.json", {
         signal,
       }).then((r) => (r.ok ? r.json() : null)),
       Promise.all(infraAtingidosPromises),
       fetchRobusto(
-        `/dados_convertidos/rio_grande/cenarios/infra_stats_${sSlug}.json`,
+        `/dados_convertidos/rio_grande/cenarios/infra_stats_${statsSlug}.json`,
         { signal }
       ).then((r) => (r.ok ? r.json() : null)),
     ])
@@ -755,8 +781,9 @@ export default function Dashboard() {
           infraStatsJson,
         ]) => {
           if (signal.aborted) return
-          // Sem a mancha o cenário inicial não existe: trata como falha (aviso com "Tentar novamente") em vez de abrir vazio
-          if (!mancha) throw new Error("mancha do cenário inicial ausente")
+          // Sem a mancha o cenário inicial não existe (exceto Simulação por Cotas, que usa raster próprio)
+          if (!isCotasInicial && !mancha)
+            throw new Error("mancha do cenário inicial ausente")
 
           if (popJson) setPopData(popJson)
 
@@ -880,12 +907,12 @@ export default function Dashboard() {
     if (cenario === COTAS_CENARIO) {
       eventoCarregadoRef.current = null
       // Sem mancha nem arquivos de cenário: a água vem do raster de cotas (hooks/useCotas.ts).
+      // Mantém `infraStats` para que o bloco `total` continue disponível se o usuário voltar a "(Ver Total)".
       setManchaCenario(null)
       setAtingidosCobertura(null)
       setAtingidosAgricultura(null)
       setAtingidosPatrimonio(null)
       setAtingidosInfra({})
-      setInfraStats(null)
       setIsLoading(false)
       const vista = CENARIO_VISTA[COTAS_CENARIO]
       mapRef.current?.getMap().flyTo({
@@ -898,21 +925,18 @@ export default function Dashboard() {
     }
     if (!cenario || cenario === "(nenhum)") {
       eventoCarregadoRef.current = null
+      setManchaCenario(null)
+      setAtingidosEmpresas(null)
+      setAtingidosEducacao(null)
+      setAtingidosSaude(null)
+      setAtingidosCobertura(null)
+      setAtingidosAgricultura(null)
+      setAtingidosPatrimonio(null)
+      setAtingidosInfra((prev) => (Object.keys(prev).length === 0 ? prev : {}))
+      setIsLoading(false)
       const map = mapRef.current?.getMap()
       if (map)
-        map.flyTo({ center: [-52.22, -32.09], zoom: 10.8, duration: 5000 })
-      limpaNenhumTimerRef.current = setTimeout(() => {
-        setManchaCenario(null)
-        setAtingidosEmpresas(null)
-        setAtingidosEducacao(null)
-        setAtingidosSaude(null)
-        setAtingidosCobertura(null)
-        setAtingidosAgricultura(null)
-        setAtingidosPatrimonio(null)
-        setAtingidosInfra((prev) =>
-          Object.keys(prev).length === 0 ? prev : {}
-        )
-      }, 5000)
+        map.flyTo({ center: [-52.22, -32.09], zoom: 10.8, duration: 2500 })
       return
     }
     const ctrl = new AbortController()
@@ -926,8 +950,6 @@ export default function Dashboard() {
       ? eventoDoCenario
       : null
     setIsLoading(true)
-    // Limpa já os resultados do cenário anterior: a câmera leva ~5 s antes de os novos chegarem, e nesse tempo o
-    // painel mostraria os números antigos sob o título do cenário novo (ex.: 601 empresas de Maio 2024 sob "+50%").
     setAtingidosEmpresas(null)
     setAtingidosEducacao(null)
     setAtingidosSaude(null)
@@ -937,91 +959,84 @@ export default function Dashboard() {
     setAtingidosInfra({})
     setInfraStats(null)
 
-    fetchRobusto(`/dados_convertidos/rio_grande/cenarios/${sSlug}.geojson`, {
-      signal,
+    const infraPromises = infraAtivas.map((infra) => {
+      const iSlug = slugify(infra)
+      const useFgb = iSlug === "terrenos" || iSlug === "quadras"
+      const ext = useFgb ? "fgb" : "geojson"
+      const url = `/dados_convertidos/rio_grande/cenarios/infra_${iSlug}_ATINGIDOS_${sSlug}.${ext}`
+      return (
+        useFgb
+          ? loadFGB(url, signal)
+          : fetchRobusto(url, { signal }).then((r) => (r.ok ? r.json() : null))
+      )
+        .then((d: any) => ({ infra, d }))
+        .catch(() => ({ infra, d: null }))
     })
+
+    const dataPromises = Promise.all([
+      fetchRobusto(
+        `/dados_convertidos/rio_grande/cenarios/empresas_ATINGIDOS_${sSlug}.geojson`,
+        { signal }
+      ).then((r) => (r.ok ? r.json() : null)),
+      fetchRobusto(
+        `/dados_convertidos/rio_grande/cenarios/educacao_ATINGIDOS_${sSlug}.geojson`,
+        { signal }
+      ).then((r) => (r.ok ? r.json() : null)),
+      fetchRobusto(
+        `/dados_convertidos/rio_grande/cenarios/saude_ATINGIDOS_${sSlug}.geojson`,
+        { signal }
+      ).then((r) => (r.ok ? r.json() : null)),
+      loadFGB(
+        `/dados_convertidos/rio_grande/cenarios/cobertura_ATINGIDOS_${sSlug}.fgb`,
+        signal
+      ),
+      loadAgriculturaAtingida(sSlug, signal),
+      fetchRobusto(
+        `/dados_convertidos/rio_grande/cenarios/patrimonio_ATINGIDOS_${sSlug}.geojson`,
+        { signal }
+      ).then((r) => (r.ok ? r.json() : null)),
+      Promise.all(infraPromises),
+      fetchRobusto(
+        `/dados_convertidos/rio_grande/cenarios/infra_stats_${sSlug}.json`,
+        { signal }
+      ).then((r) => (r.ok ? r.json() : null)),
+    ])
+
+    const manchaPromise = fetchRobusto(
+      `/dados_convertidos/rio_grande/cenarios/${sSlug}.geojson`,
+      { signal }
+    )
       .then((r) => (r.ok ? r.json() : null))
       .then((mancha) => {
-        if (signal.aborted) return
-        // A mancha nova aparece já durante o voo da câmera; os atingidos entram depois.
+        if (signal.aborted) return null
         setManchaCenario(mancha)
 
-        // Só troca de intervenção no mesmo evento: o enquadramento é o mesmo; não voa nem espera.
-        if (mesmoEvento) return mancha
-
-        // Câmera fixa do cenário (CENARIO_VISTA); sem entrada, enquadra a mancha.
-        const map = mapRef.current?.getMap()
-        const vista = vistaDoCenario(cenario)
-        if (map && vista) {
-          map.flyTo({
-            center: [vista.lng, vista.lat],
-            zoom: vista.zoom,
-            duration: 5000,
-            essential: true,
-          })
-        } else if (map && mancha) {
-          const bbox = turf.bbox(mancha) as [number, number, number, number]
-          map.fitBounds(bbox, {
-            padding: 40,
-            maxZoom: 11.8,
-            offset: [40, 60],
-            duration: 5000,
-            essential: true,
-          })
+        if (!mesmoEvento) {
+          const map = mapRef.current?.getMap()
+          const vista = vistaDoCenario(cenario)
+          if (map && vista) {
+            map.flyTo({
+              center: [vista.lng, vista.lat],
+              zoom: vista.zoom,
+              duration: 2500,
+              essential: true,
+            })
+          } else if (map && mancha) {
+            const bbox = turf.bbox(mancha) as [number, number, number, number]
+            map.fitBounds(bbox, {
+              padding: 40,
+              maxZoom: 11.8,
+              offset: [40, 60],
+              duration: 2500,
+              essential: true,
+            })
+          }
         }
 
-        return new Promise((res) => setTimeout(() => res(mancha), 5000))
+        return mancha
       })
-      .then((mancha) => {
-        if (signal.aborted) return
 
-        const infraPromises = infraAtivas.map((infra) => {
-          const iSlug = slugify(infra)
-          const useFgb = iSlug === "terrenos" || iSlug === "quadras"
-          const ext = useFgb ? "fgb" : "geojson"
-          const url = `/dados_convertidos/rio_grande/cenarios/infra_${iSlug}_ATINGIDOS_${sSlug}.${ext}`
-          return (
-            useFgb
-              ? loadFGB(url, signal)
-              : fetchRobusto(url, { signal }).then((r) =>
-                  r.ok ? r.json() : null
-                )
-          )
-            .then((d: any) => ({ infra, d }))
-            .catch(() => ({ infra, d: null }))
-        })
-
-        const dataPromises = Promise.all([
-          fetchRobusto(
-            `/dados_convertidos/rio_grande/cenarios/empresas_ATINGIDOS_${sSlug}.geojson`,
-            { signal }
-          ).then((r) => (r.ok ? r.json() : null)),
-          fetchRobusto(
-            `/dados_convertidos/rio_grande/cenarios/educacao_ATINGIDOS_${sSlug}.geojson`,
-            { signal }
-          ).then((r) => (r.ok ? r.json() : null)),
-          fetchRobusto(
-            `/dados_convertidos/rio_grande/cenarios/saude_ATINGIDOS_${sSlug}.geojson`,
-            { signal }
-          ).then((r) => (r.ok ? r.json() : null)),
-          loadFGB(
-            `/dados_convertidos/rio_grande/cenarios/cobertura_ATINGIDOS_${sSlug}.fgb`,
-            signal
-          ),
-          loadAgriculturaAtingida(sSlug, signal),
-          fetchRobusto(
-            `/dados_convertidos/rio_grande/cenarios/patrimonio_ATINGIDOS_${sSlug}.geojson`,
-            { signal }
-          ).then((r) => (r.ok ? r.json() : null)),
-          Promise.all(infraPromises),
-          fetchRobusto(
-            `/dados_convertidos/rio_grande/cenarios/infra_stats_${sSlug}.json`,
-            { signal }
-          ).then((r) => (r.ok ? r.json() : null)),
-        ])
-
-        return Promise.all([dataPromises, Promise.resolve(mancha)])
-      })
+    Promise.all([dataPromises, manchaPromise])
       .then((res) => {
         if (!res || signal.aborted) return
         const [
@@ -1058,9 +1073,8 @@ export default function Dashboard() {
     return () => ctrl.abort()
   }, [cenario]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Bases de infra (geometria completa; Terrenos sozinho tem ~17 MB). Espera os dados principais (baseReady) para
-  // não disputar banda com eles. Com um cenário ativo o mapa desenha só os atingidos, então a base carrega sem
-  // trazer o painel de volta ao esqueleto.
+  // Bases de infra (geometria completa; Terrenos sozinho tem ~17 MB): só são baixadas quando "(Ver Total)" está ativo.
+  // Com um cenário ativo o mapa desenha só `atingidosInfra` (e o painel lê `infraStats`), evitando baixar ~20 MB sem uso.
   useEffect(() => {
     if (!baseReady) return
     const ctrl = new AbortController()
@@ -1075,59 +1089,71 @@ export default function Dashboard() {
       return u
     })
 
-    const toLoad = infraAtivas.filter((i) => !baseInfra[i])
-    if (!toLoad.length) return
-    if (precisaDaBase) setIsLoading(true)
-
-    Promise.all(
-      toLoad.map((infra) => {
-        const iSlug = slugify(infra)
-        const useFgb = iSlug === "terrenos" || iSlug === "quadras"
-        const url = `/dados_convertidos/rio_grande/infraestrutura/${iSlug}_BASE.${useFgb ? "fgb" : "geojson"}`
-        const p = useFgb
-          ? loadFGB(url, signal)
-          : fetchRobusto(url, { signal }).then((r) => (r.ok ? r.json() : null))
-        return p.then((d: any) => ({ infra, d })).catch(() => null)
-      })
-    ).then((results) => {
-      if (signal.aborted) return
-      results.forEach((r) => {
-        if (r?.d) setBaseInfra((prev) => ({ ...prev, [r.infra]: r.d }))
-      })
-      if (precisaDaBase) setIsLoading(false)
-    })
-
-    if (cenario && cenario !== "(nenhum)") {
-      const sSlug = scenarioSlug(cenario)
-      toLoad.forEach((infra) => {
-        const iSlug = slugify(infra)
-        const useFgb = iSlug === "terrenos" || iSlug === "quadras"
-        const ext = useFgb ? "fgb" : "geojson"
-        const url = `/dados_convertidos/rio_grande/cenarios/infra_${iSlug}_ATINGIDOS_${sSlug}.${ext}`
-        ;(useFgb
-          ? loadFGB(url, signal)
-          : fetchRobusto(url, { signal }).then((r) => (r.ok ? r.json() : null))
-        )
-          .then((d: any) => {
-            if (d && !signal.aborted)
-              setAtingidosInfra((prev) => ({ ...prev, [infra]: d }))
+    if (precisaDaBase) {
+      const toLoadBase = infraAtivas.filter((i) => !baseInfra[i])
+      if (toLoadBase.length > 0) {
+        setIsLoading(true)
+        Promise.all(
+          toLoadBase.map((infra) => {
+            const iSlug = slugify(infra)
+            const useFgb = iSlug === "terrenos" || iSlug === "quadras"
+            const url = `/dados_convertidos/rio_grande/infraestrutura/${iSlug}_BASE.${useFgb ? "fgb" : "geojson"}`
+            const p = useFgb
+              ? loadFGB(url, signal)
+              : fetchRobusto(url, { signal }).then((r) =>
+                  r.ok ? r.json() : null
+                )
+            return p.then((d: any) => ({ infra, d })).catch(() => null)
           })
-          .catch(() => null)
-      })
+        ).then((results) => {
+          if (signal.aborted) return
+          results.forEach((r) => {
+            if (r?.d) setBaseInfra((prev) => ({ ...prev, [r.infra]: r.d }))
+          })
+          setIsLoading(false)
+        })
+      }
+    } else if (cenario !== COTAS_CENARIO) {
+      const toLoadAting = infraAtivas.filter((i) => !atingidosInfra[i])
+      if (toLoadAting.length > 0) {
+        const sSlug = scenarioSlug(cenario)
+        toLoadAting.forEach((infra) => {
+          const iSlug = slugify(infra)
+          const useFgb = iSlug === "terrenos" || iSlug === "quadras"
+          const ext = useFgb ? "fgb" : "geojson"
+          const url = `/dados_convertidos/rio_grande/cenarios/infra_${iSlug}_ATINGIDOS_${sSlug}.${ext}`
+          ;(useFgb
+            ? loadFGB(url, signal)
+            : fetchRobusto(url, { signal }).then((r) =>
+                r.ok ? r.json() : null
+              )
+          )
+            .then((d: any) => {
+              if (d && !signal.aborted)
+                setAtingidosInfra((prev) => ({ ...prev, [infra]: d }))
+            })
+            .catch(() => null)
+        })
+      }
     }
 
     return () => ctrl.abort()
-  }, [infraAtivas, baseReady]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [infraAtivas, baseReady, cenario]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Permalink (leitura do `?cenario=` inicial acontece na inicialização do ref, acima)
   useEffect(() => {
-    const params = new URLSearchParams()
+    if (!initialLoadDoneRef.current) return
+    const params = new URLSearchParams(window.location.search)
     if (cenario !== "(nenhum)") {
       // nas simulações o cenário é o nome efetivo: `?cenario=` leva o evento e `?intervencao=` a variante
       const { evento, intervencao } = desmontarEfetivo(cenario)
       params.set("cenario", cenarioParaUrl(evento))
       if (intervencao !== "sem-intervencao")
         params.set("intervencao", intervencao)
+      else params.delete("intervencao")
+    } else {
+      params.delete("cenario")
+      params.delete("intervencao")
     }
     const qs = params.toString()
     window.history.replaceState(
@@ -1183,7 +1209,13 @@ export default function Dashboard() {
 
   const toggleInfra = (infra: string) => {
     const ativando = !infraAtivas.includes(infra)
-    if (ativando && INFRA_TAMANHOS_MB[infra]) {
+    const precisaDaBase = !cenario || cenario === "(nenhum)"
+    if (
+      ativando &&
+      precisaDaBase &&
+      !baseInfra[infra] &&
+      INFRA_TAMANHOS_MB[infra]
+    ) {
       if (
         !window.confirm(
           `"${infra}" tem ~${INFRA_TAMANHOS_MB[infra]}MB. Carregar?`
@@ -1330,20 +1362,36 @@ export default function Dashboard() {
       ha: turf.area(f) / 10000,
     }))
 
+  const featsBaseAgri = useMemo(
+    () => featsFiltrados(baseAgricultura),
+    [baseAgricultura]
+  )
+  const featsImpAgri = useMemo(
+    () => featsFiltrados(atingidosAgricultura),
+    [atingidosAgricultura]
+  )
   const metricasAgri = useMemo(
     () => ({
-      base: featsFiltrados(baseAgricultura),
-      impacto: featsFiltrados(atingidosAgricultura),
+      base: featsBaseAgri,
+      impacto: featsImpAgri,
     }),
-    [baseAgricultura, atingidosAgricultura]
+    [featsBaseAgri, featsImpAgri]
   )
 
+  const featsBaseCob = useMemo(
+    () => featsFiltrados(baseCobertura),
+    [baseCobertura]
+  )
+  const featsImpCob = useMemo(
+    () => featsFiltrados(atingidosCobertura),
+    [atingidosCobertura]
+  )
   const metricasCob = useMemo(
     () => ({
-      base: featsFiltrados(baseCobertura),
-      impacto: featsFiltrados(atingidosCobertura),
+      base: featsBaseCob,
+      impacto: featsImpCob,
     }),
-    [baseCobertura, atingidosCobertura]
+    [featsBaseCob, featsImpCob]
   )
 
   const setoresUnicos = useMemo(() => {
@@ -1461,7 +1509,37 @@ export default function Dashboard() {
   // Métricas calculadas sobre o dado filtrado atualmente exibido no mapa
   const renderEmpMetrics = useMemo(() => calcEmp(renderEmp), [renderEmp])
   const renderEduMetrics = useMemo(() => calcEdu(renderEdu), [renderEdu])
+  // Pilha de geocodificação: empresas de CEPs diferentes no mesmo ponto (aviso no painel de Empresas).
+  const pilhaEmpresas = useMemo(
+    () =>
+      baseEmpresas?.features ? detectarPilha(baseEmpresas.features) : null,
+    [baseEmpresas]
+  )
+  const empresasNaPilha = useMemo(
+    () =>
+      pilhaEmpresas && atingidosEmpresas?.features
+        ? pontosNaPilha(atingidosEmpresas.features, pilhaEmpresas)
+        : 0,
+    [pilhaEmpresas, atingidosEmpresas]
+  )
   const renderSauMetrics = useMemo(() => calcSau(renderSau), [renderSau])
+  const renderPatrimonioMetrics = useMemo(
+    () => calcPatrimonio(renderPatrimonio),
+    [renderPatrimonio]
+  )
+  const basePatrimonioFiltrado = useMemo(() => {
+    if (filtroTipologia === "(todas)") return basePatrimonio
+    return basePatrimonio
+      ? {
+          ...basePatrimonio,
+          features: (basePatrimonio.features || []).filter(
+            (f: any) =>
+              normalizeTipologia(String(f.properties?.Tipologia || "")) ===
+              filtroTipologia
+          ),
+        }
+      : null
+  }, [basePatrimonio, filtroTipologia])
   const baseEmpFiltMetrics = useMemo(
     () => calcEmp(baseEmpFiltrado),
     [baseEmpFiltrado]
@@ -1473,6 +1551,10 @@ export default function Dashboard() {
   const baseSauFiltMetrics = useMemo(
     () => calcSau(baseSauFiltrado),
     [baseSauFiltrado]
+  )
+  const basePatrimonioFiltMetrics = useMemo(
+    () => calcPatrimonio(basePatrimonioFiltrado),
+    [basePatrimonioFiltrado]
   )
 
   const setoresChart = useMemo(() => {
@@ -1504,7 +1586,7 @@ export default function Dashboard() {
     if (camadas.includes("Patrimônio Histórico") && renderPatrimonio?.features)
       ids.push("patrimonio-cluster", "patrimonio-point")
     if (camadas.includes("Infraestrutura")) {
-      Object.keys(baseInfra).forEach((nome) => {
+      infraAtivas.forEach((nome) => {
         const geo = isCenarioAtivo ? atingidosInfra[nome] : baseInfra[nome]
         if (geo?.features) {
           const sid = `infra-${slugify(nome)}`
@@ -1515,6 +1597,7 @@ export default function Dashboard() {
     return ids
   }, [
     camadas,
+    infraAtivas,
     renderEmp,
     renderEdu,
     renderSau,
@@ -1895,6 +1978,11 @@ export default function Dashboard() {
   // Reiniciar: volta ao estado de quando a página abre (cenário padrão sem intervenção, camadas, heatmaps, filtros,
   // painéis e câmera), sem recarregar os dados.
   const reiniciar = () => {
+    if (limpaNenhumTimerRef.current) {
+      clearTimeout(limpaNenhumTimerRef.current)
+      limpaNenhumTimerRef.current = null
+    }
+    setErroCarga(false)
     setCenario(nomeEfetivo(DEFAULT_CENARIO, INTERVENCAO_PADRAO))
     setCamadas(CAMADAS_INICIAIS)
     setInfraAtivas(INFRA_INICIAIS)
@@ -2332,6 +2420,9 @@ export default function Dashboard() {
                       ["coalesce", ["get", "qtd_matri_inf"], 0],
                       ["coalesce", ["get", "qtd_matri_fund"], 0],
                       ["coalesce", ["get", "qtd_matri_med"], 0],
+                      ["coalesce", ["get", "qtd_matri_prof"], 0],
+                      ["coalesce", ["get", "qtd_matri_eja"], 0],
+                      ["coalesce", ["get", "qtd_matri_esp"], 0],
                     ],
                     0,
                     0,
@@ -2388,16 +2479,11 @@ export default function Dashboard() {
             baseReady &&
             camadas.includes("Infraestrutura") &&
             ["Logradouros", "Terrenos", "Quadras"].map((nome) => {
-              const total = baseInfra[nome]
-              if (!total || !infraAtivas.includes(nome)) return null
-              const sid = `infra-${slugify(nome)}`
+              if (!infraAtivas.includes(nome)) return null
               const geo =
-                cenario !== "(nenhum)"
-                  ? (atingidosInfra[nome] ?? {
-                      type: "FeatureCollection",
-                      features: [],
-                    })
-                  : total
+                cenario !== "(nenhum)" ? atingidosInfra[nome] : baseInfra[nome]
+              if (!geo) return null
+              const sid = `infra-${slugify(nome)}`
               const cor = INFRA_COLORS[nome] ?? COLORS.infra
               const corContorno = INFRA_COLORS[nome] ?? "#d97706"
               return (
@@ -3007,7 +3093,8 @@ export default function Dashboard() {
                   !!showCobertura?.features
                 const mostraPop =
                   showHeatmapPopulacao && !!popData?.["Rio Grande"]
-                const mostraMancha = !!manchaCenario && showMancha
+                const mostraMancha =
+                  cenario !== "(nenhum)" && !!manchaCenario && showMancha
                 const secoes: {
                   key: string
                   titulo: string
@@ -4344,6 +4431,42 @@ export default function Dashboard() {
                 evento={eventoSel}
                 intervencao={intervencaoSel}
               />
+              {pilhaEmpresas && isCenarioAtivo && (
+                <div className="mb-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-[11px] leading-snug text-amber-900">
+                  <strong>Localização aproximada.</strong>{" "}
+                  {empresasNaPilha > 0 ? (
+                    <>
+                      {formatoBr(empresasNaPilha, 0)} das{" "}
+                      {formatoBr(atingidosEmpresas?.features?.length ?? 0, 0)}{" "}
+                      empresas atingidas (
+                      {calcPct(
+                        empresasNaPilha,
+                        atingidosEmpresas?.features?.length ?? 0
+                      )}
+                      ) estão num mesmo ponto: o geocodificador colocou
+                      endereços diferentes no centro da cidade. Os totais de
+                      empresas, vínculos e VAB deste cenário dependem desse
+                      ponto.
+                    </>
+                  ) : (
+                    <>
+                      {formatoBr(pilhaEmpresas.n, 0)} empresas da base (
+                      {calcPct(
+                        pilhaEmpresas.n,
+                        baseEmpresas?.features?.length ?? 0
+                      )}
+                      ) têm localização aproximada e ficam fora da mancha deste
+                      cenário: o total atingido pode estar subestimado.
+                    </>
+                  )}{" "}
+                  <Link
+                    href="/metodologia#limitacoes"
+                    className="font-bold underline"
+                  >
+                    Saiba mais ↗
+                  </Link>
+                </div>
+              )}
               {setoresChart.length > 0 &&
                 (() => {
                   const totalBase = metricasEmp.base.estab
@@ -5451,17 +5574,22 @@ export default function Dashboard() {
                   isLoading={isLoading}
                   titulo="Patrimônios"
                   cor={COLORS.patrimonio}
-                  valor={compactoBr(
+                  valor={compactoBr(renderPatrimonioMetrics.total, 0)}
+                  sub={
                     isCenarioAtivo
-                      ? metricasPatrimonio.impacto.total
-                      : metricasPatrimonio.base.total,
-                    0
-                  )}
-                  sub={isCenarioAtivo ? "Atingidos" : "Total"}
+                      ? filtroTipologia !== "(todas)"
+                        ? "Atingidos (filtrado)"
+                        : "Atingidos"
+                      : filtroTipologia !== "(todas)"
+                        ? "Total (filtrado)"
+                        : "Total"
+                  }
                   delta={
                     isCenarioAtivo
-                      ? `de ${compactoBr(metricasPatrimonio.base.total, 0)} (${calcPct(metricasPatrimonio.impacto.total, metricasPatrimonio.base.total)})`
-                      : undefined
+                      ? `de ${compactoBr(basePatrimonioFiltMetrics.total, 0)} (${calcPct(renderPatrimonioMetrics.total, basePatrimonioFiltMetrics.total)})`
+                      : filtroTipologia !== "(todas)"
+                        ? `de ${compactoBr(metricasPatrimonio.base.total, 0)} (${calcPct(renderPatrimonioMetrics.total, metricasPatrimonio.base.total)})`
+                        : undefined
                   }
                 />
 
@@ -6005,7 +6133,7 @@ export default function Dashboard() {
                   evento={eventoSel}
                   intervencao={intervencaoSel}
                 />
-                {!infraStats && cenario === COTAS_CENARIO ? (
+                {cenario === COTAS_CENARIO ? (
                   <p
                     className="py-6 text-center text-xs"
                     style={{ color: C.muted }}
