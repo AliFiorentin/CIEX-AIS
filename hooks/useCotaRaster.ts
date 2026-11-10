@@ -63,7 +63,7 @@ export interface CotaRaster {
  */
 export function useCotaRaster(slug: string | null, opts: { cotaInicial?: string; autoplay?: boolean; prontoExterno?: boolean; inicio?: number | null } = {}): CotaRaster {
   const { cotaInicial, prontoExterno = true } = opts
-  // A água avançando é o próprio conteúdo do cenário "Todas as cotas" (e há botão de pausa), então o autoplay
+  // A água avançando é o próprio conteúdo do cenário "Simulação por Cotas" (e há botão de pausa), então o autoplay
   // NÃO é desligado por prefers-reduced-motion: por decisão do produto, o play sempre abre ligado.
   const autoplay = opts.autoplay ?? false
   const [meta, setMeta] = useState<CotaMeta | null>(null)

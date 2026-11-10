@@ -1,17 +1,20 @@
-import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import { cn } from "@/lib/utils";
-import { SpeedInsights } from "@vercel/speed-insights/next";
+import type { Metadata, Viewport } from "next"
+import { Geist, Geist_Mono } from "next/font/google"
+import "./globals.css"
+import { cn } from "@/lib/utils"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
-const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
-const fontMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" });
+const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
+const fontMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" })
 
-const title = "Vulnerabilidade Econômica — Rio Grande";
-const description = "Dashboard CIEX — Análise de impacto por inundação em Rio Grande (RS)";
+const title = "Vulnerabilidade Econômica — Rio Grande"
+const description =
+  "Dashboard CIEX — Análise de impacto por inundação em Rio Grande (RS)"
 
 export const metadata: Metadata = {
-  metadataBase: process.env.NEXT_PUBLIC_SITE_URL ? new URL(process.env.NEXT_PUBLIC_SITE_URL) : undefined,
+  metadataBase: process.env.NEXT_PUBLIC_SITE_URL
+    ? new URL(process.env.NEXT_PUBLIC_SITE_URL)
+    : undefined,
   title,
   description,
   openGraph: {
@@ -26,22 +29,37 @@ export const metadata: Metadata = {
     title,
     description,
   },
-};
+}
 
 // O dashboard é só claro: "only light" impede o escurecimento automático do navegador e de extensões
 // e mantém claros os controles nativos (rolagem, campos), mesmo com o sistema em modo escuro.
 export const viewport: Viewport = {
   colorScheme: "only light",
-};
+}
 
-export default function RootLayout({ children, modal }: { children: React.ReactNode; modal: React.ReactNode }) {
+export default function RootLayout({
+  children,
+  modal,
+}: {
+  children: React.ReactNode
+  modal: React.ReactNode
+}) {
   return (
-    <html lang="pt-BR" className={cn("antialiased", fontMono.variable, "font-sans", geist.variable)} suppressHydrationWarning>
+    <html
+      lang="pt-BR"
+      className={cn(
+        "antialiased",
+        fontMono.variable,
+        "font-sans",
+        geist.variable
+      )}
+      suppressHydrationWarning
+    >
       <body suppressHydrationWarning>
         {children}
         {modal}
         <SpeedInsights />
       </body>
     </html>
-  );
+  )
 }
