@@ -12,14 +12,18 @@ scripts/data/intervencoes_mancha_meta.json (converter_intervencoes.py). Saida:
 public/dados_convertidos/intervencoes_comparativo.json (lido pelo Painel, por Perdas Operacionais e Danos Fisicos).
 
 A exposicao em R$ so entra se a validacao de valor_reposicao.py passou (sem o arquivo-sinal
-scripts/EXPOSICAO_INDISPONIVEL). A populacao atingida nao e calculada: o raster de populacao nao esta disponivel
-e o metodo foi descartado na auditoria de 2026-11-08 (populacao_disponivel = false).
+scripts/EXPOSICAO_INDISPONIVEL). A populacao atingida vem de populacao_atingida.json, gravada por
+calcular_populacao_intervencoes.py (raster WorldPop 100 m, em RAW/populacao/). Sem as 12 entradas,
+populacao_disponivel = false e o indicador nao entra.
 
 Uso:  python scripts/gerar_comparativo_intervencoes.py
 """
 
+from __future__ import annotations
+
 import json
 import sys
+import unicodedata
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))  # irmaos, mesmo quando carregado por importlib
@@ -34,6 +38,7 @@ PERDAS_PATH = DADOS / "perdas_intervencoes.json"
 META_PATH = ROOT / "scripts" / "data" / "intervencoes_mancha_meta.json"
 OUT_PATH = DADOS / "intervencoes_comparativo.json"
 SINAL_EXPOSICAO_INDISPONIVEL = ROOT / "scripts" / "EXPOSICAO_INDISPONIVEL"
+POP_PATH = DADOS / "populacao_atingida.json"
 
 LIMIAR_CM = 10
 INTERVENCOES = ("diques", "diques-barragens")
@@ -54,6 +59,26 @@ def _ler(caminho: Path):
 
 def _soma(gj: dict, campo: str) -> float:
     return sum((f.get("properties") or {}).get(campo) or 0 for f in gj["features"])
+
+
+def _area_ha(caminho: Path) -> float:
+    """Area (ha, EPSG:31982) dos poligonos de um ATINGIDOS (.fgb); 0 se a camada nao tem nada atingido (arquivo ausente)."""
+    if not caminho.exists():
+        return 0.0
+    import geopandas as gpd  # so aqui: o resto do script nao precisa de GIS
+
+    g = gpd.read_file(caminho)
+    if g.empty:
+        return 0.0
+    return round(float(g.to_crs("EPSG:31982").area.sum()) / 1e4, 4)
+
+
+def _populacao(nome: str) -> float | None:
+    """Populacao atingida estimada da simulacao (chave = nome sem acento), ou None se nao houver."""
+    if not POP_PATH.exists():
+        return None
+    chave = "".join(c for c in unicodedata.normalize("NFD", nome) if unicodedata.category(c) != "Mn")
+    return _ler(POP_PATH)["Rio Grande"].get("cenarios", {}).get(chave, {}).get("pop_atingida")
 
 
 def indicadores(evento: str, variante: str, com_exposicao: bool = True) -> dict:
@@ -85,6 +110,9 @@ def indicadores(evento: str, variante: str, com_exposicao: bool = True) -> dict:
         "patrimonio": len(pat["features"]),
         "logradouros": infra["Logradouros"]["ruas_atingidas"],
         "quadras": infra["Quadras"]["atingidas"],
+        "terrenos": infra["Terrenos"]["atingidos"],
+        "agricultura_ha": _area_ha(CENARIOS_DIR / f"agricultura_ATINGIDOS_{sslug}.fgb"),
+        "cobertura_ha": _area_ha(CENARIOS_DIR / f"cobertura_ATINGIDOS_{sslug}.fgb"),
         "perdas_total": perdas["total"],
         "perdas_empresas": perdas["empresas_vab"],
         "perdas_educacao": round(perdas["educacao_perdas"] + perdas["educacao_custo_adicional"], 2),
@@ -92,6 +120,9 @@ def indicadores(evento: str, variante: str, com_exposicao: bool = True) -> dict:
         "perdas_agricultura": perdas["agricultura_perdas"],
         "perdas_dias_efetivos": perdas["dias_efetivos"],
     }
+    pop = _populacao(nome)
+    if pop is not None:
+        out["populacao"] = pop
     if com_exposicao:
         out["exposicao_empresas"] = round(vr.exposicao(emp, "empresas"), 2)
         out["exposicao_educacao"] = round(vr.exposicao(edu, "educacao"), 2)
@@ -111,10 +142,11 @@ def montar() -> dict:
             for k in INTERVENCOES
         }
         eventos[evento] = {"rotulo": EVENTOS[evento]["rotulo"], "variantes": variantes, "evitado": evitado}
+    populacao_ok = all("populacao" in v for e in eventos.values() for v in e["variantes"].values())
     return {
         "limiar_cm": LIMIAR_CM,
         "exposicao_disponivel": com_exposicao,
-        "populacao_disponivel": False,
+        "populacao_disponivel": populacao_ok,
         "eventos": eventos,
     }
 

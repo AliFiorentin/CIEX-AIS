@@ -21,7 +21,7 @@ CENARIOS_DIR = (
 SLUGS = [
     "cenario_setembro_2023",
     "cenario_maio_2024",
-    "cenario_maio_2024_50",
+    "simulacao_de_maio_de_2024_50",
     "nivel_da_lagoa_chuva_acumulada_16_05_2024",
 ]
 # Os 12 cenarios de intervencao (so entram se ja foram gerados; ver converter_intervencoes.py).
@@ -109,7 +109,7 @@ class Aninhamento(unittest.TestCase):
         for camada in CHAVE_PONTO:
             with self.subTest(camada=camada):
                 maio = _pontos_atingidos(camada, "cenario_maio_2024")
-                mais50 = _pontos_atingidos(camada, "cenario_maio_2024_50")
+                mais50 = _pontos_atingidos(camada, "simulacao_de_maio_de_2024_50")
                 self.assertEqual(maio - mais50, set(), f"{camada}: pontos de Maio 2024 fora do +50%")
 
 

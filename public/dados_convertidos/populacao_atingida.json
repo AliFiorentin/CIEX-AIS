@@ -109,7 +109,7 @@
         "pop_atingida": 23058,
         "pct_atingida": 11.6
       },
-      "Cenario Maio 2024 + 50%": {
+      "Simulacao de Maio de 2024 + 50%": {
         "pop_atingida": 80124,
         "pct_atingida": 40.4
       },
@@ -118,9 +118,69 @@
         "pct_atingida": 4.0
       },
       "Nivel da Lagoa + Chuva Acumulada – 16/05/2024": {
-        "pop_atingida": 18000,
-        "pct_atingida": 9.1,
-        "_metodologia": "estimado: proxy do alfa de populacao.png dividido pelo fator de calibracao 0.54 (medido nos 3 cenarios com valor exato; faixa 15900 a 19000) -- ver scripts/estimar_populacao_atingida.py"
+        "pop_atingida": 18553,
+        "pct_atingida": 9.4,
+        "_metodologia": "calculado: soma do raster WorldPop 2024 de 100 m dentro da mancha e do limite municipal -- ver scripts/calcular_populacao_intervencoes.py"
+      },
+      "Simulacao de Setembro de 2023 – Sem intervencao": {
+        "pop_atingida": 6765,
+        "pct_atingida": 3.4,
+        "_metodologia": "calculado: soma do raster WorldPop 2024 de 100 m dentro da mancha e do limite municipal -- ver scripts/calcular_populacao_intervencoes.py"
+      },
+      "Simulacao de Setembro de 2023 – Diques": {
+        "pop_atingida": 3276,
+        "pct_atingida": 1.7,
+        "_metodologia": "calculado: soma do raster WorldPop 2024 de 100 m dentro da mancha e do limite municipal -- ver scripts/calcular_populacao_intervencoes.py"
+      },
+      "Simulacao de Setembro de 2023 – Diques + barragens": {
+        "pop_atingida": 3324,
+        "pct_atingida": 1.7,
+        "_metodologia": "calculado: soma do raster WorldPop 2024 de 100 m dentro da mancha e do limite municipal -- ver scripts/calcular_populacao_intervencoes.py"
+      },
+      "Simulacao de Novembro de 2023 – Sem intervencao": {
+        "pop_atingida": 7210,
+        "pct_atingida": 3.6,
+        "_metodologia": "calculado: soma do raster WorldPop 2024 de 100 m dentro da mancha e do limite municipal -- ver scripts/calcular_populacao_intervencoes.py"
+      },
+      "Simulacao de Novembro de 2023 – Diques": {
+        "pop_atingida": 4008,
+        "pct_atingida": 2.0,
+        "_metodologia": "calculado: soma do raster WorldPop 2024 de 100 m dentro da mancha e do limite municipal -- ver scripts/calcular_populacao_intervencoes.py"
+      },
+      "Simulacao de Novembro de 2023 – Diques + barragens": {
+        "pop_atingida": 3909,
+        "pct_atingida": 2.0,
+        "_metodologia": "calculado: soma do raster WorldPop 2024 de 100 m dentro da mancha e do limite municipal -- ver scripts/calcular_populacao_intervencoes.py"
+      },
+      "Simulacao de Maio de 2024 – Sem intervencao": {
+        "pop_atingida": 22512,
+        "pct_atingida": 11.3,
+        "_metodologia": "calculado: soma do raster WorldPop 2024 de 100 m dentro da mancha e do limite municipal -- ver scripts/calcular_populacao_intervencoes.py"
+      },
+      "Simulacao de Maio de 2024 – Diques": {
+        "pop_atingida": 6720,
+        "pct_atingida": 3.4,
+        "_metodologia": "calculado: soma do raster WorldPop 2024 de 100 m dentro da mancha e do limite municipal -- ver scripts/calcular_populacao_intervencoes.py"
+      },
+      "Simulacao de Maio de 2024 – Diques + barragens": {
+        "pop_atingida": 6705,
+        "pct_atingida": 3.4,
+        "_metodologia": "calculado: soma do raster WorldPop 2024 de 100 m dentro da mancha e do limite municipal -- ver scripts/calcular_populacao_intervencoes.py"
+      },
+      "Simulacao de Junho de 2025 – Sem intervencao": {
+        "pop_atingida": 4004,
+        "pct_atingida": 2.0,
+        "_metodologia": "calculado: soma do raster WorldPop 2024 de 100 m dentro da mancha e do limite municipal -- ver scripts/calcular_populacao_intervencoes.py"
+      },
+      "Simulacao de Junho de 2025 – Diques": {
+        "pop_atingida": 2292,
+        "pct_atingida": 1.2,
+        "_metodologia": "calculado: soma do raster WorldPop 2024 de 100 m dentro da mancha e do limite municipal -- ver scripts/calcular_populacao_intervencoes.py"
+      },
+      "Simulacao de Junho de 2025 – Diques + barragens": {
+        "pop_atingida": 2331,
+        "pct_atingida": 1.2,
+        "_metodologia": "calculado: soma do raster WorldPop 2024 de 100 m dentro da mancha e do limite municipal -- ver scripts/calcular_populacao_intervencoes.py"
       }
     }
   }

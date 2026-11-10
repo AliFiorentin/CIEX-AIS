@@ -33,6 +33,12 @@ N_POR_VARIANTE = {"sem-intervencao": 3, "diques": 1, "diques-barragens": 2}
 VALOR_EMPRESA = 10 * 9 * 2604.24 * 2.0  # 10 vinculos, setor comercial
 
 
+def base_sem_acento(nome: str) -> str:
+    import unicodedata
+
+    return "".join(c for c in unicodedata.normalize("NFD", nome) if unicodedata.category(c) != "Mn")
+
+
 def _fc(features):
     return {"type": "FeatureCollection", "features": features}
 
@@ -67,7 +73,7 @@ class TestMontar(unittest.TestCase):
         raiz = Path(self.tmp.name)
         self.cen = raiz / "cenarios"
         self.cen.mkdir()
-        meta, perdas = {}, {"Rio Grande": {}}
+        meta, perdas, pop = {}, {"Rio Grande": {}}, {"Rio Grande": {"pop_total": 1000, "cenarios": {}}}
         for e, v in ci.todos():
             n = N_POR_VARIANTE[v]
             slug = ci.scenario_slug(ci.nome_cenario(e, v))
@@ -76,9 +82,11 @@ class TestMontar(unittest.TestCase):
             self._gj(f"saude_ATINGIDOS_{slug}.geojson", [_pt(qtd_profissionais=6, leitos_total=4, co_cnes=str(i)) for i in range(n)])
             self._gj(f"patrimonio_ATINGIDOS_{slug}.geojson", [_pt(nome=f"p{i}") for i in range(n)])
             (self.cen / f"infra_stats_{slug}.json").write_text(
-                json.dumps({"Logradouros": {"ruas_atingidas": 10 * n}, "Quadras": {"atingidas": 5 * n}}), encoding="utf-8")
+                json.dumps({"Logradouros": {"ruas_atingidas": 10 * n}, "Quadras": {"atingidas": 5 * n}, "Terrenos": {"atingidos": 7 * n}}), encoding="utf-8")
             meta[slug] = {"area_ha": 100.0 * n, "prof_max_cm": 50.0 + n, "area_por_faixa_ha": {"10-44": 60.0 * n, "45-64": 40.0 * n}, "bounds": [0, 0, 1, 1]}
             nome = ci.nome_cenario(e, v)
+            # chave do JSON de populacao: nome sem acento (como a interface e calcular_populacao_intervencoes.py)
+            pop["Rio Grande"]["cenarios"][base_sem_acento(nome)] = {"pop_atingida": 100 * n, "pct_atingida": 10.0 * n}
             perdas["Rio Grande"][nome] = {
                 "dias_agudo": 30, "dias_efetivos": 60, "f_interrup": 0.16,
                 "empresas_vab": 1000.0 * n, "educacao_perdas": 200.0 * n, "educacao_custo_adicional": 200.0 * n,
@@ -90,11 +98,14 @@ class TestMontar(unittest.TestCase):
         self.perdas = raiz / "perdas_intervencoes.json"
         self.perdas.write_text(json.dumps(perdas), encoding="utf-8")
         self.sinal = raiz / "EXPOSICAO_INDISPONIVEL"
-        self._orig = (mod.CENARIOS_DIR, mod.META_PATH, mod.PERDAS_PATH, mod.SINAL_EXPOSICAO_INDISPONIVEL)
-        mod.CENARIOS_DIR, mod.META_PATH, mod.PERDAS_PATH, mod.SINAL_EXPOSICAO_INDISPONIVEL = self.cen, self.meta, self.perdas, self.sinal
+        self.pop = raiz / "populacao_atingida.json"
+        self.pop.write_text(json.dumps(pop), encoding="utf-8")
+        self._orig = (mod.CENARIOS_DIR, mod.META_PATH, mod.PERDAS_PATH, mod.SINAL_EXPOSICAO_INDISPONIVEL, mod.POP_PATH)
+        mod.CENARIOS_DIR, mod.META_PATH, mod.PERDAS_PATH, mod.SINAL_EXPOSICAO_INDISPONIVEL, mod.POP_PATH = (
+            self.cen, self.meta, self.perdas, self.sinal, self.pop)
 
     def tearDown(self):
-        mod.CENARIOS_DIR, mod.META_PATH, mod.PERDAS_PATH, mod.SINAL_EXPOSICAO_INDISPONIVEL = self._orig
+        mod.CENARIOS_DIR, mod.META_PATH, mod.PERDAS_PATH, mod.SINAL_EXPOSICAO_INDISPONIVEL, mod.POP_PATH = self._orig
         self.tmp.cleanup()
 
     def _gj(self, nome, feats):
@@ -111,7 +122,22 @@ class TestMontar(unittest.TestCase):
     def test_flags_de_disponibilidade(self):
         r = mod.montar()
         self.assertTrue(r["exposicao_disponivel"])
+        self.assertTrue(r["populacao_disponivel"])
+
+    def test_populacao_vem_do_json_e_some_sem_ele(self):
+        v = mod.montar()["eventos"]["2023-09-29"]
+        self.assertEqual(v["variantes"]["sem-intervencao"]["populacao"], 300)
+        self.assertEqual(v["evitado"]["diques"]["populacao"], {"valor": 200, "pct": round(200 / 300, 6)})
+        self.pop.unlink()
+        r = mod.montar()
         self.assertFalse(r["populacao_disponivel"])
+        self.assertNotIn("populacao", r["eventos"]["2023-09-29"]["variantes"]["sem-intervencao"])
+
+    def test_terrenos_e_areas_sem_arquivo_valem_zero(self):
+        i = mod.montar()["eventos"]["2023-09-29"]["variantes"]["sem-intervencao"]
+        self.assertEqual(i["terrenos"], 21)
+        self.assertEqual(i["agricultura_ha"], 0.0)  # sem agricultura_ATINGIDOS: nada atingido
+        self.assertEqual(i["cobertura_ha"], 0.0)
 
     def test_indicadores_contagens_e_somas(self):
         i = mod.montar()["eventos"]["2023-09-29"]["variantes"]["sem-intervencao"]

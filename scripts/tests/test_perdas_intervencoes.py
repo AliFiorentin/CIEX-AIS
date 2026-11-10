@@ -69,15 +69,18 @@ class TestPerdasIntervencoes(unittest.TestCase):
             return mod.calcular_perdas(cenarios=self.nomes, arquivo="perdas_intervencoes.json", **kw)
 
     def test_periodo_por_evento(self):
-        self.assertEqual(mod.CENARIO_PERIODO["simulacao_29_09_2023_diques"], "setembro_2023")
-        for data in ("29_11_2023", "21_05_2024", "28_06_2025"):
+        self.assertEqual(mod.CENARIO_PERIODO["simulacao_de_setembro_de_2023_diques"], "setembro_2023")
+        esperado = {"novembro_de_2023": "novembro_2023", "maio_de_2024": "maio_2024", "junho_de_2025": "junho_2025"}
+        for data, periodo in esperado.items():
             for variante in ("sem_intervencao", "diques", "diques_barragens"):
-                self.assertEqual(mod.CENARIO_PERIODO[f"simulacao_{data}_{variante}"], "maio_2024")
+                self.assertEqual(mod.CENARIO_PERIODO[f"simulacao_de_{data}_{variante}"], periodo)
 
     def test_periodo_dala_aplicado_aos_resultados(self):
         r = self.rodar()["Rio Grande"]
         self.assertEqual(r[ci.nome_cenario("2023-09-29", "diques")]["dias_agudo"], 15)
-        self.assertEqual(r[ci.nome_cenario("2025-06-28", "diques")]["dias_agudo"], 30)
+        self.assertEqual(r[ci.nome_cenario("2023-11-29", "diques")]["dias_agudo"], 16)
+        self.assertEqual(r[ci.nome_cenario("2024-05-21", "diques")]["dias_agudo"], 30)
+        self.assertEqual(r[ci.nome_cenario("2025-06-28", "diques")]["dias_agudo"], 12)
 
     def test_total_e_soma_dos_componentes(self):
         r = self.rodar()["Rio Grande"]

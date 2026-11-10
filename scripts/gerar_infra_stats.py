@@ -33,7 +33,7 @@ INFRA_DIR = DASH / "infraestrutura"
 CENARIOS = [
     "Cenário Setembro 2023",
     "Cenário Maio 2024",
-    "Cenário Maio 2024 + 50%",
+    "Simulação de Maio de 2024 + 50%",
     "Nível da Lagoa + Chuva Acumulada – 16/05/2024",
 ]
 # Os 12 cenarios de intervencao (nomes efetivos). Rode converter_intervencoes.py antes: sem os ATINGIDOS,

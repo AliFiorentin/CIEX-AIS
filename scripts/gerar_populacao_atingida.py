@@ -4,8 +4,7 @@ populacao do Brasil (WorldPop-style, ~1km, EPSG:4326), fornecido pelo usuario
 (nao fazia parte do repositorio -- so o PNG ja renderizado do heatmap estava
 disponivel, sem o GeoTIFF original).
 
-Substitui a abordagem aproximada de scripts/estimar_populacao_atingida.py
-(que usava o canal alfa do PNG como proxy de densidade) por um calculo direto:
+Substitui a abordagem aproximada do canal alfa do PNG como proxy de densidade (aposentada) por um calculo direto:
 soma de populacao por pixel dentro do limite municipal e dentro de cada mancha
 de cenario.
 
@@ -71,7 +70,7 @@ PIXEL_AREA_KM2 = (KM_POR_GRAU * PIXEL_DEG) * (KM_POR_GRAU * math.cos(math.radian
 # mantem o resto -- ver strip_accents).
 CENARIOS = {
     "Cenário Maio 2024":                             "rio_grande___cenario_maio_2024",
-    "Cenário Maio 2024 + 50%":                        "rio_grande___cenario_maio_2024_50",
+    "Simulação de Maio de 2024 + 50%":                        "rio_grande___simulacao_de_maio_de_2024_50",
     "Cenário Setembro 2023":                          "rio_grande___cenario_setembro_2023",
     "Nível da Lagoa + Chuva Acumulada – 16/05/2024": "rio_grande___nivel_da_lagoa_chuva_acumulada_16_05_2024",
 }

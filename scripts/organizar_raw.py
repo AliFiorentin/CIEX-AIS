@@ -33,6 +33,12 @@ MAPBIOMAS_ARQUIVOS = [
     "cobertura_10m_mapbiomas.tif",
     "agricultura_riogrande_col10_2024.geojson",
 ]
+# Raster de populacao (WorldPop 2024, constrained, 100 m, EPSG:4326): a mesma fonte da origem dos dados de Rio Grande.
+POPULACAO_ARQUIVOS = ["bra_pop_2024_CN_100m_R2025A_v1.tif"]
+# Logos institucionais usadas no painel (originais em alta resolucao): nome em Downloads -> nome em RAW/logos/
+LOGOS_ARQUIVOS = {
+    "marca- horizontal-cores-originais-furg.png": "furg-marca-horizontal-cores-originais.png",
+}
 IGNORADOS = {".DS_Store"}
 # Pastas que nunca sao removidas ao subir pela arvore de origem depois de esvaziada.
 PROTEGIDAS = {"Downloads", "data", "scripts", "CIEX", "dashboard-ciex"}
@@ -49,6 +55,8 @@ por `scripts/organizar_raw.py`; `MANIFESTO.csv` guarda, para cada arquivo, o cam
 | `simulacoes-2024-05-16/` | Simulacao hidrologica do 16/05/2024 (plataforma Economia Azul): nivel da lagoa e chuva acumulada. | `converter_manchas_altura.py` |
 | `cotas-pico-2024-05-21/` | Mascaras molhado/seco por cota do pico de 21/05/2024 (6 bacias x 6 cotas). | `gerar_cota_mapa.py` |
 | `mapbiomas/` | MapBiomas Colecao 10 (2024), cobertura e lavouras, recortados em Rio Grande. | `converter_cobertura_rio_grande.py`, `converter_agricultura_rio_grande.py` |
+| `logos/` | Logos institucionais em alta resolucao (FURG, marca horizontal, cores originais). O painel usa copias reduzidas em `public/`. | cabecalho e mapa do painel |
+| `populacao/` | WorldPop 2024 Constrained, `bra_pop_2024_CN_100m_R2025A_v1.tif`: populacao por pixel de ~100 m, Brasil, EPSG:4326 (479 MB). | `calcular_populacao_intervencoes.py` |
 
 ## Nao localizados nesta maquina
 
@@ -58,7 +66,7 @@ Informados por variavel de ambiente; ficam fora de RAW/ ate serem obtidos:
 |---|---|---|
 | `PMRG_231215_layer_*.shp` (Prefeitura) | `INFRA_DADOS_DIR` | `converter_infra_rio_grande.py` |
 | `patrimHistRG_verificados.shp` | `PATRIMONIO_SHP` | `converter_patrimonio_rio_grande.py` |
-| `bra_pd_2020_1km.tif` | `POP_RASTER` | `gerar_populacao_atingida.py` |
+| `bra_pd_2020_1km.tif` (densidade a 1 km, descartado na auditoria de 2026-11-08) | `POP_RASTER` | `gerar_populacao_atingida.py` |
 
 Ficam versionados em `dashboard-ciex/scripts/data/`: `rio_grande_limite.geojson` e `producao_sus_por_cnes_rio_grande.json`.
 """
@@ -115,6 +123,12 @@ def planejar(raiz_downloads: Path, raiz_projeto: Path, raw: Path) -> list[Movime
     for nome in MAPBIOMAS_ARQUIVOS:
         if (dados / nome).is_file():
             mov.append(Movimento(dados / nome, raw / "mapbiomas" / nome))
+    for nome in POPULACAO_ARQUIVOS:
+        if (raiz_downloads / nome).is_file():
+            mov.append(Movimento(raiz_downloads / nome, raw / "populacao" / nome))
+    for nome, novo in LOGOS_ARQUIVOS.items():
+        if (raiz_downloads / nome).is_file():
+            mov.append(Movimento(raiz_downloads / nome, raw / "logos" / novo))
     return mov
 
 

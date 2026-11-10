@@ -2,7 +2,7 @@
 Os 12 cenarios de intervencao (4 eventos x sem intervencao / diques / diques + barragens): nomes efetivos, slugs
 e periodo DaLA. Fonte unica para os scripts de conversao, perdas, infra-stats e comparativo.
 
-O nome efetivo e "Simulacao DD/MM/AAAA - Variante"; o slug de arquivo e `rio_grande___{slugify(nome)}`
+O nome efetivo e "Simulacao de <Mes> de <Ano> - Variante"; o slug de arquivo e `rio_grande___{slugify(nome)}`
 (ver scenario_slug), a mesma convencao dos demais cenarios.
 """
 
@@ -10,10 +10,10 @@ import re
 import unicodedata
 
 EVENTOS: dict[str, dict] = {
-    "2023-09-29": {"rotulo": "29/09/2023", "periodo_dala": "setembro_2023"},
-    "2023-11-29": {"rotulo": "29/11/2023", "periodo_dala": "maio_2024"},
-    "2024-05-21": {"rotulo": "21/05/2024", "periodo_dala": "maio_2024"},
-    "2025-06-28": {"rotulo": "28/06/2025", "periodo_dala": "maio_2024"},
+    "2023-09-29": {"rotulo": "29/09/2023", "nome": "Simulação de Setembro de 2023", "periodo_dala": "setembro_2023"},
+    "2023-11-29": {"rotulo": "29/11/2023", "nome": "Simulação de Novembro de 2023", "periodo_dala": "novembro_2023"},
+    "2024-05-21": {"rotulo": "21/05/2024", "nome": "Simulação de Maio de 2024", "periodo_dala": "maio_2024"},
+    "2025-06-28": {"rotulo": "28/06/2025", "nome": "Simulação de Junho de 2025", "periodo_dala": "junho_2025"},
 }
 
 VARIANTES: dict[str, str] = {
@@ -32,7 +32,7 @@ def slugify(s: str) -> str:
 
 
 def nome_cenario(evento: str, variante: str) -> str:
-    return f"Simulação {EVENTOS[evento]['rotulo']} – {VARIANTES[variante]}"
+    return f"{EVENTOS[evento]['nome']} – {VARIANTES[variante]}"
 
 
 def slug_cenario(evento: str, variante: str) -> str:

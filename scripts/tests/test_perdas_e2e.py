@@ -26,7 +26,7 @@ DADOS_REAIS = SCRIPT.parent.parent / "public" / "dados_convertidos"
 SLUGS = {
     "Cenário Setembro 2023": "cenario_setembro_2023",
     "Cenário Maio 2024": "cenario_maio_2024",
-    "Cenário Maio 2024 + 50%": "cenario_maio_2024_50",
+    "Simulação de Maio de 2024 + 50%": "simulacao_de_maio_de_2024_50",
     "Nível da Lagoa + Chuva Acumulada – 16/05/2024": "nivel_da_lagoa_chuva_acumulada_16_05_2024",
 }
 
@@ -100,7 +100,7 @@ class Sintetico(unittest.TestCase):
 
     def test_mais_50_e_16_05_usam_os_parametros_de_maio_2024(self):
         res = self.rodar()
-        for cen in ("Cenário Maio 2024 + 50%", "Nível da Lagoa + Chuva Acumulada – 16/05/2024"):
+        for cen in ("Simulação de Maio de 2024 + 50%", "Nível da Lagoa + Chuva Acumulada – 16/05/2024"):
             with self.subTest(cenario=cen):
                 self.assertEqual(res[cen]["dias_efetivos"], 60)
                 self.assertEqual(res[cen]["agricultura_perdas"], 10 * 1100)

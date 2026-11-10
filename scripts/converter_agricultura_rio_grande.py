@@ -51,7 +51,7 @@ CLASSES_AGRI = {
 CENARIOS = {
     "cenario_setembro_2023": "rio_grande___cenario_setembro_2023.geojson",
     "cenario_maio_2024":    "rio_grande___cenario_maio_2024.geojson",
-    "cenario_maio_2024_50": "rio_grande___cenario_maio_2024_50.geojson",
+    "simulacao_de_maio_de_2024_50": "rio_grande___simulacao_de_maio_de_2024_50.geojson",
     "nivel_da_lagoa_chuva_acumulada_16_05_2024": "rio_grande___nivel_da_lagoa_chuva_acumulada_16_05_2024.geojson",
 }
 
