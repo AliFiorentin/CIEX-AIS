@@ -5,6 +5,8 @@ achado depois das correções. Os problemas que nascem no projeto de origem est�
 `docs/auditoria-ciex-2026-11-08.md` do repositório do projeto de origem; a política de dados da origem está em
 [dados-externos-rio-grande.md](dados-externos-rio-grande.md); as limitações dos resultados estão na Seção 12 da Metodologia.
 
+> **Nota de 2026-11-09:** com a nova Seção 12 (Cenários de Intervenção e Dano Evitado), as Limitações da Metodologia passaram a ser a **Seção 13** e as Fontes a **14**. As menções a "Seção 12" neste documento referem-se às Limitações, como eram em 2026-11-08.
+
 **Legenda:** ✔ corrigido · ◐ documentado (limitação registrada, sem mudar o dado) · ○ pendente · ↗ depende da origem.
 
 ## 1. Corrigir
@@ -34,7 +36,7 @@ achado depois das correções. Os problemas que nascem no projeto de origem est�
 |---|---|---|
 | C15 | Popup de escola somava só 3 modalidades no "Total Alunos". | ✔ |
 | C16 | Clicar em "Outros" no gráfico de setores zerava o mapa. | ✔ |
-| C17 | "Todas as cotas": abas sem dado mostravam "nenhuma classe atingida". Agora dizem que não há exposição por cota para essas camadas. | ✔ |
+| C17 | "Simulação por Cotas": abas sem dado mostravam "nenhuma classe atingida". Agora dizem que não há exposição por cota para essas camadas. | ✔ |
 | C18 | O corte de 0,5 ha no navegador só removia classes inteiras. Movido para os conversores (por polígono, em hectares, antes do dissolve). | ✔ |
 | C19 | Total fixo errado no `/danos` ("R$ 58,5 mi de R$ 460,0 mi"). A tabela foi removida; a Seção 12 cita R$ 58,5 mi de R$ 557,8 mi. | ✔ |
 | C20 | A área agrícola diverge entre telas (mapa 53,4 ha contra 49,7 ha da origem em "+50%"). Documentado na Seção 12; o mapa usa o MapBiomas filtrado e as perdas usam as estatísticas da origem. | ◐ |

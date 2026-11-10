@@ -5,7 +5,7 @@ O geocodificador de origem colocou centenas de estabelecimentos de ruas e CEPs d
 3.220 empresas, 40 escolas, 164 unidades de saude). Este script NAO altera o dashboard: gera um CSV com a posicao
 proposta de cada membro da pilha, para a fonte aplicar no pipeline de geocodificacao e regenerar, de forma
 consistente, os ATINGIDOS, cota_pontos.json e os climada_*_rio_grande.json. Aplicar so aqui deixaria o mapa
-"Todas as cotas" com pontos secos/molhados errados (o indice de cota por ponto nao pode ser recalculado sem os
+"Simulação por Cotas" com pontos secos/molhados errados (o indice de cota por ponto nao pode ser recalculado sem os
 rasters de cota) e os totais de Danos Fisicos inconsistentes.
 
 Proposta: mediana das coordenadas dos demais estabelecimentos do mesmo CEP; se o CEP nao tem referencia, mediana

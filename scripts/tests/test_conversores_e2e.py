@@ -158,7 +158,7 @@ class Patrimonio(unittest.TestCase):
             gpd.GeoDataFrame(geometry=[box(-52.105, -32.005, -52.095, -31.995)], crs="EPSG:4326").to_file(
                 cen_dir / f"{mod.CENARIOS['Cenário Maio 2024']}.geojson", driver="GeoJSON")
             gpd.GeoDataFrame(geometry=[box(-52.115, -32.015, -52.095, -31.995)], crs="EPSG:4326").to_file(
-                cen_dir / f"{mod.CENARIOS['Cenário Maio 2024 + 50%']}.geojson", driver="GeoJSON")
+                cen_dir / f"{mod.CENARIOS['Simulação de Maio de 2024 + 50%']}.geojson", driver="GeoJSON")
             antes = (mod.SHP_PATH, mod.BASE_OUT, mod.CENARIOS_DIR)
             mod.SHP_PATH, mod.BASE_OUT, mod.CENARIOS_DIR = str(raiz / "pat.shp"), str(base_out), str(cen_dir)
             try:
@@ -168,7 +168,7 @@ class Patrimonio(unittest.TestCase):
             contagem = lambda p: len(json.loads(Path(p).read_text(encoding="utf-8"))["features"])
             self.assertEqual(contagem(base_out / "patrimonio_BASE.geojson"), 3)
             self.assertEqual(contagem(cen_dir / f"patrimonio_ATINGIDOS_{mod.CENARIOS['Cenário Maio 2024']}.geojson"), 1)
-            self.assertEqual(contagem(cen_dir / f"patrimonio_ATINGIDOS_{mod.CENARIOS['Cenário Maio 2024 + 50%']}.geojson"), 2)
+            self.assertEqual(contagem(cen_dir / f"patrimonio_ATINGIDOS_{mod.CENARIOS['Simulação de Maio de 2024 + 50%']}.geojson"), 2)
 
     def test_main_sem_shapefile_falha_com_mensagem_clara(self):
         mod = _carregar("converter_patrimonio_rio_grande")

@@ -36,7 +36,7 @@ def scenario_slug(mun: str, cen: str) -> str:
 
 CENARIOS = {
     "Cenário Maio 2024":       scenario_slug("Rio Grande", "Cenário Maio 2024"),
-    "Cenário Maio 2024 + 50%": scenario_slug("Rio Grande", "Cenário Maio 2024 + 50%"),
+    "Simulação de Maio de 2024 + 50%": scenario_slug("Rio Grande", "Simulação de Maio de 2024 + 50%"),
 }
 
 def carregar_mancha(slug: str) -> gpd.GeoDataFrame:

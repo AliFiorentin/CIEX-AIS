@@ -1,6 +1,6 @@
 // Pilhas de geocodificação: muitos estabelecimentos de CEPs diferentes no mesmo ponto. É o geocodificador caindo
 // num ponto padrão (centro da cidade) quando não acha o endereço. Vários no mesmo CEP (um prédio comercial) não
-// contam. Usado só para avisar no painel; a correção dos dados é feita na origem (ver Metodologia, Seção 12).
+// contam. Usado só para avisar no painel; a correção dos dados é feita na origem (ver Metodologia, Seção 13).
 
 export interface FeicaoPonto {
   geometry?: { coordinates?: unknown }

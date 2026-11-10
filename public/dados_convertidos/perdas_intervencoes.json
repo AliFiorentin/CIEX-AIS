@@ -1,0 +1,136 @@
+{
+  "Rio Grande": {
+    "Simulação de Setembro de 2023 – Sem intervenção": {
+      "dias_agudo": 15,
+      "dias_efetivos": 30,
+      "f_interrup": 0.082192,
+      "empresas_vab": 17911518.23,
+      "educacao_perdas": 3883334.03,
+      "educacao_custo_adicional": 3883334.03,
+      "saude_producao": 4565.85,
+      "agricultura_perdas": 0,
+      "total": 25682752.14
+    },
+    "Simulação de Setembro de 2023 – Diques": {
+      "dias_agudo": 15,
+      "dias_efetivos": 30,
+      "f_interrup": 0.082192,
+      "empresas_vab": 11139481.47,
+      "educacao_perdas": 2518283.28,
+      "educacao_custo_adicional": 2518283.28,
+      "saude_producao": 0.0,
+      "agricultura_perdas": 0,
+      "total": 16176048.03
+    },
+    "Simulação de Setembro de 2023 – Diques + barragens": {
+      "dias_agudo": 15,
+      "dias_efetivos": 30,
+      "f_interrup": 0.082192,
+      "empresas_vab": 11139481.47,
+      "educacao_perdas": 2518283.28,
+      "educacao_custo_adicional": 2518283.28,
+      "saude_producao": 0.0,
+      "agricultura_perdas": 0,
+      "total": 16176048.03
+    },
+    "Simulação de Novembro de 2023 – Sem intervenção": {
+      "dias_agudo": 16,
+      "dias_efetivos": 32,
+      "f_interrup": 0.087671,
+      "empresas_vab": 21030094.86,
+      "educacao_perdas": 4142222.96,
+      "educacao_custo_adicional": 4142222.96,
+      "saude_producao": 4870.24,
+      "agricultura_perdas": 0,
+      "total": 29319411.02
+    },
+    "Simulação de Novembro de 2023 – Diques": {
+      "dias_agudo": 16,
+      "dias_efetivos": 32,
+      "f_interrup": 0.087671,
+      "empresas_vab": 12280521.69,
+      "educacao_perdas": 3028809.72,
+      "educacao_custo_adicional": 3028809.72,
+      "saude_producao": 0.0,
+      "agricultura_perdas": 0,
+      "total": 18338141.12
+    },
+    "Simulação de Novembro de 2023 – Diques + barragens": {
+      "dias_agudo": 16,
+      "dias_efetivos": 32,
+      "f_interrup": 0.087671,
+      "empresas_vab": 12087373.66,
+      "educacao_perdas": 3028809.72,
+      "educacao_custo_adicional": 3028809.72,
+      "saude_producao": 0.0,
+      "agricultura_perdas": 0,
+      "total": 18144993.09
+    },
+    "Simulação de Maio de 2024 – Sem intervenção": {
+      "dias_agudo": 30,
+      "dias_efetivos": 60,
+      "f_interrup": 0.164384,
+      "empresas_vab": 402162431.96,
+      "educacao_perdas": 28412901.62,
+      "educacao_custo_adicional": 28412901.62,
+      "saude_producao": 3426104.57,
+      "agricultura_perdas": 0,
+      "total": 462414339.77
+    },
+    "Simulação de Maio de 2024 – Diques": {
+      "dias_agudo": 30,
+      "dias_efetivos": 60,
+      "f_interrup": 0.164384,
+      "empresas_vab": 35838492.61,
+      "educacao_perdas": 7766668.06,
+      "educacao_custo_adicional": 7766668.06,
+      "saude_producao": 9131.69,
+      "agricultura_perdas": 0,
+      "total": 51380960.41
+    },
+    "Simulação de Maio de 2024 – Diques + barragens": {
+      "dias_agudo": 30,
+      "dias_efetivos": 60,
+      "f_interrup": 0.164384,
+      "empresas_vab": 35823036.47,
+      "educacao_perdas": 7766668.06,
+      "educacao_custo_adicional": 7766668.06,
+      "saude_producao": 9131.69,
+      "agricultura_perdas": 0,
+      "total": 51365504.27
+    },
+    "Simulação de Junho de 2025 – Sem intervenção": {
+      "dias_agudo": 12,
+      "dias_efetivos": 23,
+      "f_interrup": 0.063014,
+      "empresas_vab": 8753880.71,
+      "educacao_perdas": 2271607.29,
+      "educacao_custo_adicional": 2271607.29,
+      "saude_producao": 0.0,
+      "agricultura_perdas": 0,
+      "total": 13297095.28
+    },
+    "Simulação de Junho de 2025 – Diques": {
+      "dias_agudo": 12,
+      "dias_efetivos": 23,
+      "f_interrup": 0.063014,
+      "empresas_vab": 7497322.17,
+      "educacao_perdas": 1676226.34,
+      "educacao_custo_adicional": 1676226.34,
+      "saude_producao": 0.0,
+      "agricultura_perdas": 0,
+      "total": 10849774.86
+    },
+    "Simulação de Junho de 2025 – Diques + barragens": {
+      "dias_agudo": 12,
+      "dias_efetivos": 23,
+      "f_interrup": 0.063014,
+      "empresas_vab": 7497322.17,
+      "educacao_perdas": 1676226.34,
+      "educacao_custo_adicional": 1676226.34,
+      "saude_producao": 0.0,
+      "agricultura_perdas": 0,
+      "total": 10849774.86
+    }
+  }
+}

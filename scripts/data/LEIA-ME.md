@@ -1,7 +1,7 @@
 # Insumos dos conversores (`scripts/data/`)
 
-Esta pasta guarda as entradas dos scripts de `scripts/`. Só as pequenas são versionadas; as grandes ficam fora do git
-(ver `.gitignore`) e precisam ser baixadas ou copiadas para cá.
+Esta pasta guarda as entradas dos scripts de `scripts/`. Só as pequenas são versionadas; os originais grandes (rasters)
+ficam fora do git, em `RAW/` na raiz do projeto (ver `RAW/LEIAME.md` e `scripts/raw_paths.py`).
 
 ## Versionados
 
@@ -10,7 +10,7 @@ Esta pasta guarda as entradas dos scripts de `scripts/`. Só as pequenas são ve
 | `rio_grande_limite.geojson` | Limite municipal de Rio Grande (IBGE); recorte dos rasters e filtro de pontos fora do município. |
 | `producao_sus_por_cnes_rio_grande.json` | Produção SUS (SIA + SIH) anualizada por CNES, usada em `calcular_perdas_rio_grande.py`. |
 
-## Fora do git (baixar)
+## Fora do git (baixar; ficam em `RAW/mapbiomas/`)
 
 | Arquivo | O que é | Quem usa |
 |---|---|---|
@@ -28,9 +28,9 @@ Informadas por variável de ambiente; cada script explica o que falta e para ond
 |---|---|---|
 | `PATRIMONIO_SHP` | `converter_patrimonio_rio_grande.py` | Shapefile do levantamento de patrimônio histórico. |
 | `INFRA_DADOS_DIR` | `converter_infra_rio_grande.py` | Pasta com os shapefiles da Prefeitura (`PMRG_231215_layer_*.shp`). |
-| `RASTER_DIR` | `gerar_cota_mapa.py` | Pasta `pico210524_evolucaoPorCota` com as máscaras por cota (6 bacias × 6 cotas). |
+| `RASTER_DIR` | `gerar_cota_mapa.py` | Pasta com as máscaras por cota (6 bacias × 6 cotas); padrão `RAW/cotas-pico-2024-05-21`. |
 | `POP_RASTER` | `gerar_populacao_atingida.py` | Raster de densidade populacional (`bra_pd_2020_1km.tif`); método descartado, ver `docs/dados-externos-rio-grande.md`. |
 | `DADOS_EXTERNOS_DIR` | `sincronizar_dados_externos.py` | Pasta `dados_convertidos` do projeto de origem dos dados. |
 
-As simulações hidrológicas (rasters de lâmina d'água do 16/05/2024) ficam em `../dados-brutos/plataforma-economia-azul/`
+As simulações hidrológicas (rasters de lâmina d'água do 16/05/2024) ficam em `RAW/simulacoes-2024-05-16/` (na raiz do projeto)
 (ver `SIM_DIR` em `converter_manchas_altura.py`).

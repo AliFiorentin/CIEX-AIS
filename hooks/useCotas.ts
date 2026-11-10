@@ -38,7 +38,7 @@ async function buscarJson<T>(
 }
 
 /**
- * Cenário "Todas as cotas": água avançando por cota (raster) + painel com os valores da cota atual.
+ * Cenário "Simulação por Cotas": água avançando por cota (raster) + painel com os valores da cota atual.
  * Nada é baixado enquanto o cenário não está ativo.
  */
 export function useCotas(cenario: string): UseCotas {

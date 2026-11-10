@@ -28,8 +28,13 @@ Uso:  python scripts/calcular_perdas_rio_grande.py [--dias 30]
 import argparse
 import json
 import re
+import sys
 import unicodedata
 from pathlib import Path
+
+# Permite importar modulos irmaos mesmo quando este arquivo e carregado por importlib (testes).
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from cenarios_intervencao import EVENTOS, nome_cenario, slug_cenario, todos  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Configuracao -- restrita a Rio Grande
@@ -40,27 +45,58 @@ DASH_DATA = ROOT / "public" / "dados_convertidos"
 SLUG = "rio_grande"
 
 CENARIOS = [
-    "Cenário Setembro 2023", "Cenário Maio 2024", "Cenário Maio 2024 + 50%",
+    "Cenário Setembro 2023", "Cenário Maio 2024", "Simulação de Maio de 2024 + 50%",
     "Nível da Lagoa + Chuva Acumulada – 16/05/2024",
 ]
 
 # periodo do evento por cenario (define dias_agudo/dias_recuperacao e coef. agricola)
 CENARIO_PERIODO = {
     "cenario_maio_2024":    "maio_2024",
-    "cenario_maio_2024_50": "maio_2024",
+    "simulacao_de_maio_de_2024_50": "maio_2024",
     "cenario_setembro_2023": "setembro_2023",
     # Simulacao hidrologica combinada de 16/05/2024 (plataforma Economia Azul) --
     # mesmo periodo/parametros DaLA do evento de Maio 2024 (ver converter_manchas_altura.py)
     "nivel_da_lagoa_chuva_acumulada_16_05_2024": "maio_2024",
 }
+# Simulacoes de intervencao (12 cenarios): o periodo DaLA vem do evento. Setembro de 2023 e Maio de 2024 usam os
+# parametros adotados da origem; Novembro de 2023 e Junho de 2025 nao tem parametros proprios e usam dias INTERPOLADOS
+# pela area atingida (ver DALA_REF e dias_dala_interpolados abaixo), uma estimativa, nao dado da CEPAL.
+CENARIO_PERIODO.update({slug_cenario(e, v): EVENTOS[e]["periodo_dala"] for e, v in todos()})
+CENARIOS_INTERVENCAO = [nome_cenario(e, v) for e, v in todos()]
+
+# Referencias da interpolacao: (area atingida sem intervencao em ha, dias efetivos DaLA) de Setembro de 2023 (15 + 30/2 = 30)
+# e de Maio de 2024 (30 + 60/2 = 60); as areas sao as das simulacoes sem intervencao (scripts/data/intervencoes_mancha_meta.json).
+DALA_REF = ((333.0842, 30), (654.8956, 60))
+
+
+def dias_dala_interpolados(area_ha: float) -> dict:
+    """Dias DaLA de um evento sem parametros proprios: reta entre as duas referencias (DALA_REF) pela area atingida,
+    arredondada a dias inteiros. `dias_agudo` e metade dos efetivos (a proporcao 1:2 das referencias) e a recuperacao
+    fecha a conta: dias_agudo + dias_recuperacao / 2 = dias efetivos. Pode extrapolar abaixo de 30 dias (evento menor
+    que Setembro de 2023); a incerteza e a de uma reta com dois pontos."""
+    (a0, d0), (a1, d1) = DALA_REF
+    efetivos = round(d0 + (area_ha - a0) / (a1 - a0) * (d1 - d0))
+    agudo = round(efetivos / 2)
+    return {"dias_agudo": agudo, "dias_recuperacao": 2 * (efetivos - agudo)}
+
 
 INTERRUPCAO_DALA = {
     "maio_2024":     {"dias_agudo": 30, "dias_recuperacao": 60},
     "setembro_2023": {"dias_agudo": 15, "dias_recuperacao": 30},
+    # Interpolados pela area (352,2 ha -> 32 dias efetivos; 253,6 ha -> 23); um teste confere com a meta das simulacoes
+    "novembro_2023": {"dias_agudo": 16, "dias_recuperacao": 32},
+    "junho_2025":    {"dias_agudo": 12, "dias_recuperacao": 22},
 }
 
 IMPACTO_AGRICOLA = {
     "maio_2024": {
+        "Soja": 1100, "Arroz": 1100, "Outras Lavouras Temporárias": 1400,
+    },
+    # Sem efeito nas simulacoes (nenhuma lavoura passa do filtro de 0,5 ha); mesmos coeficientes de maio_2024
+    "novembro_2023": {
+        "Soja": 1100, "Arroz": 1100, "Outras Lavouras Temporárias": 1400,
+    },
+    "junho_2025": {
         "Soja": 1100, "Arroz": 1100, "Outras Lavouras Temporárias": 1400,
     },
     "setembro_2023": {
@@ -206,7 +242,8 @@ def _dala_params(periodo, dias_override):
 # Main
 # ---------------------------------------------------------------------------
 
-def calcular_perdas(dias=None):
+def calcular_perdas(dias=None, cenarios=None, arquivo=None):
+    """Calcula as perdas dos `cenarios` (padrao: CENARIOS) e grava `arquivo` (padrao: perdas_operacionais.json)."""
     modo = f"--dias {dias} (plano)" if dias is not None else "DaLA (curva linear por periodo)"
     print(f"\n{'='*70}\n  Perdas Operacionais — Rio Grande — {modo}\n{'='*70}")
 
@@ -219,7 +256,7 @@ def calcular_perdas(dias=None):
 
     resultados = {}
 
-    for cen in CENARIOS:
+    for cen in (cenarios or CENARIOS):
         cen_slug = slugify(cen)
         periodo = CENARIO_PERIODO.get(cen_slug)
         f_interrup, da, dias_ef_int, label_modo = _dala_params(periodo, dias)
@@ -263,7 +300,8 @@ def calcular_perdas(dias=None):
             "total":                    round(total, 2),
         }
 
-    nome_arq = "perdas_operacionais.json" if dias is None else f"perdas_operacionais_sens_{dias}d.json"
+    base_arq = Path(arquivo or "perdas_operacionais.json").stem
+    nome_arq = f"{base_arq}.json" if dias is None else f"{base_arq}_sens_{dias}d.json"
     out_path = DASH_DATA / nome_arq
     DASH_DATA.mkdir(parents=True, exist_ok=True)
     with open(out_path, "w", encoding="utf-8") as f:
@@ -278,8 +316,15 @@ def main():
         "--dias", type=int, default=None,
         help="Dias de interrupcao plana (sensibilidade). Omitir para usar curva DaLA por cenario.",
     )
+    parser.add_argument(
+        "--intervencoes", action="store_true",
+        help="Calcula os 12 cenarios de intervencao e grava perdas_intervencoes.json (perdas_operacionais.json nao muda).",
+    )
     args = parser.parse_args()
-    calcular_perdas(dias=args.dias)
+    if args.intervencoes:
+        calcular_perdas(dias=args.dias, cenarios=CENARIOS_INTERVENCAO, arquivo="perdas_intervencoes.json")
+    else:
+        calcular_perdas(dias=args.dias)
 
 
 if __name__ == "__main__":

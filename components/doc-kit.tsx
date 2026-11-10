@@ -50,12 +50,12 @@ export function Section({
     <section id={id} className="mb-10 scroll-mt-20">
       <div className="mb-4 flex items-center gap-2.5">
         <span
-          className="shrink-0 rounded-md px-2 py-1 text-[10px] font-black text-white"
+          className="shrink-0 rounded-md px-2.5 py-1 text-xs font-black text-white"
           style={{ backgroundColor: primary }}
         >
           {num}
         </span>
-        <h2 className="text-lg font-black tracking-tight text-slate-800">
+        <h2 className="text-2xl font-black tracking-tight text-slate-800">
           {title}
         </h2>
       </div>
@@ -65,16 +65,44 @@ export function Section({
   )
 }
 
+/**
+ * Hierarquia dos títulos nas páginas de documentação: Section (h2, 24 px) > GroupTitle (h3, 20 px) > SubTitle (16 px).
+ * `nested` faz o SubTitle valer como h4 (dentro de um GroupTitle), com um corpo um pouco menor.
+ */
 export function SubTitle({
+  primary = DOC_PRIMARY,
+  nested = false,
+  children,
+}: {
+  primary?: string
+  nested?: boolean
+  children: React.ReactNode
+}) {
+  const Tag = nested ? "h4" : "h3"
+  return (
+    <Tag
+      className={`font-bold ${nested ? "mt-5 mb-1.5 text-[15px]" : "mt-6 mb-2 text-base"}`}
+      style={{ color: primary }}
+    >
+      {children}
+    </Tag>
+  )
+}
+
+/** Título de grupo dentro de uma Section (h3, 20 px), com filete; o SubTitle dentro dele deve ser `nested`. */
+export function GroupTitle({
+  id,
   primary = DOC_PRIMARY,
   children,
 }: {
+  id?: string
   primary?: string
   children: React.ReactNode
 }) {
   return (
     <h3
-      className="mt-5 mb-1.5 text-[13px] font-black tracking-wide uppercase"
+      id={id}
+      className="mt-10 mb-3 scroll-mt-24 border-b border-[#c7d6d9] pb-1.5 text-xl font-black"
       style={{ color: primary }}
     >
       {children}

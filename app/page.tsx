@@ -32,9 +32,12 @@ import {
   TrendingDown,
   Info,
   BookOpen,
+  Waves,
+  ShieldCheck,
   LayoutGrid,
   Stethoscope,
   LandPlot,
+  RotateCcw,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent } from "@/components/ui/tabs"
@@ -54,11 +57,30 @@ import {
 import { Skeleton } from "@/components/ui/skeleton"
 import { DonutChart } from "@/components/ui/donut-chart"
 import { FitHeight } from "@/components/FitHeight"
+import { ResumoPerdasDanos } from "@/components/ResumoPerdasDanos"
 import { CotaCanvasLayer } from "@/components/CotaCanvasLayer"
 import { CotaControle } from "@/components/CotaControle"
 import { useCotas, useCotaAtingidos } from "@/hooks/useCotas"
 import { COTAS_CENARIO } from "@/lib/cotas"
-import { detectarPilha, pontosNaPilha } from "@/lib/pilhas"
+import { DanoEvitadoPainel, DiferencaAba } from "@/components/DanoEvitadoPainel"
+import { calcPct, compactoBr, formatoBr } from "@/lib/formatos"
+import { AVISO_MAIO_2024_MAIS_50, rotuloPopulacao } from "@/lib/avisos"
+import {
+  ALTURA_SIMULACAO,
+  EVENTOS_SIMULACAO,
+  INTERVENCAO_PADRAO,
+  INTERVENCOES,
+  abaDoPainel,
+  desmontarEfetivo,
+  eventoDoCodigo,
+  lerIntervencao,
+  nomeEfetivo,
+  scenarioSlug,
+  slugify,
+  temIntervencao,
+  todosNomesEfetivos,
+  type IntervencaoId,
+} from "@/lib/cenarios"
 import { calcEmp, calcEdu, calcSau, STAFF_COLS } from "@/lib/metricas"
 
 // maplibre-gl 6 is ESM-only: worker is copied to public/ by `pnpm copy:maplibre`.
@@ -172,6 +194,14 @@ const HEADER_FLUID = {
   selectTriggerSize: "clamp(9px, 0.85vw, 11px)",
 }
 
+// Botões de navegação do cabeçalho (Perdas · Danos Físicos · Metodologia)
+const NAV_LINK_CLASS =
+  "active-press hover-lift flex items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-2.5 font-black whitespace-nowrap text-white/90 hover:bg-white/20 focus-visible:outline-none"
+const NAV_LINK_STYLE = {
+  fontSize: "var(--btn-size)",
+  height: "var(--btn-h)",
+} as const
+
 // Tipografia fluida dos cards do painel de análise (clamp: min, vh, max) — o painel rola verticalmente
 const PANEL_FLUID = {
   donutCss: "clamp(120px, 19vh, 170px)",
@@ -190,40 +220,57 @@ const HEADER_GLASS = {
   boxShadow: "0 4px 24px rgba(0,0,0,0.18), 0 1px 4px rgba(0,0,0,0.08)",
 } as const
 
-// Ordem cronológica do evento (Setembro 2023 é anterior a Maio 2024).
+// Simulações dos eventos (a intervenção é escolhida no seletor ao lado; ver lib/cenarios.ts). Substituem os antigos
+// "Cenário Setembro 2023" e "Cenário Maio 2024"; os links antigos (?cenario=setembro-2023 e maio-2024) levam a elas.
 const CENARIOS = [
-  "Cenário Setembro 2023",
-  "Cenário Maio 2024",
-  "Cenário Maio 2024 + 50%",
+  ...EVENTOS_SIMULACAO.map((e) => e.nome),
+  "Simulação de Maio de 2024 + 50%",
   "Nível da Lagoa + Chuva Acumulada – 16/05/2024",
   COTAS_CENARIO, // água avançando por cota (só exposição; ver hooks/useCotas.ts)
 ]
+// Estado inicial das camadas (usado também pelo botão "Reiniciar" do cabeçalho). "Uso e Cobertura da Terra" começa
+// desligada no mapa (raster pesado e colorido); a aba Cobertura do Painel aparece sempre e os dados carregam do mesmo jeito.
+const CAMADAS_INICIAIS = [
+  "Empresas",
+  "Saúde",
+  "Educação",
+  "Agricultura",
+  "Infraestrutura",
+  "Patrimônio Histórico",
+]
+const INFRA_INICIAIS = ["Logradouros", "Terrenos"] // deve bater com defaultInfra da carga inicial
 // Cenário inicial ao carregar sem permalink — independente da posição no
 // array acima, para a ordem de exibição não mudar o comportamento padrão.
-const DEFAULT_CENARIO = "Cenário Maio 2024"
+const DEFAULT_CENARIO = "Simulação de Maio de 2024"
 
 // Códigos curtos e legíveis para a URL (?cenario=<código>) — independentes do
 // slug interno usado nos nomes de arquivo (scenarioSlug/slugify), para não
 // acoplar a estética do link compartilhável à convenção de nomenclatura dos
 // dados. Todo cenário novo precisa de uma entrada aqui.
 const CENARIO_URL_SLUGS: Record<string, string> = {
-  "Cenário Maio 2024": "maio-2024",
-  "Cenário Maio 2024 + 50%": "maio-2024-mais-50",
-  "Cenário Setembro 2023": "setembro-2023",
+  "Simulação de Maio de 2024 + 50%": "maio-2024-mais-50",
   "Nível da Lagoa + Chuva Acumulada – 16/05/2024": "lagoa-chuva-16-05-2024",
+  ...Object.fromEntries(EVENTOS_SIMULACAO.map((e) => [e.nome, e.codigo])),
   [COTAS_CENARIO]: "todas-as-cotas",
 }
 const cenarioParaUrl = (nome: string) =>
   CENARIO_URL_SLUGS[nome] ?? slugify(nome)
+const VISTA_SIMULACAO = { lng: -52.15651, lat: -32.06074, zoom: 12.37 }
 // Câmera de cada cenário (centro e zoom), usada como posição inicial e ao trocar de cenário.
 // Cenário sem entrada aqui enquadra a mancha (fitBounds). Uma URL com lng/lat/zoom explícitos tem prioridade.
 const CENARIO_VISTA: Record<
   string,
   { lng: number; lat: number; zoom: number }
 > = {
-  "Cenário Setembro 2023": { lng: -52.16722, lat: -32.0562, zoom: 11.8 },
-  "Cenário Maio 2024": { lng: -52.16827, lat: -32.04972, zoom: 11.8 },
-  "Cenário Maio 2024 + 50%": { lng: -52.18762, lat: -32.09603, zoom: 11.07 },
+  // As 4 simulações usam a mesma vista, qualquer que seja a intervenção (ver vistaDoCenario)
+  ...Object.fromEntries(
+    EVENTOS_SIMULACAO.map((e) => [e.nome, VISTA_SIMULACAO])
+  ),
+  "Simulação de Maio de 2024 + 50%": {
+    lng: -52.17973,
+    lat: -32.101,
+    zoom: 11.49,
+  },
   "Nível da Lagoa + Chuva Acumulada – 16/05/2024": {
     lng: -52.15801,
     lat: -32.05772,
@@ -231,8 +278,27 @@ const CENARIO_VISTA: Record<
   },
   [COTAS_CENARIO]: { lng: -52.16756, lat: -32.05942, zoom: 11.8 },
 }
-const urlParaCenario = (codigo: string) =>
-  CENARIOS.find((c) => CENARIO_URL_SLUGS[c] === codigo)
+// Vista de um cenário; o nome efetivo de uma simulação ("... – Diques") vale a vista do evento.
+const vistaDoCenario = (cenario: string) =>
+  CENARIO_VISTA[desmontarEfetivo(cenario).evento]
+// Código de URL → cenário (nome efetivo nas simulações, combinando com `?intervencao=`; inválido cai no padrão).
+const urlParaCenario = (codigo: string, intervencao?: string | null) => {
+  const nome =
+    CENARIOS.find((c) => CENARIO_URL_SLUGS[c] === codigo) ??
+    eventoDoCodigo(codigo) // inclui os códigos antigos (setembro-2023, maio-2024, simulacao-29-09-2023...)
+  return nome && temIntervencao(nome)
+    ? nomeEfetivo(nome, lerIntervencao(intervencao))
+    : nome
+}
+
+const MOTIVO_SEM_INTERVENCAO =
+  "Disponível nas simulações de Setembro de 2023, Novembro de 2023, Maio de 2024 e Junho de 2025"
+const AVISO_SIMULACAO =
+  'Simulação hidrodinâmica (modelo TELEMAC): não é previsão nem dado observado. Área atingida = lâmina d\'água ≥ 10 cm. "Sem intervenção" é a base de comparação das intervenções (dano evitado), não o evento real.'
+const avisoDoCenario = (cenario: string) =>
+  temIntervencao(desmontarEfetivo(cenario).evento)
+    ? AVISO_SIMULACAO
+    : AVISO_MANCHA_BINARIA
 
 const AVISO_MANCHA_BINARIA =
   "Mancha binária: áreas com lâmina d'água ≥ 10 cm decorrente de acúmulo de chuva. Não indica extensão de alagamento contínuo nem profundidade além do limiar mínimo."
@@ -273,10 +339,31 @@ const ALTURA_MANCHAS: Record<
       { label: "Chuva acumulada ≥10cm", cor: "#ba82e6" },
     ],
   },
+  // as 12 simulações com intervenção compartilham limites e legenda (lib/cenarios.ts)
+  ...Object.fromEntries(
+    todosNomesEfetivos().map((nome) => [nome, ALTURA_SIMULACAO])
+  ),
 }
 
 const INFRA_LAYERS = ["Logradouros", "Quadras", "Terrenos"]
 
+// Polígono do mundo todo, para o véu claro sobre o mapa-base
+const VEU_MUNDO: GeoJSON.Feature<GeoJSON.Polygon> = {
+  type: "Feature",
+  properties: {},
+  geometry: {
+    type: "Polygon",
+    coordinates: [
+      [
+        [-180, -85],
+        [180, -85],
+        [180, 85],
+        [-180, 85],
+        [-180, -85],
+      ],
+    ],
+  },
+}
 const EMPTY_GEO: GeoJSON.FeatureCollection = {
   type: "FeatureCollection",
   features: [],
@@ -341,16 +428,7 @@ async function loadFGB(url: string, signal?: AbortSignal): Promise<any> {
   return { type: "FeatureCollection", features }
 }
 
-const slugify = (str: string) =>
-  str
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "")
-
-const scenarioSlug = (cen: string) => `rio_grande___${slugify(cen)}`
+// slugify e scenarioSlug vêm de @/lib/cenarios (mesma regra de scripts/cenarios_intervencao.py)
 
 const normalizeDep = (val: string) => DEP_LABELS[val] || val
 
@@ -386,28 +464,7 @@ const SETOR_LABELS: Record<string, string> = {
 }
 const normalizeSetor = (val: string) => SETOR_LABELS[val] || val
 
-const formatoBr = (num: number, casas = 0) =>
-  num.toLocaleString("pt-BR", {
-    minimumFractionDigits: casas,
-    maximumFractionDigits: casas,
-  })
-
-const compactoBr = (n: number, casas = 1) => {
-  if (n === undefined || n === null || isNaN(n)) return "0"
-  const abs = Math.abs(n)
-  const sinal = n < 0 ? "-" : ""
-  // Arredonda antes de escolher a unidade: 999.950 não pode virar "1.000,0 Mil".
-  const arred = (d: number) => Number((abs / d).toFixed(casas))
-  if (abs >= 1e9 || arred(1e6) >= 1000)
-    return `${sinal}${formatoBr(abs / 1e9, casas)} Bi`
-  if (abs >= 1e6 || arred(1e3) >= 1000)
-    return `${sinal}${formatoBr(abs / 1e6, casas)} Mi`
-  if (abs >= 1e3) return `${sinal}${formatoBr(abs / 1e3, casas)} Mil`
-  return `${sinal}${formatoBr(abs, casas)}`
-}
-
-const calcPct = (parte: number, total: number) =>
-  !total ? "0%" : `${formatoBr((parte / total) * 100, 0)}%`
+// formatoBr, compactoBr e calcPct vêm de @/lib/formatos (compartilhados com as páginas de Perdas e Danos)
 
 // ─── Métricas ────────────────────────────────────────────────────────────────
 
@@ -431,7 +488,7 @@ export default function Dashboard() {
   const hasFlownInitialRef = useRef(true)
 
   const [initialViewState] = useState(() => {
-    const padrao = CENARIO_VISTA[DEFAULT_CENARIO]
+    const padrao = vistaDoCenario(DEFAULT_CENARIO)
     if (typeof window === "undefined") {
       return {
         longitude: padrao.lng,
@@ -448,7 +505,7 @@ export default function Dashboard() {
     // Sem lng/lat/zoom na URL, a câmera nasce na vista do cenário pedido em `?cenario=` (ou do cenário padrão).
     const codigo = p.get("cenario")
     const vista =
-      CENARIO_VISTA[(codigo && urlParaCenario(codigo)) || DEFAULT_CENARIO] ??
+      vistaDoCenario((codigo && urlParaCenario(codigo)) || DEFAULT_CENARIO) ??
       padrao
 
     return {
@@ -468,30 +525,27 @@ export default function Dashboard() {
       ? null
       : new URLSearchParams(window.location.search).get("cenario")
   )
+  // `?intervencao=` (só vale nas simulações; inválido cai em "sem-intervencao"), lido junto do `?cenario=`
+  const permalinkIntervencaoRef = useRef<string | null>(
+    typeof window === "undefined"
+      ? null
+      : new URLSearchParams(window.location.search).get("intervencao")
+  )
   const headerRef = useRef<HTMLElement>(null)
   // Deslocamento vertical dos painéis flutuantes; acompanha a altura do header
   // (que cresce quando os botões de camada quebram linha em telas menores).
   const [panelTop, setPanelTop] = useState(90)
 
+  // Nas simulações `cenario` é o nome efetivo ("Simulação de Setembro de 2023 – Diques"): tudo que deriva dele (slug dos
+  // arquivos, raster, vista, aviso) segue igual. O evento e a intervenção são derivados logo antes do `return`.
   const [cenario, setCenario] = useState<string>("(nenhum)")
   // Aviso metodológico temporário ao selecionar cenários com mancha binária
   // (ex.: o componente de chuva acumulada da mancha combinada) — some sozinho
   // após 10s ou ao ser fechado manualmente.
   const [avisoMancha, setAvisoMancha] = useState<string | null>(null)
 
-  const [camadas, setCamadas] = useState<string[]>([
-    "Empresas",
-    "Saúde",
-    "Educação",
-    "Agricultura",
-    "Uso e Cobertura da Terra",
-    "Infraestrutura",
-    "Patrimônio Histórico",
-  ])
-  const [infraAtivas, setInfraAtivas] = useState<string[]>([
-    "Logradouros",
-    "Terrenos",
-  ])
+  const [camadas, setCamadas] = useState<string[]>(CAMADAS_INICIAIS)
+  const [infraAtivas, setInfraAtivas] = useState<string[]>(INFRA_INICIAIS)
   const [tabAtiva, setTabAtiva] = useState("resumo")
   const [mapReady, setMapReady] = useState(false)
   const [showHeatmapPopulacao, setShowHeatmapPopulacao] = useState(false)
@@ -507,7 +561,7 @@ export default function Dashboard() {
   const [showPainelAnalise, setShowPainelAnalise] = useState(true)
   const [showFiltros, setShowFiltros] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
-  const [showLegenda, setShowLegenda] = useState(false)
+  const [showLegenda, setShowLegenda] = useState(true) // nasce aberta e se recolhe sozinha (como os Filtros)
   const [showMancha, setShowMancha] = useState(true)
   const [showListaLogradouros, setShowListaLogradouros] = useState(false)
   const [showListaEscolas, setShowListaEscolas] = useState(false)
@@ -538,7 +592,7 @@ export default function Dashboard() {
   const [atingidosPatrimonio, setAtingidosPatrimonio] = useState<any>(null)
   const [manchaCenario, setManchaCenario] = useState<any>(null)
 
-  // Cenário "Todas as cotas": água avançando por cota (raster) e, a cada cota, os pontos sob a água.
+  // Cenário "Simulação por Cotas": água avançando por cota (raster) e, a cada cota, os pontos sob a água.
   // Só empresas/educação/saúde têm dado por ponto em cada cota; o resto (cobertura, agricultura, patrimônio,
   // infra) fica vazio neste modo.
   const cotas = useCotas(cenario)
@@ -562,6 +616,9 @@ export default function Dashboard() {
   // Evita que o effect de cenário refaça o fetch/animação logo após a carga inicial
   // (a carga inicial já buscou os dados e ajustou o mapa para o cenário inicial).
   const skipInitialScenarioRef = useRef(false)
+  // Evento (sem a intervenção) da última carga de uma simulação: trocar só a intervenção dentro do mesmo evento
+  // não precisa do voo da câmera nem dos 5 s de espera (a mancha e os atingidos já estão no mesmo enquadramento).
+  const eventoCarregadoRef = useRef<string | null>(null)
 
   const [cursor, setCursor] = useState("grab")
   const [popupInfo, setPopupInfo] = useState<{
@@ -582,7 +639,8 @@ export default function Dashboard() {
     // `desired` é o código amigável da URL (CENARIO_URL_SLUGS) — ver o efeito
     // que escreve `?cenario=`, mais abaixo.
     const initialCenario =
-      (desired && urlParaCenario(desired)) || DEFAULT_CENARIO
+      (desired && urlParaCenario(desired, permalinkIntervencaoRef.current)) ||
+      DEFAULT_CENARIO
     const sSlug = scenarioSlug(initialCenario)
     const defaultInfra = ["Logradouros", "Terrenos"] // deve bater com infraAtivas inicial
 
@@ -688,6 +746,11 @@ export default function Dashboard() {
           setInfraStats(infraStatsJson)
 
           skipInitialScenarioRef.current = true
+          eventoCarregadoRef.current = temIntervencao(
+            desmontarEfetivo(initialCenario).evento
+          )
+            ? desmontarEfetivo(initialCenario).evento
+            : null
           setCenario(initialCenario)
           initialLoadDoneRef.current = true
           setBaseReady(true)
@@ -764,7 +827,7 @@ export default function Dashboard() {
   }
 
   // Timer que limpa os atingidos 5 s depois de "(nenhum)": cancelado ao trocar de cenário antes disso,
-  // senão ele zerava os atingidos de "Todas as cotas" (ou de outro cenário escolhido em seguida).
+  // senão ele zerava os atingidos de "Simulação por Cotas" (ou de outro cenário escolhido em seguida).
   const limpaNenhumTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Cenário → mancha + atingidos (pula todos os runs até o mount terminar)
@@ -781,6 +844,7 @@ export default function Dashboard() {
       return
     }
     if (cenario === COTAS_CENARIO) {
+      eventoCarregadoRef.current = null
       // Sem mancha nem arquivos de cenário: a água vem do raster de cotas (hooks/useCotas.ts).
       setManchaCenario(null)
       setAtingidosCobertura(null)
@@ -799,6 +863,7 @@ export default function Dashboard() {
       return
     }
     if (!cenario || cenario === "(nenhum)") {
+      eventoCarregadoRef.current = null
       const map = mapRef.current?.getMap()
       if (map)
         map.flyTo({ center: [-52.22, -32.09], zoom: 10.8, duration: 5000 })
@@ -819,6 +884,13 @@ export default function Dashboard() {
     const ctrl = new AbortController()
     const { signal } = ctrl
     const sSlug = scenarioSlug(cenario)
+    const eventoDoCenario = desmontarEfetivo(cenario).evento
+    const mesmoEvento =
+      temIntervencao(eventoDoCenario) &&
+      eventoCarregadoRef.current === eventoDoCenario
+    eventoCarregadoRef.current = temIntervencao(eventoDoCenario)
+      ? eventoDoCenario
+      : null
     setIsLoading(true)
     // Limpa já os resultados do cenário anterior: a câmera leva ~5 s antes de os novos chegarem, e nesse tempo o
     // painel mostraria os números antigos sob o título do cenário novo (ex.: 601 empresas de Maio 2024 sob "+50%").
@@ -838,9 +910,12 @@ export default function Dashboard() {
         // A mancha nova aparece já durante o voo da câmera; os atingidos entram depois.
         setManchaCenario(mancha)
 
+        // Só troca de intervenção no mesmo evento: o enquadramento é o mesmo; não voa nem espera.
+        if (mesmoEvento) return mancha
+
         // Câmera fixa do cenário (CENARIO_VISTA); sem entrada, enquadra a mancha.
         const map = mapRef.current?.getMap()
-        const vista = CENARIO_VISTA[cenario]
+        const vista = vistaDoCenario(cenario)
         if (map && vista) {
           map.flyTo({
             center: [vista.lng, vista.lat],
@@ -1009,7 +1084,13 @@ export default function Dashboard() {
   // Permalink (leitura do `?cenario=` inicial acontece na inicialização do ref, acima)
   useEffect(() => {
     const params = new URLSearchParams()
-    if (cenario !== "(nenhum)") params.set("cenario", cenarioParaUrl(cenario))
+    if (cenario !== "(nenhum)") {
+      // nas simulações o cenário é o nome efetivo: `?cenario=` leva o evento e `?intervencao=` a variante
+      const { evento, intervencao } = desmontarEfetivo(cenario)
+      params.set("cenario", cenarioParaUrl(evento))
+      if (intervencao !== "sem-intervencao")
+        params.set("intervencao", intervencao)
+    }
     const qs = params.toString()
     window.history.replaceState(
       null,
@@ -1030,7 +1111,9 @@ export default function Dashboard() {
   }, [])
 
   useEffect(() => {
-    if (ALTURA_MANCHAS[cenario]) mostrarAvisoMancha(AVISO_MANCHA_BINARIA)
+    if (ALTURA_MANCHAS[cenario]) mostrarAvisoMancha(avisoDoCenario(cenario))
+    else if (cenario === "Simulação de Maio de 2024 + 50%")
+      mostrarAvisoMancha(AVISO_MAIO_2024_MAIS_50) // F3: o nome sugere +50% de área; é a água 60 cm mais alta
     else setAvisoMancha(null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cenario])
@@ -1340,18 +1423,6 @@ export default function Dashboard() {
   // Métricas calculadas sobre o dado filtrado atualmente exibido no mapa
   const renderEmpMetrics = useMemo(() => calcEmp(renderEmp), [renderEmp])
   const renderEduMetrics = useMemo(() => calcEdu(renderEdu), [renderEdu])
-  // Pilha de geocodificação: empresas de CEPs diferentes no mesmo ponto (aviso no painel de Empresas).
-  const pilhaEmpresas = useMemo(
-    () => (baseEmpresas?.features ? detectarPilha(baseEmpresas.features) : null),
-    [baseEmpresas]
-  )
-  const empresasNaPilha = useMemo(
-    () =>
-      pilhaEmpresas && atingidosEmpresas?.features
-        ? pontosNaPilha(atingidosEmpresas.features, pilhaEmpresas)
-        : 0,
-    [pilhaEmpresas, atingidosEmpresas]
-  )
   const renderSauMetrics = useMemo(() => calcSau(renderSau), [renderSau])
   const baseEmpFiltMetrics = useMemo(
     () => calcEmp(baseEmpFiltrado),
@@ -1721,16 +1792,27 @@ export default function Dashboard() {
   useEffect(() => {
     if (tabAtiva === "agricultura" && !camadas.includes("Agricultura"))
       setTabAtiva("empresas")
-    if (
-      tabAtiva === "cobertura" &&
-      !camadas.includes("Uso e Cobertura da Terra")
-    )
-      setTabAtiva("empresas")
     if (tabAtiva === "infra" && !camadas.includes("Infraestrutura"))
       setTabAtiva("empresas")
     if (tabAtiva === "patrimonio" && !camadas.includes("Patrimônio Histórico"))
       setTabAtiva("empresas")
   }, [camadas, infraAtivas, tabAtiva])
+
+  // Ao escolher uma intervenção numa simulação, a aba ativa vira "Dano Evitado" (que substitui o "Resumo");
+  // ao sair desse modo, volta a "Resumo". Só reage à mudança de modo, não a cada troca de cenário.
+  const modoAba = useMemo(() => {
+    const { evento, intervencao } = desmontarEfetivo(cenario)
+    return abaDoPainel(evento, intervencao)
+  }, [cenario])
+  useEffect(() => {
+    setTabAtiva((atual) =>
+      modoAba === "dano-evitado"
+        ? "dano-evitado"
+        : atual === "dano-evitado"
+          ? "resumo"
+          : atual
+    )
+  }, [modoAba])
 
   // ─── Render ───────────────────────────────────────────────────────────────
 
@@ -1739,6 +1821,9 @@ export default function Dashboard() {
   const [abertoFiltros, setAbertoFiltros] = useState(false)
   const filtrosInteragiu = useRef(false)
   const filtrosJaRecolheu = useRef(false)
+  // Legenda: mesmo esquema dos Filtros (nasce aberta, recolhe sozinha em 6 s se ninguém mexer, reabre ao trocar de cenário).
+  const legendaInteragiu = useRef(false)
+  const legendaJaRecolheu = useRef(false)
   const primeiraSelecao = useRef(true)
   useEffect(() => {
     if (primeiraSelecao.current) {
@@ -1748,6 +1833,9 @@ export default function Dashboard() {
     filtrosInteragiu.current = false
     filtrosJaRecolheu.current = false
     setShowFiltros(true)
+    legendaInteragiu.current = false
+    legendaJaRecolheu.current = false
+    setShowLegenda(true)
   }, [cenario])
   const filtrosVisiveis = showFiltros && (temCamadaTabular || isCenarioAtivo)
   useEffect(() => {
@@ -1758,6 +1846,54 @@ export default function Dashboard() {
     }, 6000)
     return () => clearTimeout(t)
   }, [filtrosVisiveis])
+  useEffect(() => {
+    if (!showLegenda || legendaJaRecolheu.current) return
+    const t = setTimeout(() => {
+      legendaJaRecolheu.current = true
+      if (!legendaInteragiu.current) setShowLegenda(false)
+    }, 6000)
+    return () => clearTimeout(t)
+  }, [showLegenda])
+  // Reiniciar: volta ao estado de quando a página abre (cenário padrão sem intervenção, camadas, heatmaps, filtros,
+  // painéis e câmera), sem recarregar os dados.
+  const reiniciar = () => {
+    setCenario(nomeEfetivo(DEFAULT_CENARIO, INTERVENCAO_PADRAO))
+    setCamadas(CAMADAS_INICIAIS)
+    setInfraAtivas(INFRA_INICIAIS)
+    setShowHeatmapPopulacao(false)
+    setShowHeatmapEmpresas(false)
+    setShowHeatmapSaude(false)
+    setShowHeatmapEducacao(false)
+    setFiltroSetor("(todos)")
+    setFiltroDep("(todas)")
+    setFiltroTipo("(todas)")
+    setFiltroTipologia("(todas)")
+    setShowMancha(true)
+    setShowListaLogradouros(false)
+    setShowListaEscolas(false)
+    setShowListaHospitais(false)
+    setShowListaUBS(false)
+    setShowListaAmbulat(false)
+    setPopupInfo(null)
+    setTabAtiva("resumo")
+    setShowPainelAnalise(true)
+    // Filtros e Legenda reabrem e voltam a se recolher sozinhos
+    filtrosInteragiu.current = false
+    filtrosJaRecolheu.current = false
+    setShowFiltros(true)
+    legendaInteragiu.current = false
+    legendaJaRecolheu.current = false
+    setShowLegenda(true)
+    const vista = vistaDoCenario(DEFAULT_CENARIO)
+    mapRef.current?.getMap().flyTo({
+      center: [vista.lng, vista.lat],
+      zoom: vista.zoom,
+      pitch: 0,
+      bearing: 0,
+      duration: 1500,
+      essential: true,
+    })
+  }
   const nFiltrosAtivos = [
     filtroSetor !== "(todos)",
     filtroDep !== "(todas)",
@@ -1769,6 +1905,10 @@ export default function Dashboard() {
     camadas.includes("Educação") ||
     camadas.includes("Saúde") ||
     camadas.includes("Patrimônio Histórico")
+
+  // Evento e intervenção escolhidos (derivados do nome efetivo); usados pelos seletores do cabeçalho e pelo Painel.
+  const { evento: eventoSel, intervencao: intervencaoSel } =
+    desmontarEfetivo(cenario)
 
   return (
     <div
@@ -1855,13 +1995,30 @@ export default function Dashboard() {
           cursor={cursor}
           onMouseEnter={() => setCursor("pointer")}
           onMouseLeave={() => setCursor("grab")}
-          onLoad={() => setMapReady(true)}
+          onLoad={(e) => {
+            setMapReady(true)
+            // Créditos do mapa recolhidos (só o botão "i"); o clique no "i" abre
+            e.target
+              .getContainer()
+              .querySelector(".maplibregl-ctrl-attrib")
+              ?.classList.remove("maplibregl-compact-show")
+          }}
           maxPitch={0}
           dragRotate={false}
           pitchWithRotate={false}
           touchPitch={false}
           onMoveEnd={handleMapMoveEnd}
         >
+          {/* Véu claro sobre o mapa-base (ruas, água, rótulos), abaixo de todas as camadas de dados: suaviza o fundo e
+              destaca mancha, pontos e demais camadas. O MapLibre não tem desfoque por camada; o véu faz o papel. */}
+          <Source id="veu-base" type="geojson" data={VEU_MUNDO}>
+            <Layer
+              id="veu-base-fill"
+              type="fill"
+              paint={{ "fill-color": "#eef3f4", "fill-opacity": 0.62 }}
+            />
+          </Source>
+
           {/* Âncoras para manter Z-Index correto (primeira coisa a ser renderizada) */}
           <Source id="anchors" type="geojson" data={EMPTY_GEO}>
             <Layer
@@ -1948,7 +2105,7 @@ export default function Dashboard() {
               </Source>
             )}
 
-          {/* Cenário "Todas as cotas": água avançando por cota (canvas recolorido a cada cota) */}
+          {/* Cenário "Simulação por Cotas": água avançando por cota (canvas recolorido a cada cota) */}
           {mapReady && cotas.cotasAtivo && (
             <CotaCanvasLayer
               raster={cotas.cotaRaster}
@@ -2627,40 +2784,53 @@ export default function Dashboard() {
         </Map>
 
         {/* Logo CIEX + GPEA — barra com a altura do grupo de zoom (72 px), alinhada a ele, à esquerda do zoom, na base; a legenda se apoia acima dela */}
-        <div className="pointer-events-none absolute right-[40px] bottom-[40px] z-10">
+        <div className="pointer-events-none absolute right-[62px] bottom-[40px] z-10">
           <div
-            className="flex h-[72px] w-[150px] items-center justify-center gap-2 rounded-md bg-white/90 px-2 shadow-sm"
+            className="flex h-[130px] w-[196px] items-center justify-center rounded-md bg-white/90 px-2 shadow-sm"
             style={{ border: "2px solid rgba(0,0,0,0.1)" }}
           >
-            <Image
-              src="/CIEX2.png"
-              alt="CIEX"
-              width={58}
-              height={58}
-              className="object-contain"
-              style={{
-                width: "auto",
-                height: "auto",
-                maxWidth: "58px",
-                maxHeight: "58px",
-              }}
-              onError={(e) => (e.currentTarget.style.display = "none")}
-            />
-            <div className="h-10 w-px bg-black/10" />
-            <Image
-              src="/GPEA.png"
-              alt="GPEA"
-              width={80}
-              height={26}
-              className="object-contain"
-              style={{
-                width: "auto",
-                height: "auto",
-                maxWidth: "56px",
-                maxHeight: "30px",
-              }}
-              onError={(e) => (e.currentTarget.style.display = "none")}
-            />
+            {/* A largura da fileira CIEX + GPEA define a da logo da FURG (w-0 + min-w-full: ela não alarga a fileira) */}
+            <div className="flex flex-col items-stretch gap-2">
+              <div className="flex items-center justify-center gap-2">
+                <Image
+                  src="/CIEX2.png"
+                  alt="CIEX"
+                  width={58}
+                  height={58}
+                  className="object-contain"
+                  style={{
+                    width: "auto",
+                    height: "auto",
+                    maxWidth: "58px",
+                    maxHeight: "58px",
+                  }}
+                  onError={(e) => (e.currentTarget.style.display = "none")}
+                />
+                <div className="h-10 w-px bg-black/10" />
+                <Image
+                  src="/GPEA.png"
+                  alt="GPEA"
+                  width={80}
+                  height={26}
+                  className="object-contain"
+                  style={{
+                    width: "auto",
+                    height: "auto",
+                    maxWidth: "92px",
+                    maxHeight: "48px",
+                  }}
+                  onError={(e) => (e.currentTarget.style.display = "none")}
+                />
+              </div>
+              <Image
+                src="/FURG.png"
+                alt="FURG"
+                width={216}
+                height={82}
+                className="h-[45px] w-0 min-w-[90%] self-center object-fill"
+                onError={(e) => (e.currentTarget.style.display = "none")}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -2698,11 +2868,20 @@ export default function Dashboard() {
 
       {/* ── Legenda: canto direito, acima da barra de logos e dos controles do mapa ──────── */}
       <div
-        className="absolute right-2 bottom-[120px] z-10 flex w-[182px] flex-col justify-end"
+        onPointerDown={() => {
+          legendaInteragiu.current = true
+        }}
+        onPointerEnter={() => {
+          legendaInteragiu.current = true
+        }}
+        onFocus={() => {
+          legendaInteragiu.current = true
+        }}
+        className="absolute right-2 bottom-[178px] z-10 flex w-[250px] flex-col justify-end"
         style={{
           maxHeight: filtrosVisiveis
-            ? "calc(100vh - 262px)"
-            : `calc(100vh - ${120 + panelTop + 44}px)`,
+            ? "calc(100vh - 320px)"
+            : `calc(100vh - ${178 + panelTop + 44}px)`,
         }}
       >
         <div
@@ -2862,16 +3041,27 @@ export default function Dashboard() {
                             ? "Altura da lâmina d'água"
                             : "Cenário",
                           corpo: ALTURA_MANCHAS[cenario] ? (
-                            ALTURA_MANCHAS[cenario].legenda.map(
-                              ({ label, cor }) => (
-                                <LegendItem
-                                  key={`altura-${label}`}
-                                  cor={cor}
-                                  label={label}
-                                  area
-                                />
-                              )
-                            )
+                            <>
+                              {ALTURA_MANCHAS[cenario].legenda.map(
+                                ({ label, cor }) => (
+                                  <LegendItem
+                                    key={`altura-${label}`}
+                                    cor={cor}
+                                    label={label}
+                                    area
+                                  />
+                                )
+                              )}
+                              {temIntervencao(eventoSel) && (
+                                <p
+                                  className="mt-1 text-[8px] leading-tight"
+                                  style={{ color: C.muted }}
+                                >
+                                  10–44 cm: lâmina rasa. Simulação, não
+                                  observação.
+                                </p>
+                              )}
+                            </>
                           ) : (
                             <LegendItem
                               cor={COLORS.cenario}
@@ -2912,7 +3102,7 @@ export default function Dashboard() {
 
       {/* ── Copyright: base, centralizado na área livre do mapa (entre o painel e a atribuição) ── */}
       <div
-        className={`pointer-events-none absolute right-[330px] bottom-4 z-10 flex items-end justify-center transition-[left] duration-300 ${showPainelAnalise ? "left-[397px]" : "left-0"}`}
+        className={`pointer-events-none absolute right-[330px] bottom-4 z-10 flex items-end justify-center transition-[left] duration-300 ${showPainelAnalise ? "left-[432px]" : "left-0"}`}
         style={{ transitionTimingFunction: "var(--ease-out)" }}
       >
         <div
@@ -2961,7 +3151,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ── Header — flex-wrap com tamanhos fluidos (.dash-header); em < 1400 px os botões de camada viram grade 2x2; painéis seguem panelTop */}
+      {/* ── Header — 1 linha a partir de 1260 px (camadas só com ícone abaixo de 2200 px); abaixo de 1260 px quebra e as camadas vão para a 2ª linha; painéis seguem panelTop */}
       <header
         ref={headerRef}
         className="dash-header absolute top-1.5 right-3 left-3 z-20 flex flex-wrap items-center rounded-xl shadow-2xl"
@@ -2972,38 +3162,25 @@ export default function Dashboard() {
           gap: "var(--section-gap)",
         }}
       >
-        {/* Logos CIEX + GPEA + título */}
+        {/* Ícone do projeto (favicon, no lugar das logos CIEX e GPEA) + título em uma linha */}
         <div
-          className="flex shrink-0 items-center gap-3 border-r"
+          className="flex shrink-0 items-center gap-2.5 border-r"
           style={{
             borderColor: "rgba(255,255,255,0.2)",
             paddingRight: "var(--section-gap)",
           }}
         >
           <Image
-            src="/CIEX.png"
-            alt="CIEX"
-            width={80}
-            height={28}
-            className="object-contain"
-            style={{ height: "var(--logo-h)", width: "auto" }}
-            onError={(e) => (e.currentTarget.style.display = "none")}
+            src="/icon.png"
+            alt="CIEX · GPEA"
+            width={48}
+            height={48}
+            className="shrink-0 rounded-lg object-contain"
+            style={{ height: "calc(var(--logo-h) * 1.5)", width: "auto" }}
           />
-          <Image
-            src="/GPEA.png"
-            alt="GPEA"
-            width={80}
-            height={24}
-            className="object-contain"
-            style={{ height: "var(--logo-h2)", width: "auto" }}
-            onError={(e) => (e.currentTarget.style.display = "none")}
-          />
-          <div
-            className="flex min-w-0 flex-col justify-center pl-3"
-            style={{ maxWidth: "clamp(130px, 15vw, 260px)" }}
-          >
+          <div className="flex min-w-0 flex-col justify-center">
             <h1
-              className="leading-tight font-black text-white"
+              className="leading-tight font-black whitespace-nowrap text-white"
               style={{ fontSize: HEADER_FLUID.titleSize }}
             >
               Painel de Vulnerabilidade Econômica
@@ -3018,20 +3195,31 @@ export default function Dashboard() {
         </div>
 
         {/* Perdas Operacionais / Metodologia — empilhados, empurram o resto para a direita (mr-auto) */}
-        <div className="mr-auto flex shrink-0 flex-col gap-0.5">
+        <div className="grid shrink-0 grid-cols-2 gap-0.5 max-[1999px]:flex max-[1999px]:flex-row max-[1999px]:gap-1 min-[1260px]:mr-auto">
           <Link
-            href="/danos"
-            className="active-press hover-lift flex items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-2.5 font-black whitespace-nowrap text-white/90 hover:bg-white/20 focus-visible:outline-none"
-            style={{ fontSize: "var(--btn-size)", height: "var(--btn-h)" }}
-            title="Ver danos operacionais e físicos"
+            href="/perdas-operacionais"
+            className={NAV_LINK_CLASS}
+            style={NAV_LINK_STYLE}
+            title="Ver perdas operacionais (DaLA)"
           >
             <TrendingDown size={11} strokeWidth={2.5} />
-            Danos
+            <span className="min-[2000px]:hidden">Perdas</span>
+            <span className="max-[1999px]:hidden">Perdas Operacionais</span>
+          </Link>
+          <Link
+            href="/danos-fisicos"
+            className={NAV_LINK_CLASS}
+            style={NAV_LINK_STYLE}
+            title="Ver danos físicos (exposição por cota)"
+          >
+            <Waves size={11} strokeWidth={2.5} />
+            <span className="min-[2000px]:hidden">Danos</span>
+            <span className="max-[1999px]:hidden">Danos Físicos</span>
           </Link>
           <Link
             href="/metodologia"
-            className="active-press hover-lift flex items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-2.5 font-black whitespace-nowrap text-white/90 hover:bg-white/20 focus-visible:outline-none"
-            style={{ fontSize: "var(--btn-size)", height: "var(--btn-h)" }}
+            className={`${NAV_LINK_CLASS} min-[2000px]:col-span-2`}
+            style={NAV_LINK_STYLE}
             title="Ver metodologia do painel"
           >
             <BookOpen size={11} strokeWidth={2.5} />
@@ -3040,21 +3228,17 @@ export default function Dashboard() {
         </div>
 
         {/* Cenário */}
-        <div
-          className="flex shrink-0 flex-col gap-0 border-r"
-          style={{
-            borderColor: "rgba(255,255,255,0.2)",
-            paddingRight: "var(--section-gap)",
-            width: "calc(var(--select-w) + var(--section-gap))",
-          }}
-        >
+        <div className="flex w-[var(--select-w)] shrink-0 flex-col gap-0 max-[1259px]:w-auto max-[1259px]:min-w-[var(--select-w)] max-[1259px]:flex-1">
           <label
             className="font-bold tracking-wider whitespace-nowrap text-white/70 uppercase"
             style={{ fontSize: "var(--select-label)" }}
           >
             Cenário de Inundação
           </label>
-          <Select value={cenario} onValueChange={setCenario}>
+          <Select
+            value={eventoSel}
+            onValueChange={(v) => setCenario(nomeEfetivo(v, intervencaoSel))}
+          >
             <SelectTrigger
               aria-label="Cenário de inundação"
               className="w-full min-w-0 border-white/20 text-white"
@@ -3079,102 +3263,209 @@ export default function Dashboard() {
           </Select>
         </div>
 
-        {/* Camadas — 1 linha em telas largas; grade 2 colunas abaixo de 1400 px (evita botões na 2ª linha com espaço sobrando) */}
+        {/* Intervenção — só nas simulações (Setembro de 2023, Novembro de 2023, Maio de 2024 e Junho de 2025); nos demais cenários fica desabilitado */}
         <div
-          className="flex items-center max-[1399px]:grid max-[1399px]:shrink-0 max-[1399px]:grid-cols-2"
-          style={{ gap: "var(--layer-gap)" }}
+          className="group relative flex w-[calc(var(--select-w)+var(--section-gap)+var(--select-h)+4px)] shrink-0 flex-col gap-0 border-r border-white/20 pr-[var(--section-gap)] max-[1259px]:w-auto max-[1259px]:min-w-[var(--select-w)] max-[1259px]:flex-1 max-[1259px]:border-r-0 max-[1259px]:pr-0"
+          // Desabilitado, o seletor não recebe foco e o `title` não aparece por teclado nem leitor de tela: o próprio
+          // bloco passa a ser focável, com o motivo no aria-label e num aviso visível ao focar ou passar o mouse.
+          {...(temIntervencao(eventoSel)
+            ? {}
+            : {
+                tabIndex: 0,
+                role: "group",
+                "aria-label": `Intervenção indisponível neste cenário. ${MOTIVO_SEM_INTERVENCAO}`,
+              })}
         >
-          {[
-            {
-              id: "Empresas",
-              label: "Empresas",
-              icon: <Building2 size={11} strokeWidth={2.5} />,
-            },
-            {
-              id: "Saúde",
-              label: "Saúde",
-              icon: <HeartPulse size={11} strokeWidth={2.5} />,
-            },
-            {
-              id: "Educação",
-              label: "Educação",
-              icon: <GraduationCap size={11} strokeWidth={2.5} />,
-            },
-            {
-              id: "Agricultura",
-              label: "Agricultura",
-              icon: <Sprout size={11} strokeWidth={2.5} />,
-            },
-            {
-              id: "Uso e Cobertura da Terra",
-              label: "Cobertura",
-              icon: <Leaf size={11} strokeWidth={2.5} />,
-            },
-            {
-              id: "Patrimônio Histórico",
-              label: "Patrimônio",
-              icon: <Landmark size={11} strokeWidth={2.5} />,
-            },
-          ].map(({ id, label, icon }) => (
-            <button
-              key={id}
-              onClick={() => toggleCamada(id)}
-              aria-pressed={camadas.includes(id)}
-              className={`active-press hover-lift flex shrink-0 items-center justify-center gap-1 rounded-md border font-black whitespace-nowrap focus-visible:ring-2 focus-visible:ring-[#1E404A]/40 focus-visible:ring-offset-1 focus-visible:outline-none max-[1399px]:w-full ${camadas.includes(id) ? "border-[#dce1d8] bg-white text-[#1E404A]" : "border-white/20 text-white/80 hover:bg-white/10"}`}
-              style={{
-                fontSize: "var(--btn-size)",
-                height: "var(--btn-h)",
-                paddingInline: "var(--btn-px)",
-                ...(camadas.includes(id) ? {} : { backgroundColor: C.field }),
-              }}
+          {!temIntervencao(eventoSel) && (
+            <span
+              role="tooltip"
+              className="pointer-events-none absolute top-full left-0 z-30 mt-1 hidden w-56 rounded-md bg-slate-900 px-2 py-1 text-[10px] leading-snug font-medium text-white normal-case shadow-lg group-hover:block group-focus:block"
             >
-              {icon}
-              {label}
-            </button>
-          ))}
-
-          {/* Infraestrutura dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              disabled={!possuiInfra}
-              className={`active-press hover-lift flex shrink-0 items-center justify-center gap-1.5 rounded-md border font-black whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-50 max-[1399px]:col-span-2 max-[1399px]:w-full ${camadas.includes("Infraestrutura") && infraAtivas.length > 0 ? "border-[#dce1d8] bg-white text-[#1E404A]" : "border-white/20 text-white/80 hover:bg-white/10"}`}
-              style={{
-                fontSize: "var(--btn-size)",
-                height: "var(--btn-h)",
-                paddingInline: "var(--btn-px)",
-                ...(camadas.includes("Infraestrutura") && infraAtivas.length > 0
-                  ? {}
-                  : { backgroundColor: C.field }),
-              }}
-            >
-              <span className="flex items-center gap-1">
-                <Wrench size={11} strokeWidth={2.5} />
-                Infraestrutura{" "}
-                {infraAtivas.length > 0 && `(${infraAtivas.length})`}
-              </span>
-              <span className="text-[7px] opacity-70">▼</span>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end">
-              <button
-                onClick={toggleMenuInfra}
-                className="mb-1 w-full border-b border-slate-200/60 px-2 py-1 text-left text-xs font-bold text-slate-500 transition-colors duration-150 hover:bg-slate-100 focus-visible:outline-none"
+              {MOTIVO_SEM_INTERVENCAO}
+            </span>
+          )}
+          <label
+            className="font-bold tracking-wider whitespace-nowrap text-white/70 uppercase"
+            style={{ fontSize: "var(--select-label)" }}
+          >
+            Intervenção
+          </label>
+          <div className="flex items-center gap-1">
+            <div className="min-w-0 flex-1">
+              <Select
+                value={intervencaoSel}
+                onValueChange={(v) =>
+                  setCenario(nomeEfetivo(eventoSel, v as IntervencaoId))
+                }
+                disabled={!temIntervencao(eventoSel)}
               >
-                {camadas.includes("Infraestrutura")
-                  ? "Ocultar Camada"
-                  : "Exibir Camada"}
-              </button>
-              {INFRA_LAYERS.map((nome) => (
-                <DropdownMenuCheckboxItem
-                  key={nome}
-                  checked={infraAtivas.includes(nome)}
-                  onCheckedChange={() => toggleInfra(nome)}
-                  className="text-xs hover:bg-slate-100"
+                <SelectTrigger
+                  aria-label="Intervenção"
+                  className="w-full min-w-0 border-white/20 text-white disabled:opacity-50"
+                  style={{
+                    backgroundColor: `${C.field}cc`,
+                    fontSize: "var(--select-trigger)",
+                    height: "var(--select-h)",
+                  }}
                 >
-                  {nome}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent position="popper" align="start" sideOffset={4}>
+                  {INTERVENCOES.map((i) => (
+                    <SelectItem key={i.id} value={i.id}>
+                      {i.rotulo}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <span className="group/tip relative flex shrink-0">
+              <button
+                type="button"
+                onClick={reiniciar}
+                aria-label="Reiniciar seleções"
+                className="active-press hover-lift flex items-center justify-center rounded-md border border-white/20 text-white/90 hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:outline-none"
+                style={{
+                  backgroundColor: C.field,
+                  height: "var(--select-h)",
+                  width: "var(--select-h)",
+                }}
+              >
+                <RotateCcw size={12} strokeWidth={2.5} />
+              </button>
+              <TipCamada texto="Reiniciar seleções" />
+            </span>
+          </div>
+        </div>
+
+        {/* Camadas — na mesma linha do cabeçalho; só ícone (título no hover) abaixo de 2200 px */}
+        <div className="flex flex-col gap-0 max-[1259px]:order-last max-[1259px]:basis-full">
+          <span
+            className="font-bold tracking-wider whitespace-nowrap text-white/70 uppercase"
+            style={{ fontSize: "var(--select-label)" }}
+          >
+            Camadas
+          </span>
+          <div
+            className="flex items-center"
+            style={{ gap: "var(--layer-gap)" }}
+          >
+            {[
+              {
+                id: "Empresas",
+                label: "Empresas",
+                icon: <Building2 size={11} strokeWidth={2.5} />,
+              },
+              {
+                id: "Saúde",
+                label: "Saúde",
+                icon: <HeartPulse size={11} strokeWidth={2.5} />,
+              },
+              {
+                id: "Educação",
+                label: "Educação",
+                icon: <GraduationCap size={11} strokeWidth={2.5} />,
+              },
+              {
+                id: "Agricultura",
+                label: "Agricultura",
+                icon: <Sprout size={11} strokeWidth={2.5} />,
+              },
+              {
+                id: "Uso e Cobertura da Terra",
+                label: "Cobertura",
+                icon: <Leaf size={11} strokeWidth={2.5} />,
+              },
+              {
+                id: "Patrimônio Histórico",
+                label: "Patrimônio",
+                icon: <Landmark size={11} strokeWidth={2.5} />,
+              },
+              {
+                // Heatmap de população: começa desmarcado e não é uma camada de `camadas` (tem estado próprio)
+                id: "População",
+                label: "População",
+                icon: <Users size={11} strokeWidth={2.5} />,
+                on: showHeatmapPopulacao,
+                toggle: () => setShowHeatmapPopulacao((p) => !p),
+              },
+            ].map(({ id, label, icon, on, toggle }) => {
+              const ativo = on ?? camadas.includes(id)
+              return (
+                <span
+                  key={id}
+                  className="group/tip relative flex max-[1259px]:flex-1"
+                >
+                  <button
+                    onClick={toggle ?? (() => toggleCamada(id))}
+                    aria-pressed={ativo}
+                    className={`active-press hover-lift flex shrink-0 items-center justify-center gap-1 rounded-md border font-black whitespace-nowrap focus-visible:ring-2 focus-visible:ring-[#1E404A]/40 focus-visible:ring-offset-1 focus-visible:outline-none max-[1259px]:w-full ${ativo ? "border-[#dce1d8] bg-white text-[#1E404A]" : "border-white/20 text-white/80 hover:bg-white/10"}`}
+                    style={{
+                      fontSize: "var(--btn-size)",
+                      height: "var(--btn-h)",
+                      paddingInline: "var(--btn-px)",
+                      ...(ativo ? {} : { backgroundColor: C.field }),
+                    }}
+                  >
+                    {icon}
+                    <span className="max-[999px]:sr-only min-[1260px]:max-[2199px]:sr-only">
+                      {label}
+                    </span>
+                  </button>
+                  <TipCamada texto={label} />
+                </span>
+              )
+            })}
+
+            {/* Infraestrutura dropdown */}
+            <span className="group/tip relative flex max-[1259px]:flex-1">
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  disabled={!possuiInfra}
+                  className={`active-press hover-lift flex shrink-0 items-center justify-center gap-1.5 rounded-md border font-black whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-50 max-[1259px]:w-full ${camadas.includes("Infraestrutura") && infraAtivas.length > 0 ? "border-[#dce1d8] bg-white text-[#1E404A]" : "border-white/20 text-white/80 hover:bg-white/10"}`}
+                  style={{
+                    fontSize: "var(--btn-size)",
+                    height: "var(--btn-h)",
+                    paddingInline: "var(--btn-px)",
+                    ...(camadas.includes("Infraestrutura") &&
+                    infraAtivas.length > 0
+                      ? {}
+                      : { backgroundColor: C.field }),
+                  }}
+                >
+                  <span className="flex items-center gap-1">
+                    <Wrench size={11} strokeWidth={2.5} />
+                    <span className="max-[999px]:sr-only min-[1260px]:max-[2199px]:sr-only">
+                      Infraestrutura
+                    </span>{" "}
+                    {infraAtivas.length > 0 && `(${infraAtivas.length})`}
+                  </span>
+                  <span className="text-[7px] opacity-70">▼</span>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end">
+                  <button
+                    onClick={toggleMenuInfra}
+                    className="mb-1 w-full border-b border-slate-200/60 px-2 py-1 text-left text-xs font-bold text-slate-500 transition-colors duration-150 hover:bg-slate-100 focus-visible:outline-none"
+                  >
+                    {camadas.includes("Infraestrutura")
+                      ? "Ocultar Camada"
+                      : "Exibir Camada"}
+                  </button>
+                  {INFRA_LAYERS.map((nome) => (
+                    <DropdownMenuCheckboxItem
+                      key={nome}
+                      checked={infraAtivas.includes(nome)}
+                      onCheckedChange={() => toggleInfra(nome)}
+                      className="text-xs hover:bg-slate-100"
+                    >
+                      {nome}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <TipCamada texto="Infraestrutura" />
+            </span>
+          </div>
         </div>
       </header>
 
@@ -3251,13 +3542,6 @@ export default function Dashboard() {
               </div>
             )
             const heatmaps: Chip[] = [
-              {
-                id: "pop",
-                label: "População",
-                cor: "#7e22ce",
-                on: showHeatmapPopulacao,
-                toggle: () => setShowHeatmapPopulacao((p) => !p),
-              },
               {
                 id: "emp",
                 label: "Empresas",
@@ -3435,19 +3719,27 @@ export default function Dashboard() {
         </button>
       )}
 
-      {/* Cenário "Todas as cotas": slider vertical ao lado do Painel (cota alta em cima), com play/pause.
-          Segue o Painel (397 px de borda direita + folga) e vai para a esquerda, abaixo do botão "Abrir Painel", quando ele está oculto. */}
+      {/* Cenário "Simulação por Cotas": slider vertical ao lado do Painel (cota alta em cima), com play/pause.
+          Acoplado à borda direita do Painel (432 px = 12 + 420, sem folga; mesma superfície de vidro) e, com o Painel oculto,
+          vai para a esquerda, abaixo do botão "Abrir Painel". O aviso de erro continua uma caixa pequena e solta. */}
       {cotas.cotasAtivo &&
         (cotas.cotaRaster.erro || cotas.cotaRaster.cota !== null) && (
           <div
-            className={`absolute bottom-1.5 z-20 rounded-xl px-2 py-3 transition-[left] duration-300 ${
-              showPainelAnalise ? "left-[405px]" : "left-3"
+            className={`absolute bottom-1.5 z-20 px-2 py-3 transition-[left] duration-300 ${
+              showPainelAnalise && !cotas.cotaRaster.erro
+                ? "left-[432px] rounded-r-xl border-l border-slate-300/50 shadow-2xl" // acoplado ao Painel (12 + 420 px)
+                : showPainelAnalise
+                  ? "left-[405px] rounded-xl"
+                  : "left-3 rounded-xl"
             } ${cotas.cotaRaster.erro ? "max-w-[140px]" : "w-[68px]"}`}
             style={{
               top: showPainelAnalise ? panelTop : panelTop + 44,
               // aviso de erro: caixa só do tamanho do texto, não a coluna inteira
               ...(cotas.cotaRaster.erro ? { bottom: "auto" } : {}),
-              ...glassStyle(0.8),
+              // acoplado: mesmo vidro do Painel, para os dois formarem uma superfície só
+              ...glassStyle(
+                showPainelAnalise && !cotas.cotaRaster.erro ? 0.6 : 0.8
+              ),
             }}
           >
             {cotas.cotaRaster.erro ? (
@@ -3467,7 +3759,14 @@ export default function Dashboard() {
       {/* ── Painel de Análise (esquerda flutuante) ─────────────────────── */}
       {showPainelAnalise && (
         <div
-          className="absolute bottom-1.5 left-3 z-20 flex w-[385px] flex-col overflow-hidden rounded-xl p-4 shadow-2xl"
+          className={`absolute bottom-1.5 left-3 z-20 flex w-[420px] flex-col overflow-hidden p-4 shadow-2xl ${
+            // com o trilho de cotas acoplado à direita, o canto direito fica reto (o trilho continua a superfície)
+            cotas.cotasAtivo &&
+            !cotas.cotaRaster.erro &&
+            cotas.cotaRaster.cota !== null
+              ? "rounded-l-xl"
+              : "rounded-xl"
+          }`}
           style={{
             top: panelTop,
             ...glassStyle(0.6),
@@ -3483,8 +3782,12 @@ export default function Dashboard() {
               <div className="flex gap-1">
                 {ALTURA_MANCHAS[cenario] && (
                   <button
-                    onClick={() => mostrarAvisoMancha(AVISO_MANCHA_BINARIA)}
-                    title="Sobre a mancha binária"
+                    onClick={() => mostrarAvisoMancha(avisoDoCenario(cenario))}
+                    title={
+                      temIntervencao(eventoSel)
+                        ? "Sobre as simulações"
+                        : "Sobre a mancha binária"
+                    }
                     className="active-press hover-lift flex h-6 w-6 items-center justify-center rounded-md bg-slate-200/80 text-slate-700 hover:bg-slate-300"
                   >
                     <Info size={12} strokeWidth={2.5} />
@@ -3515,11 +3818,18 @@ export default function Dashboard() {
             >
               {(
                 [
-                  {
-                    value: "resumo",
-                    label: "Resumo",
-                    icon: <LayoutGrid size={11} strokeWidth={2.5} />,
-                  },
+                  // numa simulação com intervenção, "Dano Evitado" substitui "Resumo" (lib/cenarios.ts: abaDoPainel)
+                  abaDoPainel(eventoSel, intervencaoSel) === "dano-evitado"
+                    ? {
+                        value: "dano-evitado",
+                        label: "Dano Evitado",
+                        icon: <ShieldCheck size={11} strokeWidth={2.5} />,
+                      }
+                    : {
+                        value: "resumo",
+                        label: "Resumo",
+                        icon: <LayoutGrid size={11} strokeWidth={2.5} />,
+                      },
                   {
                     value: "empresas",
                     label: "Empresas",
@@ -3562,15 +3872,11 @@ export default function Dashboard() {
                         },
                       ]
                     : []),
-                  ...(camadas.includes("Uso e Cobertura da Terra")
-                    ? [
-                        {
-                          value: "cobertura",
-                          label: "Cobertura",
-                          icon: <Leaf size={11} strokeWidth={2.5} />,
-                        },
-                      ]
-                    : []),
+                  {
+                    value: "cobertura",
+                    label: "Cobertura",
+                    icon: <Leaf size={11} strokeWidth={2.5} />,
+                  },
                 ] as { value: string; label: string; icon: React.ReactNode }[]
               ).map(({ value, label, icon }) => (
                 <button
@@ -3614,6 +3920,9 @@ export default function Dashboard() {
                       cenario !== "(nenhum)"
                         ? popData["Rio Grande"].cenarios?.[cenSlug]
                         : null
+                    // F1/F2: valor estimado é rotulado como estimativa; sem dado, "não calculada" (nunca omitir em silêncio)
+                    const popRotulo =
+                      cenario !== "(nenhum)" ? rotuloPopulacao(popCen) : null
                     return (
                       <div
                         className="mt-2 mb-4 shrink-0 overflow-hidden rounded-lg border"
@@ -3644,13 +3953,26 @@ export default function Dashboard() {
                                   </span>
                                 </div>
                               </div>
+                              {!popCen && popRotulo && (
+                                <div
+                                  className="min-w-0 shrink-0 text-right text-[9px] font-bold text-slate-500"
+                                  title={popRotulo.texto}
+                                >
+                                  Atingida: {popRotulo.texto.split(" para ")[0]}
+                                </div>
+                              )}
                               {popCen && (
-                                <div className="min-w-0 shrink-0 text-right">
+                                <div
+                                  className="min-w-0 shrink-0 text-right"
+                                  title={popRotulo?.texto}
+                                >
                                   <div className="mb-0.5 text-[9px] leading-none font-bold tracking-wider text-red-500 uppercase">
                                     Atingida
+                                    {popRotulo?.estimado ? " (estimada)" : ""}
                                   </div>
                                   <div className="flex items-baseline justify-end gap-0.5">
                                     <span className="text-[13px] font-black text-red-700 tabular-nums">
+                                      {popRotulo?.estimado ? "~" : ""}
                                       {formatoBr(popCen.pop_atingida)}
                                     </span>
                                     <span className="text-[9px] text-red-400">
@@ -3722,7 +4044,7 @@ export default function Dashboard() {
                     {
                       icon: <Users size={15} strokeWidth={2.5} />,
                       cor: COLORS.empresas,
-                      titulo: "Empregados",
+                      titulo: "Vínculos (RAIS)",
                       valor: isCenarioAtivo
                         ? metricasEmp.impacto.emp
                         : metricasEmp.base.emp,
@@ -3824,98 +4146,106 @@ export default function Dashboard() {
                         })}
                       </div>
 
-                      {haBaseAgri > 0 && (
-                        <div className="mb-2 overflow-hidden rounded-lg shadow-sm">
-                          <div
-                            className="flex items-center gap-1.5 px-3 py-1.5"
-                            style={{ background: BRAND_GRADIENT }}
-                          >
-                            <Sprout
-                              size={12}
-                              strokeWidth={2.5}
-                              className="text-white"
-                            />
-                            <span className="text-[10px] font-black tracking-wider text-white uppercase">
-                              Área Agrícola
-                            </span>
-                          </div>
-                          <div
-                            className="flex items-center gap-3 px-3 py-2.5"
-                            style={{ backgroundColor: PANEL_CARD_BG }}
-                          >
-                            <DonutChart
-                              size={56}
-                              strokeWidth={7}
-                              highlightOnHover={false}
-                              data={[
-                                {
-                                  value: isCenarioAtivo
-                                    ? haImpAgri
-                                    : haBaseAgri,
-                                  color: COLORS.agricultura,
-                                  label: "Área",
-                                },
-                                {
-                                  value: Math.max(
-                                    0,
-                                    haBaseAgri -
-                                      (isCenarioAtivo ? haImpAgri : haBaseAgri)
-                                  ),
-                                  color: `${COLORS.agricultura}22`,
-                                  label: "Resto",
-                                },
-                              ]}
-                              centerContent={
-                                <span
-                                  className="text-[10px] font-black"
-                                  style={{ color: COLORS.agricultura }}
-                                >
-                                  {haBaseAgri > 0
-                                    ? Math.round(
-                                        ((isCenarioAtivo
+                      {temIntervencao(eventoSel) ? (
+                        // Simulação sem intervenção: perdas operacionais e danos físicos no lugar da área agrícola
+                        // (nas simulações nenhuma lavoura passa do filtro de 0,5 ha)
+                        <ResumoPerdasDanos evento={eventoSel} />
+                      ) : (
+                        haBaseAgri > 0 && (
+                          <div className="mb-2 overflow-hidden rounded-lg shadow-sm">
+                            <div
+                              className="flex items-center gap-1.5 px-3 py-1.5"
+                              style={{ background: BRAND_GRADIENT }}
+                            >
+                              <Sprout
+                                size={12}
+                                strokeWidth={2.5}
+                                className="text-white"
+                              />
+                              <span className="text-[10px] font-black tracking-wider text-white uppercase">
+                                Área Agrícola
+                              </span>
+                            </div>
+                            <div
+                              className="flex items-center gap-3 px-3 py-2.5"
+                              style={{ backgroundColor: PANEL_CARD_BG }}
+                            >
+                              <DonutChart
+                                size={56}
+                                strokeWidth={7}
+                                highlightOnHover={false}
+                                data={[
+                                  {
+                                    value: isCenarioAtivo
+                                      ? haImpAgri
+                                      : haBaseAgri,
+                                    color: COLORS.agricultura,
+                                    label: "Área",
+                                  },
+                                  {
+                                    value: Math.max(
+                                      0,
+                                      haBaseAgri -
+                                        (isCenarioAtivo
                                           ? haImpAgri
-                                          : haBaseAgri) /
-                                          haBaseAgri) *
-                                          100
-                                      )
-                                    : 0}
-                                  %
-                                </span>
-                              }
-                            />
-                            <div className="flex min-w-0 flex-col">
-                              <span
-                                className="text-[9px] font-bold tracking-wider uppercase"
-                                style={{ color: C.muted }}
-                              >
-                                {isCenarioAtivo
-                                  ? "Área Atingida"
-                                  : "Área Total"}
-                              </span>
-                              <span
-                                className="leading-tight font-black"
-                                style={{
-                                  color: C.primary,
-                                  fontSize: PANEL_FLUID.fontValor,
-                                }}
-                              >
-                                {compactoBr(
-                                  isCenarioAtivo ? haImpAgri : haBaseAgri,
-                                  1
-                                )}{" "}
-                                ha
-                              </span>
-                              {isCenarioAtivo && (
+                                          : haBaseAgri)
+                                    ),
+                                    color: `${COLORS.agricultura}22`,
+                                    label: "Resto",
+                                  },
+                                ]}
+                                centerContent={
+                                  <span
+                                    className="text-[10px] font-black"
+                                    style={{ color: COLORS.agricultura }}
+                                  >
+                                    {haBaseAgri > 0
+                                      ? Math.round(
+                                          ((isCenarioAtivo
+                                            ? haImpAgri
+                                            : haBaseAgri) /
+                                            haBaseAgri) *
+                                            100
+                                        )
+                                      : 0}
+                                    %
+                                  </span>
+                                }
+                              />
+                              <div className="flex min-w-0 flex-col">
                                 <span
-                                  className="text-[9px]"
+                                  className="text-[9px] font-bold tracking-wider uppercase"
                                   style={{ color: C.muted }}
                                 >
-                                  de {compactoBr(haBaseAgri, 1)} ha
+                                  {isCenarioAtivo
+                                    ? "Área Atingida"
+                                    : "Área Total"}
                                 </span>
-                              )}
+                                <span
+                                  className="leading-tight font-black"
+                                  style={{
+                                    color: C.primary,
+                                    fontSize: PANEL_FLUID.fontValor,
+                                  }}
+                                >
+                                  {compactoBr(
+                                    isCenarioAtivo ? haImpAgri : haBaseAgri,
+                                    1
+                                  )}{" "}
+                                  ha
+                                </span>
+                                {isCenarioAtivo && (
+                                  <span
+                                    className="text-[9px]"
+                                    style={{ color: C.muted }}
+                                  >
+                                    de {compactoBr(haBaseAgri, 1)} ha
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </div>
+                        )
                       )}
                     </>
                   )
@@ -3923,49 +4253,29 @@ export default function Dashboard() {
               </FitHeight>
             </TabsContent>
 
+            {/* Dano Evitado — substitui o Resumo nas simulações com intervenção (components/DanoEvitadoPainel.tsx) */}
+            <TabsContent
+              value="dano-evitado"
+              className="mt-4 flex-1 overflow-y-auto pr-2 pb-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-track]:bg-transparent"
+            >
+              {modoAba === "dano-evitado" && (
+                <DanoEvitadoPainel
+                  evento={eventoSel}
+                  intervencao={intervencaoSel}
+                />
+              )}
+            </TabsContent>
+
             {/* Empresas */}
             <TabsContent
               value="empresas"
               className="mt-4 flex-1 overflow-y-auto pr-2 pb-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-track]:bg-transparent"
             >
-              {pilhaEmpresas && isCenarioAtivo && (
-                <div className="mb-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-[11px] leading-snug text-amber-900">
-                  <strong>Localização aproximada.</strong>{" "}
-                  {empresasNaPilha > 0 ? (
-                    <>
-                      {formatoBr(empresasNaPilha, 0)} das{" "}
-                      {formatoBr(atingidosEmpresas?.features?.length ?? 0, 0)}{" "}
-                      empresas atingidas (
-                      {calcPct(
-                        empresasNaPilha,
-                        atingidosEmpresas?.features?.length ?? 0
-                      )}
-                      ) estão num mesmo ponto: o geocodificador colocou
-                      endereços diferentes no centro da cidade. Os totais de
-                      empresas, vínculos e VAB deste cenário dependem desse
-                      ponto.
-                    </>
-                  ) : (
-                    <>
-                      {formatoBr(pilhaEmpresas.n, 0)} empresas da base (
-                      {calcPct(
-                        pilhaEmpresas.n,
-                        baseEmpresas?.features?.length ?? 0
-                      )}
-                      ) têm localização aproximada e ficam fora da mancha deste
-                      cenário: o total atingido pode estar subestimado.
-                    </>
-                  )}{" "}
-                  <a
-                    href="/metodologia#limitacoes"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-bold underline"
-                  >
-                    Saiba mais ↗
-                  </a>
-                </div>
-              )}
+              <DiferencaAba
+                aba="empresas"
+                evento={eventoSel}
+                intervencao={intervencaoSel}
+              />
               {setoresChart.length > 0 &&
                 (() => {
                   const totalBase = metricasEmp.base.estab
@@ -4129,7 +4439,7 @@ export default function Dashboard() {
               <div className="animate-fade-in-up flex flex-col gap-2 pb-2">
                 <KPIRow
                   isLoading={isLoading}
-                  titulo="Empregados"
+                  titulo="Vínculos (RAIS)"
                   cor={COLORS.empresas}
                   valor={compactoBr(renderEmpMetrics.emp, 0)}
                   sub={isCenarioAtivo ? "Atingidos" : "Total"}
@@ -4250,6 +4560,11 @@ export default function Dashboard() {
               value="educacao"
               className="mt-4 flex-1 overflow-y-auto pr-2 pb-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-track]:bg-transparent"
             >
+              <DiferencaAba
+                aba="educacao"
+                evento={eventoSel}
+                intervencao={intervencaoSel}
+              />
               {(() => {
                 const src = isCenarioAtivo ? atingidosEducacao : baseEducacao
                 if (!src?.features) return null
@@ -4699,6 +5014,11 @@ export default function Dashboard() {
               value="saude"
               className="mt-4 flex-1 overflow-y-auto pr-2 pb-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-track]:bg-transparent"
             >
+              <DiferencaAba
+                aba="saude"
+                evento={eventoSel}
+                intervencao={intervencaoSel}
+              />
               {(() => {
                 const LISTAS: Record<
                   string,
@@ -5054,6 +5374,11 @@ export default function Dashboard() {
                 value="patrimonio"
                 className="mt-4 flex-1 overflow-y-auto pr-2 pb-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-track]:bg-transparent"
               >
+                <DiferencaAba
+                  aba="patrimonio"
+                  evento={eventoSel}
+                  intervencao={intervencaoSel}
+                />
                 <KPIRow
                   isLoading={isLoading}
                   titulo="Patrimônios"
@@ -5248,6 +5573,23 @@ export default function Dashboard() {
                 value="agricultura"
                 className="mt-4 flex-1 overflow-y-auto pr-2 pb-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-track]:bg-transparent"
               >
+                <DiferencaAba
+                  aba="agricultura"
+                  evento={eventoSel}
+                  intervencao={intervencaoSel}
+                />
+                <p className="mb-2 rounded-lg border border-slate-200 bg-white/70 px-2.5 py-1.5 text-[10px] leading-snug text-slate-600">
+                  A área agrícola daqui vem do MapBiomas (filtro de 0,5 ha, em
+                  hectares reais) e pode divergir da usada nas Perdas
+                  Operacionais (estatísticas da origem). Ver{" "}
+                  <Link
+                    href="/metodologia#limitacoes"
+                    className="font-bold underline"
+                  >
+                    Metodologia, Seção 13
+                  </Link>
+                  .
+                </p>
                 {!baseAgricultura ? (
                   <div className="flex flex-col gap-3 p-2">
                     <div className="flex items-center justify-center py-4">
@@ -5402,11 +5744,16 @@ export default function Dashboard() {
             )}
 
             {/* Uso e Cobertura da Terra */}
-            {camadas.includes("Uso e Cobertura da Terra") && (
+            {
               <TabsContent
                 value="cobertura"
                 className="mt-4 flex-1 overflow-y-auto pr-2 pb-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-track]:bg-transparent"
               >
+                <DiferencaAba
+                  aba="cobertura"
+                  evento={eventoSel}
+                  intervencao={intervencaoSel}
+                />
                 {!baseCobertura ? (
                   <div className="flex flex-col gap-3 p-2">
                     <div className="flex items-center justify-center py-4">
@@ -5573,7 +5920,7 @@ export default function Dashboard() {
                   })()
                 )}
               </TabsContent>
-            )}
+            }
 
             {/* Infraestrutura — mostra todas as camadas (Logradouros/Quadras/Terrenos)
                 mesmo as não ativas no mapa, usando estatísticas pré-computadas
@@ -5585,6 +5932,11 @@ export default function Dashboard() {
                 value="infra"
                 className="mt-4 flex-1 overflow-y-auto pr-2 pb-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-track]:bg-transparent"
               >
+                <DiferencaAba
+                  aba="infra"
+                  evento={eventoSel}
+                  intervencao={intervencaoSel}
+                />
                 {!infraStats && cenario === COTAS_CENARIO ? (
                   <p
                     className="py-6 text-center text-xs"
@@ -6029,11 +6381,11 @@ function MiniStatCard({
   const p = Math.max(0, Math.min(100, pct ?? 100))
   return (
     <div
-      className="flex items-center gap-2.5 rounded-lg p-2.5"
+      className="flex items-center gap-2 rounded-lg px-2 py-2.5"
       style={{ backgroundColor: PANEL_CARD_BG }}
     >
       <DonutChart
-        size={40}
+        size={36}
         strokeWidth={5}
         highlightOnHover={false}
         data={[
@@ -6042,9 +6394,9 @@ function MiniStatCard({
         ]}
         centerContent={<span style={{ color: cor }}>{icon}</span>}
       />
-      <div className="flex min-w-0 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col">
         <span
-          className="truncate text-[8.5px] leading-tight font-bold tracking-wider uppercase"
+          className="text-[8.5px] leading-tight font-bold tracking-wider uppercase"
           style={{ color: C.muted }}
         >
           {titulo}
@@ -6053,20 +6405,32 @@ function MiniStatCard({
           <Skeleton className="mt-0.5 h-5 w-16" />
         ) : (
           <span
-            className="truncate leading-tight font-black"
-            style={{ color: C.primary, fontSize: PANEL_FLUID.fontValor }}
+            className="leading-tight font-black whitespace-nowrap"
+            style={{ color: C.primary, fontSize: "clamp(15px, 2.1vh, 21px)" }}
           >
             {valor}
           </span>
         )}
         <span
-          className="truncate text-[9px] leading-none"
+          className="text-[9px] leading-tight whitespace-nowrap"
           style={{ color: C.muted }}
         >
           {sub}
         </span>
       </div>
     </div>
+  )
+}
+
+/** Nome da camada ao passar o mouse (o título nativo demora e some); `aria-hidden`: o botão já tem nome acessível. */
+function TipCamada({ texto }: { texto: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className="pointer-events-none absolute top-full left-1/2 z-30 mt-1 hidden -translate-x-1/2 rounded-md bg-slate-900 px-2 py-1 text-[10px] leading-none font-bold whitespace-nowrap text-white shadow-lg group-hover/tip:block"
+    >
+      {texto}
+    </span>
   )
 }
 

@@ -1,11 +1,15 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { CotaMapa } from "@/components/CotaMapa"
 import { KpiRow, Section, DataTable, Note } from "@/components/doc-kit"
+import { GraficoBarrasEmpilhadas, GraficoLinhas } from "./GraficosDanos"
 import type { ExposicaoSetor, ExposicaoMun } from "./types"
 import { SETOR_LABEL, SETOR_COLORS, fmtBRL, fmtN, fmtPct } from "./helpers"
 import { DetalhePorCategoria } from "./DetalhePorCategoria"
+import { IntervencoesFisicos } from "../danos-fisicos/IntervencoesFisicos"
+import type { Comparativo } from "@/lib/comparativo"
 
 const MUN = "Rio Grande"
 const MAPA_SLUG = "rio_grande"
@@ -13,10 +17,10 @@ const PRIMARY = "#1E404A"
 
 export function FisicosView({
   expo,
-  irOperacionais,
+  comparativo,
 }: {
   expo: ExposicaoMun | null
-  irOperacionais: () => void
+  comparativo: Comparativo | null
 }) {
   const mun = MUN
   const cotasLista0 = expo
@@ -29,6 +33,8 @@ export function FisicosView({
     return (
       <div className="mx-auto max-w-[1440px] px-6 py-10">
         <Note type="warning">Dados de exposição por cota indisponíveis.</Note>
+        {/* As intervenções vêm de outro arquivo (comparativo): seguem visíveis sem a exposição por cota. */}
+        <IntervencoesFisicos comparativo={comparativo} num={1} />
       </div>
     )
   }
@@ -96,6 +102,7 @@ export function FisicosView({
         ] as [string, string][])
       : []),
     ["c-mapa", "Mapa por cota"],
+    ["c-intervencoes", "Intervenções e exposição evitada"],
   ]
   const numDe = (id: string) => itens.findIndex(([i]) => i === id) + 1
 
@@ -180,14 +187,14 @@ export function FisicosView({
             água em Rio Grande, todo ponto molhado entra com 100% do seu valor.
             O resultado é, portanto, um <strong>teto</strong>: o que se perderia
             se tudo o que molha fosse perdido por completo. O dano real fica
-            entre zero e esse valor. Ele <strong>não deve ser somado</strong>{" "}
-            aos Danos Operacionais (
-            <button
-              onClick={() => irOperacionais()}
+            entre zero e esse valor. Ele <strong>não deve ser somado</strong> às
+            Perdas Operacionais (
+            <Link
+              href="/perdas-operacionais"
               className="font-bold underline underline-offset-2"
             >
               DaLA
-            </button>
+            </Link>
             ), que medem outra coisa: a produção e os serviços interrompidos
             durante e depois da cheia.
           </Note>
@@ -298,7 +305,7 @@ export function FisicosView({
               rel="noopener noreferrer"
               className="font-semibold underline underline-offset-2"
             >
-              Seção 12 da Metodologia ↗
+              Seção 13 da Metodologia ↗
             </a>
             .
           </Note>
@@ -365,7 +372,7 @@ export function FisicosView({
               )}
               <li>
                 <strong>Lembrete:</strong> são valores de exposição (teto), não
-                perdas. Não somar aos Danos Operacionais.
+                perdas. Não somar às Perdas Operacionais.
               </li>
             </ul>
           </div>
@@ -482,6 +489,51 @@ export function FisicosView({
               }),
             ]}
           />
+          <GraficoBarrasEmpilhadas
+            titulo="Valor exposto atingido por cota do rio (R$)"
+            categorias={cotasLista}
+            series={[
+              {
+                nome: "Empresas",
+                cor: "#2563eb",
+                valores: cotasLista.map(
+                  (c) => expo.por_cota[c].empresas.valor_exposto_atingido_brl
+                ),
+              },
+              {
+                nome: "Educação",
+                cor: "#16a34a",
+                valores: cotasLista.map(
+                  (c) => expo.por_cota[c].educacao.valor_exposto_atingido_brl
+                ),
+              },
+              {
+                nome: "Saúde",
+                cor: "#dc2626",
+                valores: cotasLista.map(
+                  (c) => expo.por_cota[c].saude.valor_exposto_atingido_brl
+                ),
+              },
+            ]}
+          />
+          <GraficoLinhas
+            titulo="Parcela dos ativos atingidos por cota (% do total de cada setor)"
+            categorias={cotasLista}
+            series={(
+              [
+                ["Empresas", "#2563eb", "empresas"],
+                ["Escolas", "#16a34a", "educacao"],
+                ["Unidades de saúde", "#dc2626", "saude"],
+              ] as const
+            ).map(([nome, cor, st]) => ({
+              nome,
+              cor,
+              valores: cotasLista.map((c) => {
+                const r = expo.por_cota[c][st]
+                return r.n_total ? (r.n_atingidos / r.n_total) * 100 : 0
+              }),
+            }))}
+          />
         </Section>
 
         {expo.detalhe && (
@@ -507,6 +559,11 @@ export function FisicosView({
           </p>
           <CotaMapa slug={MAPA_SLUG} cotaInicial={cotaAtiva} />
         </Section>
+
+        <IntervencoesFisicos
+          comparativo={comparativo}
+          num={numDe("c-intervencoes")}
+        />
       </main>
     </div>
   )

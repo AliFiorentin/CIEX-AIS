@@ -1,6 +1,6 @@
-// Lógica pura do cenário "Todas as cotas" (sem React nem DOM), testada em lib/cotas.test.ts.
+// Lógica pura do cenário "Simulação por Cotas" (sem React nem DOM), testada em lib/cotas.test.ts.
 
-export const COTAS_CENARIO = "Todas as cotas"
+export const COTAS_CENARIO = "Simulação por Cotas"
 
 const EPS = 1e-6
 

@@ -4,7 +4,7 @@ import type { CotaRaster } from "@/hooks/useCotaRaster"
 
 const fmt = (v: number) => v.toFixed(2).replace(".", ",")
 
-/** Cota atual + play/pause + slider. Usado na página de Danos e no cenário "Todas as cotas". */
+/** Cota atual + play/pause + slider. Usado na página de Danos e no cenário "Simulação por Cotas". */
 export function CotaControle({
   raster,
   className = "",
