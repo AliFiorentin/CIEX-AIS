@@ -17,6 +17,7 @@ export const COMP_COLORS = {
   agricultura: "#6B8E23",
 }
 
+/** Barra de composição: segmentos proporcionais ocupando toda a largura disponível. */
 export function CompositionBar({ v }: { v: ComposicaoPerdas }) {
   const comps = [
     { value: v.empresas_vab, color: COMP_COLORS.empresas },
@@ -28,26 +29,62 @@ export function CompositionBar({ v }: { v: ComposicaoPerdas }) {
     { value: v.agricultura_perdas, color: COMP_COLORS.agricultura },
   ].filter((c) => c.value > 0)
   const total = comps.reduce((s, c) => s + c.value, 0)
-  let offset = 0
   return (
-    <svg viewBox="0 0 400 14" className="w-full" style={{ height: 14 }}>
-      {comps.map((c, i) => {
-        const w = Math.max((c.value / total) * 400, 1)
-        const x = offset
-        offset += w
-        return (
-          <rect
-            key={i}
-            x={x}
-            y={0}
-            width={w}
-            height={14}
-            fill={c.color}
-            rx={i === 0 || i === comps.length - 1 ? 3 : 0}
-            ry={3}
-          />
-        )
-      })}
-    </svg>
+    <div
+      className="flex h-3.5 w-full overflow-hidden rounded-full bg-slate-100"
+      role="img"
+      aria-label="Composição das perdas por componente"
+    >
+      {comps.map((c, i) => (
+        <div
+          key={i}
+          style={{
+            width: `${(c.value / total) * 100}%`,
+            minWidth: 2,
+            backgroundColor: c.color,
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
+/**
+ * Legenda da barra de composição: quatro colunas, cada uma com ponto e nome, o valor em destaque e a parcela do total,
+ * alinhadas à esquerda sob a barra (em duas colunas em telas estreitas).
+ */
+export function LegendaComposicao({
+  itens,
+  total,
+  fmt,
+}: {
+  itens: { rotulo: string; valor: number; cor: string }[]
+  total: number
+  fmt: (v: number) => string
+}) {
+  return (
+    <dl className="grid grid-cols-2 gap-x-6 gap-y-3 md:grid-cols-4">
+      {itens.map(({ rotulo, valor, cor }) => (
+        <div key={rotulo} className="min-w-0">
+          <dt className="flex items-center gap-1.5 text-[11px] text-slate-500">
+            <span
+              className="h-2 w-2 shrink-0 rounded-full"
+              style={{ backgroundColor: cor }}
+            />
+            {rotulo}
+          </dt>
+          <dd className="mt-0.5 flex items-baseline gap-1.5 whitespace-nowrap">
+            <span className="text-sm font-black text-slate-800 tabular-nums">
+              {fmt(valor)}
+            </span>
+            <span className="text-[10px] text-slate-400 tabular-nums">
+              {total > 0
+                ? `${((valor / total) * 100).toFixed(1).replace(".", ",")}%`
+                : "0%"}
+            </span>
+          </dd>
+        </div>
+      ))}
+    </dl>
   )
 }

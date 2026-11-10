@@ -3,15 +3,9 @@
 import React, { useState } from "react"
 import Link from "next/link"
 import { TrendingDown } from "lucide-react"
-import {
-  KpiRow,
-  Section,
-  SubTitle,
-  DataTable,
-  Note,
-} from "@/components/doc-kit"
+import { Section, SubTitle, DataTable, Note } from "@/components/doc-kit"
 import { Banner } from "@/components/danos/Banner"
-import { COMP_COLORS, CompositionBar } from "./composicao"
+import { COMP_COLORS, CompositionBar, LegendaComposicao } from "./composicao"
 import { IntervencoesPerdas } from "./IntervencoesPerdas"
 import { AVISO_MAIO_2024_MAIS_50 } from "@/lib/avisos"
 import type { Comparativo } from "@/lib/comparativo"
@@ -36,9 +30,11 @@ export type PerdasData = Record<string, Record<string, CenarioPerdas>>
 // ─── Constantes visuais (paleta CIEX) ─────────────────────────────────────────
 const PRIMARY = "#1E404A"
 const CEN_COLORS: Record<string, string> = {
-  "Cenário Maio 2024": "#2563eb",
-  "Cenário Maio 2024 + 50%": "#dc2626",
-  "Cenário Setembro 2023": "#16a34a",
+  "Simulação de Setembro de 2023": "#16a34a",
+  "Simulação de Novembro de 2023": "#0d9488",
+  "Simulação de Maio de 2024": "#2563eb",
+  "Simulação de Junho de 2025": "#ca8a04",
+  "Simulação de Maio de 2024 + 50%": "#dc2626",
   "Nível da Lagoa + Chuva Acumulada – 16/05/2024": "#7c3aed",
 }
 const CEN_FALLBACK = "#3d7a94"
@@ -234,37 +230,34 @@ function OperacionaisView({
                 <div className="px-5 pt-4 pb-1">
                   <CompositionBar v={destaque[1]} />
                 </div>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 px-5 pt-3 pb-5 md:grid-cols-4">
-                  <KpiRow
-                    label="Empresas (VAB)"
-                    value={fmtBRL(destaque[1].empresas_vab)}
-                    sub={pct(destaque[1].empresas_vab, destaque[1].total)}
-                    color={COMP_COLORS.empresas}
-                  />
-                  <KpiRow
-                    label="Educação"
-                    value={fmtBRL(
-                      destaque[1].educacao_perdas +
-                        destaque[1].educacao_custo_adicional
-                    )}
-                    sub={pct(
-                      destaque[1].educacao_perdas +
-                        destaque[1].educacao_custo_adicional,
-                      destaque[1].total
-                    )}
-                    color={COMP_COLORS.educacao}
-                  />
-                  <KpiRow
-                    label="Saúde (SUS)"
-                    value={fmtBRL(destaque[1].saude_producao)}
-                    sub={pct(destaque[1].saude_producao, destaque[1].total)}
-                    color={COMP_COLORS.saude}
-                  />
-                  <KpiRow
-                    label="Agricultura"
-                    value={fmtBRL(destaque[1].agricultura_perdas)}
-                    sub={pct(destaque[1].agricultura_perdas, destaque[1].total)}
-                    color={COMP_COLORS.agricultura}
+                <div className="px-5 pt-3 pb-5">
+                  <LegendaComposicao
+                    total={destaque[1].total}
+                    fmt={fmtBRL}
+                    itens={[
+                      {
+                        rotulo: "Empresas (VAB)",
+                        valor: destaque[1].empresas_vab,
+                        cor: COMP_COLORS.empresas,
+                      },
+                      {
+                        rotulo: "Educação",
+                        valor:
+                          destaque[1].educacao_perdas +
+                          destaque[1].educacao_custo_adicional,
+                        cor: COMP_COLORS.educacao,
+                      },
+                      {
+                        rotulo: "Saúde (SUS)",
+                        valor: destaque[1].saude_producao,
+                        cor: COMP_COLORS.saude,
+                      },
+                      {
+                        rotulo: "Agricultura",
+                        valor: destaque[1].agricultura_perdas,
+                        cor: COMP_COLORS.agricultura,
+                      },
+                    ]}
                   />
                 </div>
               </div>
@@ -299,6 +292,19 @@ function OperacionaisView({
               Os cenários representam eventos independentes (extensões de mancha
               de inundação distintas), os valores não devem ser somados entre
               si.
+            </Note>
+            <Note type="info">
+              <strong>Dois conjuntos de cenários, dois modelos.</strong> As
+              quatro <strong>simulações</strong> (Setembro e Novembro de 2023,
+              Maio de 2024 e Junho de 2025) vêm do modelo TELEMAC e aqui
+              aparecem <em>sem intervenção</em>; as versões com diques e com
+              diques + barragens estão na seção 4. Maio de 2024 + 50% e o
+              16/05/2024 vêm de outra modelagem e{" "}
+              <strong>não são diretamente comparáveis</strong> às simulações. As
+              simulações de Novembro de 2023 e Junho de 2025 não têm parâmetros
+              DaLA próprios: os dias de interrupção são{" "}
+              <strong>interpolados pela área atingida</strong> (estimativa; ver
+              Metodologia, Seção 10).
             </Note>
           </Section>
 

@@ -52,8 +52,8 @@ export function ExemploDanoEvitado({
   if (!comparativo || !ev) {
     return (
       <Note type="warning">
-        <strong>Dado ausente:</strong> o exemplo numérico depende de
-        intervencoes_comparativo.json.
+        <strong>Dado ausente:</strong> o exemplo numérico depende do comparativo
+        de dano evitado, que não pôde ser carregado.
       </Note>
     )
   }
@@ -75,10 +75,9 @@ export function ExemploDanoEvitado({
   return (
     <>
       <p>
-        Simulação de <strong>{ev.rotulo}</strong>, <strong>diques</strong>{" "}
-        contra <strong>sem intervenção</strong>. As perdas estão nos parâmetros
-        DaLA do evento ({sem.perdas_dias_efetivos} dias efetivos); a exposição é
-        o valor de reposição de tudo o que molha.
+        Simulação de {ev.rotulo}, diques contra sem intervenção. As perdas estão
+        nos parâmetros DaLA do evento ({sem.perdas_dias_efetivos} dias
+        efetivos); a exposição é o valor de reposição de tudo o que molha.
       </p>
       <DataTable
         rows={[
@@ -104,14 +103,13 @@ export function ExemploDanoEvitado({
       />
       <p>
         <strong>Conferência.</strong> A soma dos evitados dos quatro componentes
-        de perdas é <strong>R$ {formatoBr(somaComponentes, 2)}</strong> e o
-        evitado das perdas totais é{" "}
-        <strong>R$ {formatoBr(evitado.perdas_total.valor, 2)}</strong>
+        de perdas é R$ {formatoBr(somaComponentes, 2)} e o evitado das perdas
+        totais é R$ {formatoBr(evitado.perdas_total.valor, 2)}
         {fecha
           ? ": a conta fecha nos dois sentidos."
           : ": diferem por arredondamento dos componentes."}{" "}
-        A exposição física evitada <strong>não</strong> entra nessa soma: mede
-        outra coisa (Seção 11).
+        A exposição física evitada não entra nessa soma: mede outra coisa (Seção
+        11).
       </p>
     </>
   )

@@ -17,14 +17,18 @@ import {
 } from "./cenarios.ts"
 
 // Os mesmos 12 slugs de scripts/tests/test_cenarios_intervencao.py (paridade Python x TypeScript).
-const SLUGS = ["29_09_2023", "29_11_2023", "21_05_2024", "28_06_2025"].flatMap(
-  (data) =>
-    ["sem_intervencao", "diques", "diques_barragens"].map(
-      (v) => `rio_grande___simulacao_${data}_${v}`
-    )
+const SLUGS = [
+  "setembro_de_2023",
+  "novembro_de_2023",
+  "maio_de_2024",
+  "junho_de_2025",
+].flatMap((data) =>
+  ["sem_intervencao", "diques", "diques_barragens"].map(
+    (v) => `rio_grande___simulacao_de_${data}_${v}`
+  )
 )
 
-const SIM = "Simulação 29/09/2023"
+const SIM = "Simulação de Setembro de 2023"
 
 test("slugify remove acentos e pontuação (igual ao Python)", () => {
   assert.equal(
@@ -32,8 +36,8 @@ test("slugify remove acentos e pontuação (igual ao Python)", () => {
     "nivel_da_lagoa_chuva_acumulada_16_05_2024"
   )
   assert.equal(
-    scenarioSlug("Cenário Maio 2024 + 50%"),
-    "rio_grande___cenario_maio_2024_50"
+    scenarioSlug("Simulação de Maio de 2024 + 50%"),
+    "rio_grande___simulacao_de_maio_de_2024_50"
   )
 })
 
@@ -46,22 +50,22 @@ test("todosNomesEfetivos mapeia exatamente para os 12 slugs de arquivo", () => {
 test("nomeEfetivo compõe evento e intervenção", () => {
   assert.equal(
     nomeEfetivo(SIM, "diques-barragens"),
-    "Simulação 29/09/2023 – Diques + barragens"
+    "Simulação de Setembro de 2023 – Diques + barragens"
   )
   assert.equal(
     nomeEfetivo(SIM, "sem-intervencao"),
-    "Simulação 29/09/2023 – Sem intervenção"
+    "Simulação de Setembro de 2023 – Sem intervenção"
   )
   assert.equal(
-    nomeEfetivo("Simulação 28/06/2025", "diques"),
-    "Simulação 28/06/2025 – Diques"
+    nomeEfetivo("Simulação de Junho de 2025", "diques"),
+    "Simulação de Junho de 2025 – Diques"
   )
 })
 
 test("a intervenção é ignorada em cenário antigo", () => {
   assert.equal(nomeEfetivo("Cenário Maio 2024", "diques"), "Cenário Maio 2024")
   assert.equal(temIntervencao("Cenário Maio 2024"), false)
-  assert.equal(temIntervencao("Todas as cotas"), false)
+  assert.equal(temIntervencao("Simulação por Cotas"), false)
   assert.equal(temIntervencao("(nenhum)"), false)
   assert.equal(temIntervencao(SIM), true)
 })
@@ -77,8 +81,8 @@ test("desmontarEfetivo é o inverso de nomeEfetivo nos 12 cenários e identidade
     evento: "Cenário Maio 2024",
     intervencao: "sem-intervencao",
   })
-  assert.deepEqual(desmontarEfetivo("Todas as cotas"), {
-    evento: "Todas as cotas",
+  assert.deepEqual(desmontarEfetivo("Simulação por Cotas"), {
+    evento: "Simulação por Cotas",
     intervencao: "sem-intervencao",
   })
   assert.deepEqual(desmontarEfetivo("(nenhum)"), {
@@ -104,8 +108,11 @@ test("lerIntervencao: valor inválido ou ausente cai em sem-intervencao", () => 
 })
 
 test("eventoDoCodigo devolve o nome do evento ou undefined", () => {
-  assert.equal(eventoDoCodigo("simulacao-29-09-2023"), SIM)
-  assert.equal(eventoDoCodigo("simulacao-28-06-2025"), "Simulação 28/06/2025")
+  assert.equal(eventoDoCodigo("simulacao-setembro-2023"), SIM)
+  assert.equal(
+    eventoDoCodigo("simulacao-junho-2025"),
+    "Simulação de Junho de 2025"
+  )
   assert.equal(eventoDoCodigo("nao-existe"), undefined)
   assert.equal(eventoDoCodigo(null), undefined)
 })

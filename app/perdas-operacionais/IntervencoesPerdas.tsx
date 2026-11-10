@@ -1,7 +1,7 @@
 "use client"
 
 import { Section, DataTable, Note } from "@/components/doc-kit"
-import { INTERVENCOES, type IntervencaoId } from "@/lib/cenarios"
+import { INTERVENCOES, nomeDoEvento, type IntervencaoId } from "@/lib/cenarios"
 import {
   formatarEvitado,
   perdasEmDias,
@@ -23,7 +23,7 @@ const COR_TOM = {
   piora: "#b91c1c",
   neutro: "#64748b",
 } as const
-// Eventos sem período DaLA próprio: usam os parâmetros de maio/2024 (premissa declarada na Metodologia).
+// Eventos sem período DaLA próprio: os dias efetivos são interpolados pela área atingida (estimativa; ver Metodologia).
 const PREMISSA_DALA = new Set(["2023-11-29", "2025-06-28"])
 
 const composicao = (ind: Indicadores, dias: number) => {
@@ -66,11 +66,11 @@ export function IntervencoesPerdas({
         <em>Evitado = perdas sem intervenção − perdas com a intervenção</em>;
         verde evita, vermelho piora. São simulações do mesmo modelo, não
         previsão nem dado observado, e <strong>não são comparáveis</strong> aos
-        cenários anteriores desta página (outro modelo). Perdas operacionais
-        medem produção e serviços interrompidos e <strong>não se somam</strong>{" "}
-        à exposição física dos Danos Físicos. Diferenças de poucos % entre
-        diques e diques + barragens podem estar dentro da incerteza do modelo
-        (não há estimativa de incerteza).
+        cenários de outra modelagem desta página (Maio de 2024 + 50% e
+        16/05/2024). Perdas operacionais medem produção e serviços interrompidos
+        e <strong>não se somam</strong> à exposição física dos Danos Físicos.
+        Diferenças de poucos % entre diques e diques + barragens podem estar
+        dentro da incerteza do modelo (não há estimativa de incerteza).
       </Note>
 
       {!comparativo ? (
@@ -84,12 +84,17 @@ export function IntervencoesPerdas({
           return (
             <div key={id} className="my-5">
               <div className="mb-2 flex flex-wrap items-center gap-2">
-                <h3 className="text-base font-black text-[#1E404A]">
-                  Simulação {ev.rotulo}
+                <h3 className="text-base font-bold text-[#1E404A]">
+                  {nomeDoEvento(id)}
                 </h3>
+                <span className="text-[11px] font-medium text-slate-500">
+                  evento de {ev.rotulo}
+                </span>
                 {PREMISSA_DALA.has(id) && (
                   <span className="rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-900">
-                    parâmetros DaLA de maio/2024 (premissa)
+                    dias DaLA interpolados pela área:{" "}
+                    {ev.variantes["sem-intervencao"].perdas_dias_efetivos} dias
+                    efetivos (estimado)
                   </span>
                 )}
               </div>

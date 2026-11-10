@@ -1,7 +1,7 @@
 "use client"
 
 import { Section, DataTable, Note } from "@/components/doc-kit"
-import { INTERVENCOES, type IntervencaoId } from "@/lib/cenarios"
+import { INTERVENCOES, nomeDoEvento, type IntervencaoId } from "@/lib/cenarios"
 import {
   formatarEvitado,
   type Comparativo,
@@ -10,7 +10,8 @@ import {
   type IntervencaoAtiva,
 } from "@/lib/comparativo"
 import { AVISO_BASES } from "@/lib/avisos"
-import { fmtBRL, formatoBr } from "@/lib/formatos"
+import { fmtBRL, formatoBr, compactoBr } from "@/lib/formatos"
+import { GraficoBarrasAgrupadas } from "../danos/GraficosDanos"
 
 // Faixas de profundidade (cm) do raster das simulações; as cores são as do mapa.
 const FAIXAS: { chave: string; rotulo: string; cor: string }[] = [
@@ -94,6 +95,7 @@ export function IntervencoesFisicos({
   num: number
 }) {
   const exposicao = !!comparativo?.exposicao_disponivel
+  const populacao = !!comparativo?.populacao_disponivel
   return (
     <Section
       id="c-intervencoes"
@@ -125,6 +127,35 @@ export function IntervencoesFisicos({
               mostra só os ativos atingidos e a área.
             </Note>
           )}
+          <GraficoBarrasAgrupadas
+            titulo="Área atingida por evento e variante (ha)"
+            categorias={Object.keys(comparativo.eventos).map((id) =>
+              nomeDoEvento(id).replace("Simulação de ", "")
+            )}
+            fmt={(v) => compactoBr(v, 0)}
+            series={INTERVENCOES.map(({ id, rotulo }) => ({
+              nome: rotulo,
+              cor: COR_VARIANTE[id],
+              valores: Object.values(comparativo.eventos).map(
+                (ev) => ev.variantes[id].area_ha
+              ),
+            }))}
+          />
+          {exposicao && (
+            <GraficoBarrasAgrupadas
+              titulo="Exposição física (teto) por evento e variante (R$)"
+              categorias={Object.keys(comparativo.eventos).map((id) =>
+                nomeDoEvento(id).replace("Simulação de ", "")
+              )}
+              series={INTERVENCOES.map(({ id, rotulo }) => ({
+                nome: rotulo,
+                cor: COR_VARIANTE[id],
+                valores: Object.values(comparativo.eventos).map(
+                  (ev) => ev.variantes[id].exposicao_total ?? 0
+                ),
+              }))}
+            />
+          )}
           {Object.entries(comparativo.eventos).map(
             ([id, ev]: [string, ComparativoEvento]) => {
               const base = ev.variantes["sem-intervencao"]
@@ -134,8 +165,11 @@ export function IntervencoesFisicos({
               )
               return (
                 <div key={id} className="my-6">
-                  <h3 className="mb-1 text-base font-black text-[#1E404A]">
-                    Simulação {ev.rotulo}
+                  <h3 className="mb-1 text-base font-bold text-[#1E404A]">
+                    {nomeDoEvento(id)}{" "}
+                    <span className="text-[11px] font-medium text-slate-500">
+                      evento de {ev.rotulo}
+                    </span>
                   </h3>
                   <p className="mb-2 text-[10px] text-slate-500">
                     {AVISO_BASES(Number(id.slice(0, 4)))}
@@ -177,6 +211,7 @@ export function IntervencoesFisicos({
                       [
                         "Variante",
                         ...(exposicao ? ["Exposição (teto)"] : []),
+                        ...(populacao ? ["População"] : []),
                         "Empresas",
                         "Escolas",
                         "Unid. de saúde",
@@ -207,6 +242,15 @@ export function IntervencoesFisicos({
                                   valor={ind.exposicao_total ?? 0}
                                   evitado={ed("exposicao_total")}
                                   brl
+                                />,
+                              ]
+                            : []),
+                          ...(populacao
+                            ? [
+                                <Celula
+                                  key="pop"
+                                  valor={ind.populacao ?? 0}
+                                  evitado={ed("populacao")}
                                 />,
                               ]
                             : []),
@@ -244,6 +288,13 @@ export function IntervencoesFisicos({
                       }),
                     ]}
                   />
+                  {populacao && (
+                    <p className="text-[10px] text-slate-500">
+                      População: soma do raster WorldPop 2024 (100 m) dentro da
+                      mancha e do limite municipal; é população residente
+                      modelada, não contagem do Censo.
+                    </p>
+                  )}
                   {exposicao && (
                     <p className="text-[10px] text-slate-500">
                       Exposição sem intervenção: empresas{" "}

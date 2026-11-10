@@ -5,7 +5,7 @@ import { formatoBr } from "./formatos.ts"
 export interface PopulacaoCenario {
   pop_atingida: number
   pct_atingida: number
-  /** Presente quando o valor é estimativa por proxy (ex.: o cenário de 16/05/2024). */
+  /** Presente e começando por "estimado" quando o valor é estimativa por proxy (hoje todos são calculados no raster). */
   _metodologia?: string
 }
 

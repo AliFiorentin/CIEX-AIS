@@ -15,10 +15,10 @@ export function ConteudoDanoEvitado({
   return (
     <>
       <p>
-        Esta seção descreve as <strong>12 simulações com intervenção</strong> (4
-        eventos × 3 variantes) e como se calcula o <strong>dano evitado</strong>
-        : quanto uma intervenção reduz a área atingida, os ativos expostos e as
-        perdas, em relação à situação sem a intervenção. Os resultados estão em{" "}
+        Esta seção descreve as 12 simulações com intervenção (4 eventos × 3
+        variantes) e como se calcula o dano evitado : quanto uma intervenção
+        reduz a área atingida, os ativos expostos e as perdas, em relação à
+        situação sem a intervenção. Os resultados estão em{" "}
         <Link
           href="/perdas-operacionais"
           className="font-semibold underline underline-offset-4"
@@ -49,30 +49,31 @@ export function ConteudoDanoEvitado({
         ]}
       />
       <p>
-        Os eventos simulados são{" "}
-        <strong>29/09/2023, 29/11/2023, 21/05/2024 e 28/06/2025</strong>. A
-        fonte são rasters de profundidade da lâmina d&rsquo;água (em cm, grade
-        de ~1 m, EPSG:31982) por bacia hidrográfica (bacias 1, 2, 3, 4, 5 e 7),
-        produzidos com o modelo hidrodinâmico TELEMAC.
+        Os quatro eventos aparecem no seletor de cenários como Simulação de
+        Setembro de 2023, Simulação de Novembro de 2023, Simulação de Maio de
+        2024 e Simulação de Junho de 2025 (eventos de 29/09/2023, 29/11/2023,
+        21/05/2024 e 28/06/2025); a intervenção é escolhida no seletor ao lado,
+        no cabeçalho, e a Simulação de Maio de 2024 sem intervenção é o cenário
+        inicial. A fonte são rasters de profundidade da lâmina d&rsquo;água (em
+        cm, grade de ~1 m, EPSG:31982) por bacia hidrográfica (bacias 1, 2, 3,
+        4, 5 e 7), produzidos com o modelo hidrodinâmico TELEMAC.
       </p>
       <Note type="warning">
-        <strong>Não são comparáveis aos cenários anteriores.</strong> As
-        simulações usam outro modelo que as manchas de Setembro 2023, Maio 2024
-        e 16/05/2024: a sobreposição espacial entre elas é de cerca de 50% e os
-        totais diferem muito (a base de 21/05/2024 tem perdas várias vezes
-        maiores que o &ldquo;Cenário Maio 2024&rdquo;). Compare sempre uma
-        intervenção com a base <em>do mesmo evento</em>, nunca com os cenários
-        antigos. Também não são previsão nem dado observado.
+        <strong>Não são comparáveis aos cenários de outra modelagem.</strong> As
+        simulações usam outro modelo que as manchas de Maio de 2024 + 50% e do
+        16/05/2024: a sobreposição espacial entre elas é de cerca de 50% e os
+        totais diferem muito. Compare sempre uma intervenção com a base{" "}
+        <em>do mesmo evento</em>, nunca com os outros cenários. Também não são
+        previsão nem dado observado.
       </Note>
 
       <SubTitle>2. Do raster ao cenário</SubTitle>
       <ul className="list-inside list-disc space-y-1">
         <li>
           <strong>Mosaico.</strong> As 6 bacias são reunidas numa grade comum.
-          Onde duas bacias se sobrepõem vale a{" "}
-          <strong>maior profundidade</strong>: somar contaria a mesma água duas
-          vezes (em 21/05/2024 com diques, a soma por bacia dá 465,7 ha e o
-          mosaico 333 ha).
+          Onde duas bacias se sobrepõem vale a maior profundidade: somar
+          contaria a mesma água duas vezes (em 21/05/2024 com diques, a soma por
+          bacia dá 465,7 ha e o mosaico 333 ha).
         </li>
         <li>
           <strong>Atingido = profundidade ≥ 10 cm</strong> (pixel sem dado é
@@ -94,30 +95,43 @@ export function ConteudoDanoEvitado({
 
       <SubTitle>3. Do cenário aos indicadores</SubTitle>
       <p>
-        Cada mancha passa pelo mesmo cruzamento espacial (
-        <code>intersects</code>) das Seções 2 a 8: empresas (Seção 3),
-        agricultura e cobertura (Seção 4), educação (Seção 5), saúde (Seção 6),
-        patrimônio (Seção 7) e infraestrutura (Seção 8). Ou seja, os 12 cenários
-        têm os mesmos indicadores que os cenários anteriores.
+        Cada mancha passa pelo mesmo cruzamento espacial das Seções 2 a 8:
+        empresas (Seção 3), agricultura e cobertura (Seção 4), educação (Seção
+        5), saúde (Seção 6), patrimônio (Seção 7) e infraestrutura (Seção 8, com
+        ruas, quadras e terrenos). Ou seja, os 12 cenários têm os mesmos
+        indicadores que os outros cenários, mais três medidas por simulação:
       </p>
+      <ul className="list-inside list-disc space-y-1">
+        <li>
+          <strong>População atingida</strong>: soma do raster WorldPop 2024 de
+          100 m dentro da mancha e do limite municipal (Seção 9).
+        </li>
+        <li>
+          <strong>Área de cobertura da terra atingida</strong> (ha, MapBiomas),
+          medida nos polígonos das classes sob a água.
+        </li>
+        <li>
+          <strong>Área agrícola atingida</strong> (ha), depois do filtro de
+          ruído de 0,5 ha: nas simulações nenhum fragmento passa do filtro e o
+          valor é zero.
+        </li>
+      </ul>
 
       <SubTitle>4. Dos indicadores aos R$</SubTitle>
-      <p>
-        Há duas medidas em R$, que <strong>não se somam</strong>:
-      </p>
+      <p>Há duas medidas em R$, que não se somam:</p>
       <ul className="list-inside list-disc space-y-1">
         <li>
           <strong>Perdas operacionais</strong> (Seção 10, método DaLA): produção
           e serviços interrompidos, por componente (empresas, educação, saúde e
-          agricultura). Usam os parâmetros do evento: 29/09/2023 usa os de
-          setembro/2023; 21/05/2024 usa os de maio/2024;{" "}
-          <strong>29/11/2023 e 28/06/2025 usam os de maio/2024</strong>{" "}
-          (premissa, pois não há parâmetros próprios).
+          agricultura). Usam os parâmetros do evento: Setembro de 2023 usa os de
+          setembro/2023 e Maio de 2024 os de maio/2024; Novembro de 2023 e Junho
+          de 2025 usam dias interpolados pela área atingida (32 e 23 dias
+          efetivos; estimativa, pois não há parâmetros próprios).
         </li>
         <li>
           <strong>Exposição física</strong> (Seção 11): valor de reposição de
-          tudo o que molha, com 100% de cada ponto, um <strong>teto</strong> do
-          dano. Sem a curva de dano por profundidade não há R$ de dano físico.
+          tudo o que molha, com 100% de cada ponto, um teto do dano. Sem a curva
+          de dano por profundidade não há R$ de dano físico.
         </li>
       </ul>
       <DataTable
@@ -180,9 +194,9 @@ export function ConteudoDanoEvitado({
       />
       <ul className="list-inside list-disc space-y-1">
         <li>
-          Valor <strong>positivo</strong> = evitado; <strong>negativo</strong> =
-          a intervenção piora o indicador, e o valor é mostrado como está, sem
-          truncar (acontece, por exemplo, com diques + barragens em 29/09/2023).
+          Valor positivo = evitado; negativo = a intervenção piora o indicador,
+          e o valor é mostrado como está, sem truncar (acontece, por exemplo,
+          com diques + barragens em Setembro de 2023).
         </li>
         <li>
           Com baseline zero o percentual fica indefinido e aparece como
@@ -210,14 +224,48 @@ export function ConteudoDanoEvitado({
         </li>
         <li>
           Perdas operacionais e exposição física medem coisas diferentes e não
-          se somam; <strong>exposição evitada não é dano evitado</strong>.
+          se somam; exposição evitada não é dano evitado.
         </li>
         <li>
-          A população atingida não foi calculada para as simulações (o raster de
-          população não está disponível e o método foi descartado na auditoria
-          de 2026-11-08).
+          A população atingida das simulações vem do raster WorldPop 2024 de 100
+          m (população residente modelada, não contagem do Censo); use-a para
+          comparar simulações entre si.
         </li>
       </ul>
+      <SubTitle>8. Onde aparece no painel</SubTitle>
+      <ul className="list-inside list-disc space-y-1">
+        <li>
+          <strong>Cabeçalho.</strong> O seletor <em>Intervenção</em> (ativo só
+          nas quatro simulações), o botão de camadas <em>População</em> (mapa de
+          calor, começa desligado) e o botão de reiniciar, que devolve o painel
+          ao estado de abertura: Simulação de Maio de 2024 sem intervenção,
+          camadas e filtros padrão e câmera na posição inicial das simulações.
+        </li>
+        <li>
+          <strong>Sem intervenção.</strong> O Resumo mostra os cartões de{" "}
+          <em>Perdas Operacionais</em> (DaLA, 30 dias efetivos, por componente)
+          e de <em>Danos Físicos</em> (exposição, um teto), no lugar da área
+          agrícola.
+        </li>
+        <li>
+          <strong>Com diques ou diques + barragens.</strong> A aba{" "}
+          <em>Dano Evitado</em> substitui o Resumo. Cada cartão mostra o valor
+          evitado, o percentual evitado (o mesmo da barra) e os valores sem e
+          com a intervenção. As demais abas (Empresas, Saúde, Educação,
+          Patrimônio, Infraestrutura, Agricultura e Cobertura) ganham, no topo,
+          um bloco de diferença com os indicadores da própria aba.
+        </li>
+        <li>
+          <strong>Rodapé.</strong> A defasagem das bases, os parâmetros DaLA do
+          evento e os atalhos para Perdas Operacionais, Danos Físicos e esta
+          Metodologia aparecem no fim do Resumo e do Dano Evitado.
+        </li>
+        <li>
+          <strong>Mapa.</strong> As simulações abrem na mesma posição, qualquer
+          que seja a intervenção; trocar só a intervenção não move a câmera.
+        </li>
+      </ul>
+
       <p className="text-[12px] text-slate-600">
         As limitações desta seção estão reunidas na{" "}
         <a

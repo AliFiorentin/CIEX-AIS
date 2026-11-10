@@ -19,7 +19,6 @@ export function FisicosClient({
         ativa="fisicos"
         titulo="Danos Físicos"
         subtitulo="Exposição por cota do pico de 21/05/2024 em Rio Grande (RS)"
-        nota="Máscaras molhado/seco · sem profundidade, sem R$ de dano"
       />
       <FisicosView expo={expo} comparativo={comparativo} />
     </div>

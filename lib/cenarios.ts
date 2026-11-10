@@ -1,6 +1,6 @@
 // Lógica pura dos cenários de simulação com intervenção (sem React nem DOM), testada em lib/cenarios.test.ts.
 //
-// O par evento + intervenção vira um "cenário efetivo" (ex.: "Simulação 29/09/2023 – Diques"); o resto do app usa
+// O par evento + intervenção vira um "cenário efetivo" (ex.: "Simulação de Setembro de 2023 – Diques"); o resto do app usa
 // esse nome como identificador de arquivo (scenarioSlug) igual aos demais cenários. Os nomes e slugs têm de bater com
 // scripts/cenarios_intervencao.py (o teste confere os 12 slugs).
 
@@ -19,25 +19,29 @@ export const EVENTOS_SIMULACAO: { id: string; nome: string; codigo: string }[] =
   [
     {
       id: "2023-09-29",
-      nome: "Simulação 29/09/2023",
-      codigo: "simulacao-29-09-2023",
+      nome: "Simulação de Setembro de 2023",
+      codigo: "simulacao-setembro-2023",
     },
     {
       id: "2023-11-29",
-      nome: "Simulação 29/11/2023",
-      codigo: "simulacao-29-11-2023",
+      nome: "Simulação de Novembro de 2023",
+      codigo: "simulacao-novembro-2023",
     },
     {
       id: "2024-05-21",
-      nome: "Simulação 21/05/2024",
-      codigo: "simulacao-21-05-2024",
+      nome: "Simulação de Maio de 2024",
+      codigo: "simulacao-maio-2024",
     },
     {
       id: "2025-06-28",
-      nome: "Simulação 28/06/2025",
-      codigo: "simulacao-28-06-2025",
+      nome: "Simulação de Junho de 2025",
+      codigo: "simulacao-junho-2025",
     },
   ]
+
+/** Nome do cenário ("Simulação de Maio de 2024") a partir do id do evento ("2024-05-21"); o próprio id se não existir. */
+export const nomeDoEvento = (id: string): string =>
+  EVENTOS_SIMULACAO.find((e) => e.id === id)?.nome ?? id
 
 export const slugify = (str: string) =>
   str
@@ -101,11 +105,22 @@ export function lerIntervencao(
   return INTERVENCOES.find((i) => i.id === codigo)?.id ?? INTERVENCAO_PADRAO
 }
 
+/** Códigos de URL antigos que ainda levam à simulação do mesmo evento (links já compartilhados). */
+const CODIGOS_ANTIGOS: Record<string, string> = {
+  "setembro-2023": "2023-09-29",
+  "maio-2024": "2024-05-21",
+  "simulacao-29-09-2023": "2023-09-29",
+  "simulacao-29-11-2023": "2023-11-29",
+  "simulacao-21-05-2024": "2024-05-21",
+  "simulacao-28-06-2025": "2025-06-28",
+}
+
 /** Nome do evento a partir do código de URL (`?cenario=`), ou undefined se não for uma simulação. */
 export function eventoDoCodigo(
   codigo: string | null | undefined
 ): string | undefined {
-  return EVENTOS_SIMULACAO.find((e) => e.codigo === codigo)?.nome
+  const id = codigo ? CODIGOS_ANTIGOS[codigo] : undefined
+  return EVENTOS_SIMULACAO.find((e) => e.codigo === codigo || e.id === id)?.nome
 }
 
 /**

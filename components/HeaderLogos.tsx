@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Image from "next/image"
 
 /**
  * Selo de logos (CIEX/GPEA) para o canto direito dos headers escuros de
@@ -7,13 +7,23 @@ import Image from "next/image";
  */
 export function HeaderLogos() {
   return (
-    <div className="hidden sm:flex items-center gap-2 shrink-0">
-      <div className="relative bg-white rounded-md h-9 w-16 p-1">
-        <Image src="/CIEX2.png" alt="CIEX" fill className="object-contain p-1" />
+    <div className="hidden shrink-0 items-center gap-3 self-center sm:flex">
+      <div className="relative h-16 w-28 rounded-lg bg-white p-1.5">
+        <Image
+          src="/CIEX2.png"
+          alt="CIEX"
+          fill
+          className="object-contain p-1.5"
+        />
       </div>
-      <div className="relative bg-white rounded-md h-9 w-16 p-1">
-        <Image src="/GPEA.png" alt="GPEA" fill className="object-contain p-1" />
+      <div className="relative h-16 w-28 rounded-lg bg-white p-1.5">
+        <Image
+          src="/GPEA.png"
+          alt="GPEA"
+          fill
+          className="object-contain p-1.5"
+        />
       </div>
     </div>
-  );
+  )
 }

@@ -4,6 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { CotaMapa } from "@/components/CotaMapa"
 import { KpiRow, Section, DataTable, Note } from "@/components/doc-kit"
+import { GraficoBarrasEmpilhadas, GraficoLinhas } from "./GraficosDanos"
 import type { ExposicaoSetor, ExposicaoMun } from "./types"
 import { SETOR_LABEL, SETOR_COLORS, fmtBRL, fmtN, fmtPct } from "./helpers"
 import { DetalhePorCategoria } from "./DetalhePorCategoria"
@@ -487,6 +488,51 @@ export function FisicosView({
                 ]
               }),
             ]}
+          />
+          <GraficoBarrasEmpilhadas
+            titulo="Valor exposto atingido por cota do rio (R$)"
+            categorias={cotasLista}
+            series={[
+              {
+                nome: "Empresas",
+                cor: "#2563eb",
+                valores: cotasLista.map(
+                  (c) => expo.por_cota[c].empresas.valor_exposto_atingido_brl
+                ),
+              },
+              {
+                nome: "Educação",
+                cor: "#16a34a",
+                valores: cotasLista.map(
+                  (c) => expo.por_cota[c].educacao.valor_exposto_atingido_brl
+                ),
+              },
+              {
+                nome: "Saúde",
+                cor: "#dc2626",
+                valores: cotasLista.map(
+                  (c) => expo.por_cota[c].saude.valor_exposto_atingido_brl
+                ),
+              },
+            ]}
+          />
+          <GraficoLinhas
+            titulo="Parcela dos ativos atingidos por cota (% do total de cada setor)"
+            categorias={cotasLista}
+            series={(
+              [
+                ["Empresas", "#2563eb", "empresas"],
+                ["Escolas", "#16a34a", "educacao"],
+                ["Unidades de saúde", "#dc2626", "saude"],
+              ] as const
+            ).map(([nome, cor, st]) => ({
+              nome,
+              cor,
+              valores: cotasLista.map((c) => {
+                const r = expo.por_cota[c][st]
+                return r.n_total ? (r.n_atingidos / r.n_total) * 100 : 0
+              }),
+            }))}
           />
         </Section>
 

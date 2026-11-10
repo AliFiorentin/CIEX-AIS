@@ -24,7 +24,7 @@ export function Banner({
   ativa: PaginaDanos
   titulo: string
   subtitulo: string
-  nota: string
+  nota?: string
 }) {
   const Icone = ativa === "perdas" ? TrendingDown : Waves
   const linkNav =
@@ -56,7 +56,9 @@ export function Banner({
             {titulo}
           </h1>
           <p className="text-base font-medium opacity-75">{subtitulo}</p>
-          <p className="mt-3 font-mono text-[11px] opacity-50">{nota}</p>
+          {nota && (
+            <p className="mt-3 font-mono text-[11px] opacity-50">{nota}</p>
+          )}
           <nav
             className="mt-5 flex flex-wrap gap-2"
             aria-label="Páginas de danos"

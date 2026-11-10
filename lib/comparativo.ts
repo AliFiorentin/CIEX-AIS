@@ -20,12 +20,17 @@ export interface Indicadores {
   patrimonio: number
   logradouros: number
   quadras: number
+  terrenos: number
+  agricultura_ha: number
+  cobertura_ha: number
   perdas_total: number
   perdas_empresas: number
   perdas_educacao: number // perdas + custo adicional de reposição das aulas
   perdas_saude: number
   perdas_agricultura: number
   perdas_dias_efetivos: number
+  // só quando `populacao_disponivel`: soma do raster WorldPop 100 m na mancha (população residente modelada)
+  populacao?: number
   // só quando `exposicao_disponivel` (valor de reposição de tudo o que molha, um teto)
   exposicao_empresas?: number
   exposicao_educacao?: number
