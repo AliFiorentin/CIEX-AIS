@@ -404,7 +404,7 @@ async function loadAgriculturaAtingida(
 ): Promise<any> {
   const base = "/dados_convertidos/rio_grande/cenarios"
   try {
-    const r = await fetch(
+    const r = await fetchRobusto(
       `${base}/agricultura_stats_${sSlug}.json`,
       signal ? { signal } : {}
     )
@@ -418,8 +418,35 @@ async function loadAgriculturaAtingida(
   return loadFGB(`${base}/agricultura_ATINGIDOS_${sSlug}.fgb`, signal)
 }
 
+/**
+ * fetch com novas tentativas (até 3, com espera crescente) para falha de rede e para 5xx/408/429: na abertura do painel
+ * dezenas de arquivos são pedidos de uma vez e, sem isto, um pedido que falhava virava "dado ausente" em silêncio
+ * (mapa sem mancha até atualizar a página). Respostas 4xx (ex.: 404, arquivo que não existe) voltam sem repetir.
+ */
+async function fetchRobusto(
+  url: RequestInfo | URL,
+  init?: RequestInit,
+  tentativas = 3
+): Promise<Response> {
+  let ultimo: unknown
+  for (let i = 0; i < tentativas; i++) {
+    try {
+      const r = await globalThis.fetch(url, init)
+      if (r.ok || (r.status < 500 && r.status !== 408 && r.status !== 429))
+        return r
+      ultimo = new Error(`HTTP ${r.status}`)
+    } catch (e) {
+      if ((e as Error).name === "AbortError") throw e
+      ultimo = e
+    }
+    if (init?.signal?.aborted) break
+    await new Promise((res) => setTimeout(res, 400 * (i + 1)))
+  }
+  throw ultimo
+}
+
 async function loadFGB(url: string, signal?: AbortSignal): Promise<any> {
-  const res = await fetch(url, signal ? { signal } : {})
+  const res = await fetchRobusto(url, signal ? { signal } : {})
   if (!res.ok || !res.body) return null
   const features: any[] = []
   for await (const f of flatgeobuf.geojson.deserialize(res.body)) {
@@ -486,6 +513,7 @@ export default function Dashboard() {
   // padrão abaixo) — inicia true para sempre pular a animação de fitBounds do
   // carregamento inicial (nunca é lido/escrito durante o render).
   const hasFlownInitialRef = useRef(true)
+  const estiloReaplicadoRef = useRef(false)
 
   const [initialViewState] = useState(() => {
     const padrao = vistaDoCenario(DEFAULT_CENARIO)
@@ -561,6 +589,7 @@ export default function Dashboard() {
   const [showPainelAnalise, setShowPainelAnalise] = useState(true)
   const [showFiltros, setShowFiltros] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
+  const [erroCarga, setErroCarga] = useState(false) // a carga inicial falhou mesmo com novas tentativas
   const [showLegenda, setShowLegenda] = useState(true) // nasce aberta e se recolhe sozinha (como os Filtros)
   const [showMancha, setShowMancha] = useState(true)
   const [showListaLogradouros, setShowListaLogradouros] = useState(false)
@@ -640,7 +669,9 @@ export default function Dashboard() {
     // que escreve `?cenario=`, mais abaixo.
     const initialCenario =
       (desired && urlParaCenario(desired, permalinkIntervencaoRef.current)) ||
-      DEFAULT_CENARIO
+      // O padrão é uma simulação: precisa do nome efetivo ("... – Sem intervenção"), que é o do arquivo da mancha;
+      // com o nome-base a mancha não existia e o painel abria sem cenário até a página ser atualizada.
+      nomeEfetivo(DEFAULT_CENARIO, INTERVENCAO_PADRAO)
     const sSlug = scenarioSlug(initialCenario)
     const defaultInfra = ["Logradouros", "Terrenos"] // deve bater com infraAtivas inicial
 
@@ -651,7 +682,7 @@ export default function Dashboard() {
       return (
         useFgb
           ? loadFGB(url, signal)
-          : fetch(url, { signal }).then((r) => (r.ok ? r.json() : null))
+          : fetchRobusto(url, { signal }).then((r) => (r.ok ? r.json() : null))
       )
         .then((d: any) => ({ infra, d }))
         .catch(() => ({ infra, d: null }))
@@ -659,32 +690,32 @@ export default function Dashboard() {
 
     Promise.all([
       // Base
-      fetch("/dados_convertidos/rio_grande/empresas_BASE.geojson", {
+      fetchRobusto("/dados_convertidos/rio_grande/empresas_BASE.geojson", {
         signal,
       }).then((r) => (r.ok ? r.json() : null)),
-      fetch("/dados_convertidos/rio_grande/educacao_BASE.geojson", {
+      fetchRobusto("/dados_convertidos/rio_grande/educacao_BASE.geojson", {
         signal,
       }).then((r) => (r.ok ? r.json() : null)),
-      fetch("/dados_convertidos/rio_grande/saude_BASE.geojson", {
+      fetchRobusto("/dados_convertidos/rio_grande/saude_BASE.geojson", {
         signal,
       }).then((r) => (r.ok ? r.json() : null)),
-      fetch("/dados_convertidos/rio_grande/patrimonio_BASE.geojson", {
+      fetchRobusto("/dados_convertidos/rio_grande/patrimonio_BASE.geojson", {
         signal,
       }).then((r) => (r.ok ? r.json() : null)),
       // Mancha
-      fetch(`/dados_convertidos/rio_grande/cenarios/${sSlug}.geojson`, {
+      fetchRobusto(`/dados_convertidos/rio_grande/cenarios/${sSlug}.geojson`, {
         signal,
       }).then((r) => (r.ok ? r.json() : null)),
       // Atingidos
-      fetch(
+      fetchRobusto(
         `/dados_convertidos/rio_grande/cenarios/empresas_ATINGIDOS_${sSlug}.geojson`,
         { signal }
       ).then((r) => (r.ok ? r.json() : null)),
-      fetch(
+      fetchRobusto(
         `/dados_convertidos/rio_grande/cenarios/educacao_ATINGIDOS_${sSlug}.geojson`,
         { signal }
       ).then((r) => (r.ok ? r.json() : null)),
-      fetch(
+      fetchRobusto(
         `/dados_convertidos/rio_grande/cenarios/saude_ATINGIDOS_${sSlug}.geojson`,
         { signal }
       ).then((r) => (r.ok ? r.json() : null)),
@@ -693,15 +724,15 @@ export default function Dashboard() {
         signal
       ),
       loadAgriculturaAtingida(sSlug, signal),
-      fetch(
+      fetchRobusto(
         `/dados_convertidos/rio_grande/cenarios/patrimonio_ATINGIDOS_${sSlug}.geojson`,
         { signal }
       ).then((r) => (r.ok ? r.json() : null)),
-      fetch("/dados_convertidos/populacao_atingida.json", { signal }).then(
-        (r) => (r.ok ? r.json() : null)
-      ),
+      fetchRobusto("/dados_convertidos/populacao_atingida.json", {
+        signal,
+      }).then((r) => (r.ok ? r.json() : null)),
       Promise.all(infraAtingidosPromises),
-      fetch(
+      fetchRobusto(
         `/dados_convertidos/rio_grande/cenarios/infra_stats_${sSlug}.json`,
         { signal }
       ).then((r) => (r.ok ? r.json() : null)),
@@ -724,6 +755,8 @@ export default function Dashboard() {
           infraStatsJson,
         ]) => {
           if (signal.aborted) return
+          // Sem a mancha o cenário inicial não existe: trata como falha (aviso com "Tentar novamente") em vez de abrir vazio
+          if (!mancha) throw new Error("mancha do cenário inicial ausente")
 
           if (popJson) setPopData(popJson)
 
@@ -803,6 +836,7 @@ export default function Dashboard() {
           console.error(e)
           // Sem isto, falha de rede no carregamento inicial deixava o app preso em loading.
           setIsLoading(false)
+          setErroCarga(true)
         }
       })
 
@@ -903,7 +937,9 @@ export default function Dashboard() {
     setAtingidosInfra({})
     setInfraStats(null)
 
-    fetch(`/dados_convertidos/rio_grande/cenarios/${sSlug}.geojson`, { signal })
+    fetchRobusto(`/dados_convertidos/rio_grande/cenarios/${sSlug}.geojson`, {
+      signal,
+    })
       .then((r) => (r.ok ? r.json() : null))
       .then((mancha) => {
         if (signal.aborted) return
@@ -947,22 +983,24 @@ export default function Dashboard() {
           return (
             useFgb
               ? loadFGB(url, signal)
-              : fetch(url, { signal }).then((r) => (r.ok ? r.json() : null))
+              : fetchRobusto(url, { signal }).then((r) =>
+                  r.ok ? r.json() : null
+                )
           )
             .then((d: any) => ({ infra, d }))
             .catch(() => ({ infra, d: null }))
         })
 
         const dataPromises = Promise.all([
-          fetch(
+          fetchRobusto(
             `/dados_convertidos/rio_grande/cenarios/empresas_ATINGIDOS_${sSlug}.geojson`,
             { signal }
           ).then((r) => (r.ok ? r.json() : null)),
-          fetch(
+          fetchRobusto(
             `/dados_convertidos/rio_grande/cenarios/educacao_ATINGIDOS_${sSlug}.geojson`,
             { signal }
           ).then((r) => (r.ok ? r.json() : null)),
-          fetch(
+          fetchRobusto(
             `/dados_convertidos/rio_grande/cenarios/saude_ATINGIDOS_${sSlug}.geojson`,
             { signal }
           ).then((r) => (r.ok ? r.json() : null)),
@@ -971,12 +1009,12 @@ export default function Dashboard() {
             signal
           ),
           loadAgriculturaAtingida(sSlug, signal),
-          fetch(
+          fetchRobusto(
             `/dados_convertidos/rio_grande/cenarios/patrimonio_ATINGIDOS_${sSlug}.geojson`,
             { signal }
           ).then((r) => (r.ok ? r.json() : null)),
           Promise.all(infraPromises),
-          fetch(
+          fetchRobusto(
             `/dados_convertidos/rio_grande/cenarios/infra_stats_${sSlug}.json`,
             { signal }
           ).then((r) => (r.ok ? r.json() : null)),
@@ -1048,7 +1086,7 @@ export default function Dashboard() {
         const url = `/dados_convertidos/rio_grande/infraestrutura/${iSlug}_BASE.${useFgb ? "fgb" : "geojson"}`
         const p = useFgb
           ? loadFGB(url, signal)
-          : fetch(url, { signal }).then((r) => (r.ok ? r.json() : null))
+          : fetchRobusto(url, { signal }).then((r) => (r.ok ? r.json() : null))
         return p.then((d: any) => ({ infra, d })).catch(() => null)
       })
     ).then((results) => {
@@ -1068,7 +1106,7 @@ export default function Dashboard() {
         const url = `/dados_convertidos/rio_grande/cenarios/infra_${iSlug}_ATINGIDOS_${sSlug}.${ext}`
         ;(useFgb
           ? loadFGB(url, signal)
-          : fetch(url, { signal }).then((r) => (r.ok ? r.json() : null))
+          : fetchRobusto(url, { signal }).then((r) => (r.ok ? r.json() : null))
         )
           .then((d: any) => {
             if (d && !signal.aborted)
@@ -1990,6 +2028,20 @@ export default function Dashboard() {
           ref={mapRef}
           initialViewState={initialViewState}
           mapStyle="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
+          onError={(ev) => {
+            // Estilo do mapa-base que não carregou (rede instável na abertura): uma nova tentativa depois de 1,5 s
+            const map = ev.target
+            if (!estiloReaplicadoRef.current && !map.isStyleLoaded()) {
+              estiloReaplicadoRef.current = true
+              setTimeout(
+                () =>
+                  map.setStyle(
+                    "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
+                  ),
+                1500
+              )
+            }
+          }}
           interactiveLayerIds={interactiveLayerIds}
           onClick={handleMapClick}
           cursor={cursor}
@@ -2834,6 +2886,22 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {erroCarga && (
+        <div
+          role="alert"
+          className="absolute top-24 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-2 text-xs text-amber-900 shadow-lg"
+        >
+          Não foi possível carregar os dados do painel.
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="rounded-md bg-[#1E404A] px-2.5 py-1 font-bold text-white"
+          >
+            Tentar novamente
+          </button>
+        </div>
+      )}
 
       {/* ── Loading ──────────────────────────────────────────────────── */}
       {isLoading && (
