@@ -50,3 +50,22 @@ export interface DetalheCotaMun {
   totais: Record<string, { n: number }>
   por_cota: Record<string, DetalheCotaValores>
 }
+
+/** Perdas operacionais (DaLA) acumuladas até uma cota (perdas_cotas.json, scripts/calcular_perdas_cotas.py). */
+export interface PerdasCota {
+  dias_agudo: number
+  dias_efetivos: number
+  empresas_vab: number
+  educacao_perdas: number
+  educacao_custo_adicional: number
+  saude_producao: number
+  agricultura_perdas: number
+  total: number
+}
+export interface PerdasCotasJson {
+  "Rio Grande": {
+    _metodologia?: string
+    /** chave = cota no formato de climada_cota_detalhe (ex.: "2.6215") */
+    por_cota: Record<string, PerdasCota>
+  }
+}

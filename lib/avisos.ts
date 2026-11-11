@@ -32,6 +32,10 @@ export function rotuloPopulacao(popCen: PopulacaoCenario | null | undefined): {
   return { estimado: false, texto: "calculada a partir do raster de população" }
 }
 
+/** Aviso do modo "Simulação por Cotas" (mesmo papel do AVISO_COTAS_SIMULACAO do dashboard do BID, adaptado a Rio Grande). */
+export const AVISO_COTAS_SIMULACAO =
+  "Simulação por Cotas: a água sobe por níveis fixos (1,00 a 2,62 m), a partir das máscaras molhado/seco do pico de 21/05/2024. Não é previsão nem dado observado, é sujeita a incertezas de modelagem e de relevo, e não tem profundidade (sem dano em R$, só exposição)."
+
 /** F3: "Maio 2024 + 50%" não é 50% a mais de área (a explicação só estava na Metodologia). */
 export const AVISO_MAIO_2024_MAIS_50 =
   "Maio 2024 + 50%: a água fica 60 cm mais alta que em Maio 2024 (mancha ~7 vezes maior), não 50% a mais de área."

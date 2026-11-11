@@ -1,11 +1,15 @@
 "use client"
 
+import Link from "next/link"
 import { Skeleton } from "@/components/ui/skeleton"
 import { TrendingDown, Waves } from "lucide-react"
 import { EVENTOS_SIMULACAO } from "@/lib/cenarios"
 import { perdasEmDias } from "@/lib/comparativo"
 import { fmtBRL } from "@/lib/formatos"
 import { useComparativo } from "@/hooks/useComparativo"
+import { usePerdasCotas } from "@/hooks/usePerdasCotas"
+import { perdasCotaEmDias } from "@/lib/cotas"
+import type { DetalheCotaValores } from "@/lib/cotas-types"
 import { NotasSimulacao } from "@/components/DanoEvitadoPainel"
 
 const DIAS_PERDAS = 30 // mesmos 30 dias efetivos do Dano Evitado
@@ -13,13 +17,14 @@ const PRIMARY = "#1E404A"
 const BRAND_GRADIENT = "linear-gradient(135deg, #1E404A 0%, #255362 100%)"
 const CARD_BG = "rgba(255,255,255,0.55)"
 
-function Cartao({
+export function Cartao({
   titulo,
   icone,
   rotuloValor,
   valor,
   linhas,
   ajuda,
+  href,
 }: {
   titulo: string
   icone: React.ReactNode
@@ -27,14 +32,10 @@ function Cartao({
   valor: string
   linhas: { rotulo: string; valor: string }[]
   ajuda: string
+  href?: string
 }) {
-  return (
-    <div
-      className="flex h-full flex-col overflow-hidden rounded-lg shadow-sm"
-      title={ajuda}
-      role="group"
-      aria-label={`${titulo}: ${rotuloValor} ${valor}`}
-    >
+  const corpo = (
+    <>
       <div
         className="flex items-center gap-1.5 px-3 py-1.5"
         style={{ background: BRAND_GRADIENT }}
@@ -66,6 +67,30 @@ function Cartao({
           ))}
         </dl>
       </div>
+    </>
+  )
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        className="hover-lift flex h-full flex-col overflow-hidden rounded-lg shadow-sm transition-shadow"
+        title={ajuda}
+        aria-label={`${titulo}: ${rotuloValor} ${valor}`}
+      >
+        {corpo}
+      </Link>
+    )
+  }
+
+  return (
+    <div
+      className="flex h-full flex-col overflow-hidden rounded-lg shadow-sm"
+      title={ajuda}
+      role="group"
+      aria-label={`${titulo}: ${rotuloValor} ${valor}`}
+    >
+      {corpo}
     </div>
   )
 }
@@ -109,7 +134,8 @@ export function ResumoPerdasDanos({ evento }: { evento: string }) {
               { rotulo: "Saúde", valor: fmtBRL(perdas.saude) },
               { rotulo: "Agricultura", valor: fmtBRL(perdas.agricultura) },
             ]}
-            ajuda="DaLA: produção e serviços interrompidos. Não se soma à exposição física."
+            ajuda="DaLA: produção e serviços interrompidos. Não se soma à exposição física. Clique para ver detalhes."
+            href="/perdas-operacionais"
           />
           {temExposicao ? (
             <Cartao
@@ -128,7 +154,8 @@ export function ResumoPerdasDanos({ evento }: { evento: string }) {
                 },
                 { rotulo: "Saúde", valor: fmtBRL(ind.exposicao_saude ?? 0) },
               ]}
-              ajuda="Valor de reposição de tudo o que molha, 100% de cada ponto. Não é dano nem se soma às perdas."
+              ajuda="Valor de reposição de tudo o que molha, 100% de cada ponto. Não é dano nem se soma às perdas. Clique para ver detalhes."
+              href="/danos-fisicos"
             />
           ) : (
             <Cartao
@@ -138,11 +165,89 @@ export function ResumoPerdasDanos({ evento }: { evento: string }) {
               valor="—"
               linhas={[{ rotulo: "Indisponível", valor: "—" }]}
               ajuda="A exposição em R$ não passou na validação contra os totais do CLIMADA."
+              href="/danos-fisicos"
             />
           )}
         </div>
       )}
       <NotasSimulacao evento={evento} />
+    </div>
+  )
+}
+
+/**
+ * Os mesmos dois cartões na aba "Por cota" (Simulação por Cotas), na cota em exibição: Perdas Operacionais (DaLA, 30 dias
+ * efetivos, de perdas_cotas.json) e Danos Físicos (exposição sob água na cota, de climada_cota_detalhe). `chave` é a
+ * cota atingida no formato de `por_cota` (null = abaixo da menor cota: nada molhado, tudo zero) e `exposicao` os valores
+ * dessa cota. Sem profundidade nas cotas, Danos Físicos é só exposição, nunca dano em R$.
+ */
+export function ResumoPerdasDanosCota({
+  chave,
+  exposicao,
+}: {
+  chave: string | null
+  exposicao: DetalheCotaValores | null
+}) {
+  const { perdas: porCota, erro } = usePerdasCotas()
+  if (!porCota && !erro) {
+    return (
+      <div className="grid grid-cols-2 gap-2" aria-busy="true">
+        <Skeleton className="h-36 rounded-lg" />
+        <Skeleton className="h-36 rounded-lg" />
+      </div>
+    )
+  }
+  const p = porCota && chave ? porCota[chave] : null
+  const perdas = p
+    ? perdasCotaEmDias(p, DIAS_PERDAS)
+    : porCota
+      ? { empresas: 0, educacao: 0, saude: 0, agricultura: 0, total: 0 }
+      : null
+  const expEmp = exposicao?.empresas.valor_exposto_brl ?? 0
+  const expEdu = exposicao?.educacao.valor_exposto_brl ?? 0
+  const expSau = exposicao?.saude.valor_exposto_brl ?? 0
+
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      {perdas ? (
+        <Cartao
+          titulo="Perdas Operacionais"
+          icone={<TrendingDown size={12} strokeWidth={2.5} />}
+          rotuloValor={`Total (${DIAS_PERDAS} dias)`}
+          valor={fmtBRL(perdas.total)}
+          linhas={[
+            { rotulo: "Empresas", valor: fmtBRL(perdas.empresas) },
+            { rotulo: "Educação", valor: fmtBRL(perdas.educacao) },
+            { rotulo: "Saúde", valor: fmtBRL(perdas.saude) },
+            { rotulo: "Agricultura", valor: fmtBRL(perdas.agricultura) },
+          ]}
+          ajuda="DaLA: produção e serviços interrompidos nos pontos sob a água nesta cota (período de Maio de 2024, 30 dias efetivos). Não se soma à exposição física. Clique para ver detalhes."
+          href="/perdas-operacionais"
+        />
+      ) : (
+        <Cartao
+          titulo="Perdas Operacionais"
+          icone={<TrendingDown size={12} strokeWidth={2.5} />}
+          rotuloValor={`Total (${DIAS_PERDAS} dias)`}
+          valor="—"
+          linhas={[{ rotulo: "Indisponível", valor: "—" }]}
+          ajuda="Não foi possível carregar as perdas por cota (perdas_cotas.json)."
+          href="/perdas-operacionais"
+        />
+      )}
+      <Cartao
+        titulo="Danos Físicos"
+        icone={<Waves size={12} strokeWidth={2.5} />}
+        rotuloValor="Exposição (cota)"
+        valor={fmtBRL(expEmp + expEdu + expSau)}
+        linhas={[
+          { rotulo: "Empresas", valor: fmtBRL(expEmp) },
+          { rotulo: "Educação", valor: fmtBRL(expEdu) },
+          { rotulo: "Saúde", valor: fmtBRL(expSau) },
+        ]}
+        ajuda="Valor de reposição de tudo o que está sob a água nesta cota, 100% de cada ponto. Não é dano (sem profundidade) nem se soma às perdas. Clique para ver detalhes."
+        href="/danos-fisicos"
+      />
     </div>
   )
 }

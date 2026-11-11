@@ -182,6 +182,36 @@
         "pct_atingida": 1.2,
         "_metodologia": "calculado: soma do raster WorldPop 2024 de 100 m dentro da mancha e do limite municipal -- ver scripts/calcular_populacao_intervencoes.py"
       }
+    },
+    "cotas": {
+      "_metodologia": "calculado: soma do raster WorldPop 2024 de 100 m dentro da mancha de cada cota (uniao das bacias, acumulada) e do limite municipal -- ver scripts/calcular_populacao_cotas.py",
+      "por_cota": [
+        {
+          "cota": 1.0,
+          "pop_atingida": 7,
+          "pct_atingida": 0.0
+        },
+        {
+          "cota": 1.5,
+          "pop_atingida": 2192,
+          "pct_atingida": 1.1
+        },
+        {
+          "cota": 2.0,
+          "pop_atingida": 8716,
+          "pct_atingida": 4.4
+        },
+        {
+          "cota": 2.5,
+          "pop_atingida": 19869,
+          "pct_atingida": 10.0
+        },
+        {
+          "cota": 2.6215,
+          "pop_atingida": 22136,
+          "pct_atingida": 11.2
+        }
+      ]
     }
   }
 }

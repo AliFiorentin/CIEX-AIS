@@ -6,6 +6,9 @@ import {
   filtrarPorIndice,
   passosPorIndice,
   primeiraCotaExposta,
+  popAtingidaNaCota,
+  chaveCotaAtingida,
+  perdasCotaEmDias,
 } from "./cotas.ts"
 
 const COTAS = [1, 1.5, 2, 2.5, 2.6215]
@@ -69,4 +72,65 @@ test("primeiraCotaExposta acha a menor cota com algo exposto", () => {
     primeiraCotaExposta({ "1.0": { empresas: { valor_exposto_brl: 0 } } }),
     null
   )
+})
+
+test("popAtingidaNaCota devolve a populacao da cota atual (acumulada)", () => {
+  const pop = {
+    por_cota: COTAS.map((cota, i) => ({
+      cota,
+      pop_atingida: (i + 1) * 100,
+      pct_atingida: i + 1,
+    })),
+  }
+  assert.deepEqual(popAtingidaNaCota(pop, COTAS, 3), {
+    pop_atingida: 300,
+    pct_atingida: 3,
+    _metodologia: undefined,
+  })
+  assert.equal(popAtingidaNaCota(pop, COTAS, 5)?.pop_atingida, 500)
+  assert.equal(popAtingidaNaCota(pop, COTAS, 9)?.pop_atingida, 500)
+  assert.equal(popAtingidaNaCota(pop, COTAS, 0)?.pop_atingida, 0)
+})
+
+test("popAtingidaNaCota nao mostra valor desalinhado ou ausente", () => {
+  const pop = { por_cota: [{ cota: 1, pop_atingida: 5, pct_atingida: 0 }] }
+  assert.equal(popAtingidaNaCota(null, COTAS, 2), null)
+  assert.equal(popAtingidaNaCota(undefined, COTAS, 2), null)
+  assert.equal(popAtingidaNaCota(pop, COTAS, 1), null) // tamanho diferente
+  const outras = {
+    por_cota: COTAS.map((c) => ({
+      cota: c + 1,
+      pop_atingida: 1,
+      pct_atingida: 1,
+    })),
+  }
+  assert.equal(popAtingidaNaCota(outras, COTAS, 2), null) // cotas diferentes
+})
+
+test("chaveCotaAtingida devolve a ultima cota ja atingida", () => {
+  const chaves = ["1.0", "1.5", "2.0", "2.5", "2.6215"]
+  assert.equal(chaveCotaAtingida(chaves, 1.7), "1.5")
+  assert.equal(chaveCotaAtingida(chaves, 2.0), "2.0")
+  assert.equal(chaveCotaAtingida(chaves, 2.6215), "2.6215")
+  assert.equal(chaveCotaAtingida(chaves, 0.4), null)
+  assert.equal(chaveCotaAtingida(chaves, null), null)
+})
+
+test("perdasCotaEmDias reescala por dias efetivos e mantem a agricultura fixa", () => {
+  const p = {
+    dias_efetivos: 60,
+    empresas_vab: 600,
+    educacao_perdas: 60,
+    educacao_custo_adicional: 60,
+    saude_producao: 120,
+    agricultura_perdas: 50,
+  }
+  assert.deepEqual(perdasCotaEmDias(p, 30), {
+    empresas: 300,
+    educacao: 60,
+    saude: 60,
+    agricultura: 50,
+    total: 470,
+  })
+  assert.equal(perdasCotaEmDias({ ...p, dias_efetivos: 0 }, 30).total, 50)
 })
