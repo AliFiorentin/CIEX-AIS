@@ -2948,8 +2948,8 @@ export default function Dashboard() {
           </Source>
         </Map>
 
-        {/* Logo CIEX + GPEA — barra com a altura do grupo de zoom (72 px), alinhada a ele, à esquerda do zoom, na base; a legenda se apoia acima dela */}
-        <div className="pointer-events-none absolute right-[62px] bottom-[40px] z-10">
+        {/* Logo CIEX + GPEA — barra com a mesma altura do grupo de zoom (130 px), alinhada a ele pela base (8 px) e topo (138 px), à esquerda do zoom */}
+        <div className="pointer-events-none absolute right-[59px] bottom-2 z-10">
           <div
             className="flex h-[130px] w-[196px] items-center justify-center rounded-md bg-white/90 px-2 shadow-sm"
             style={{ border: "2px solid rgba(0,0,0,0.1)" }}
@@ -3058,11 +3058,11 @@ export default function Dashboard() {
         onFocus={() => {
           legendaInteragiu.current = true
         }}
-        className="absolute right-2 bottom-[178px] z-10 flex w-[250px] flex-col justify-end"
+        className="absolute right-2 bottom-[146px] z-10 flex w-[247px] flex-col justify-end"
         style={{
           maxHeight: filtrosVisiveis
-            ? "calc(100vh - 320px)"
-            : `calc(100vh - ${178 + panelTop + 44}px)`,
+            ? "calc(100vh - 290px)"
+            : `calc(100vh - ${146 + panelTop + 44}px)`,
         }}
       >
         <div
