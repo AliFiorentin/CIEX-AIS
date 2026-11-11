@@ -1,0 +1,77 @@
+{
+  "Rio Grande": {
+    "_metodologia": "calculado: mesma conta de scripts/calcular_perdas_rio_grande.py nos pontos sob a agua em cada cota (indice de cota_pontos.json, acumulado), com o periodo DaLA de Maio de 2024 (30 + 60 dias) -- ver scripts/calcular_perdas_cotas.py",
+    "por_cota": {
+      "1.0": {
+        "dias_agudo": 30,
+        "dias_efetivos": 60,
+        "f_interrup": 0.164384,
+        "empresas_vab": 0,
+        "educacao_perdas": 0.0,
+        "educacao_custo_adicional": 0.0,
+        "saude_producao": 0.0,
+        "agricultura_perdas": 0.0,
+        "total": 0.0,
+        "empresas_n": 0,
+        "educacao_n": 0,
+        "saude_n": 0
+      },
+      "1.5": {
+        "dias_agudo": 30,
+        "dias_efetivos": 60,
+        "f_interrup": 0.164384,
+        "empresas_vab": 17781717.17,
+        "educacao_perdas": 1305258.22,
+        "educacao_custo_adicional": 1305258.22,
+        "saude_producao": 0.0,
+        "agricultura_perdas": 0.0,
+        "total": 20392233.6,
+        "empresas_n": 73,
+        "educacao_n": 4,
+        "saude_n": 4
+      },
+      "2.0": {
+        "dias_agudo": 30,
+        "dias_efetivos": 60,
+        "f_interrup": 0.164384,
+        "empresas_vab": 65714309.82,
+        "educacao_perdas": 9673668.13,
+        "educacao_custo_adicional": 9673668.13,
+        "saude_producao": 9131.69,
+        "agricultura_perdas": 0.0,
+        "total": 85070777.76,
+        "empresas_n": 491,
+        "educacao_n": 23,
+        "saude_n": 41
+      },
+      "2.5": {
+        "dias_agudo": 30,
+        "dias_efetivos": 60,
+        "f_interrup": 0.164384,
+        "empresas_vab": 119972791.73,
+        "educacao_perdas": 13812074.55,
+        "educacao_custo_adicional": 13812074.55,
+        "saude_producao": 733693.97,
+        "agricultura_perdas": 0.0,
+        "total": 148330634.79,
+        "empresas_n": 1026,
+        "educacao_n": 35,
+        "saude_n": 90
+      },
+      "2.6215": {
+        "dias_agudo": 30,
+        "dias_efetivos": 60,
+        "f_interrup": 0.164384,
+        "empresas_vab": 405395976.37,
+        "educacao_perdas": 28152104.41,
+        "educacao_custo_adicional": 28152104.41,
+        "saude_producao": 733693.97,
+        "agricultura_perdas": 0.0,
+        "total": 462433879.17,
+        "empresas_n": 1924,
+        "educacao_n": 78,
+        "saude_n": 99
+      }
+    }
+  }
+}

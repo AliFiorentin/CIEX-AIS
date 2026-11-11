@@ -61,10 +61,12 @@ import { ResumoPerdasDanos } from "@/components/ResumoPerdasDanos"
 import { CotaCanvasLayer } from "@/components/CotaCanvasLayer"
 import { CotaControle } from "@/components/CotaControle"
 import { useCotas, useCotaAtingidos } from "@/hooks/useCotas"
-import { COTAS_CENARIO } from "@/lib/cotas"
+import { COTAS_CENARIO, popAtingidaNaCota } from "@/lib/cotas"
 import { DanoEvitadoPainel, DiferencaAba } from "@/components/DanoEvitadoPainel"
 import { calcPct, compactoBr, formatoBr } from "@/lib/formatos"
-import { AVISO_MAIO_2024_MAIS_50, rotuloPopulacao } from "@/lib/avisos"
+import { AVISO_COTAS_SIMULACAO, AVISO_MAIO_2024_MAIS_50 } from "@/lib/avisos"
+import { PopulacaoKpi } from "@/components/PopulacaoKpi"
+import { CotasPanel } from "@/components/CotasPanel"
 import {
   ALTURA_SIMULACAO,
   EVENTOS_SIMULACAO,
@@ -277,7 +279,7 @@ const CENARIO_VISTA: Record<
     lat: -32.05772,
     zoom: 11.8,
   },
-  [COTAS_CENARIO]: { lng: -52.16756, lat: -32.05942, zoom: 11.8 },
+  [COTAS_CENARIO]: { lng: -52.16004, lat: -32.06034, zoom: 12.38 },
 }
 // Vista de um cenário; o nome efetivo de uma simulação ("... – Diques") vale a vista do evento.
 const vistaDoCenario = (cenario: string) =>
@@ -639,6 +641,27 @@ export default function Dashboard() {
     setAtingidosSaude(cotaAting.saude)
     setAtingidosPatrimonio(cotaAting.patrimonio)
   }, [cotas.cotasAtivo, cotaAting])
+
+  // População do Painel (KPI do Resumo e da aba "Por cota"): total do município e atingida no cenário ou, na Simulação
+  // por Cotas, na cota em exibição (acumulada, como os atingidos). Sem a série de cotas carregada ainda, mostra 0 em vez
+  // de "não calculada" piscando.
+  const popPainel = useMemo(() => {
+    const rg = popData?.["Rio Grande"]
+    if (!rg) return null
+    const cenSlug = cenario.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    const popCen = cotas.cotasAtivo
+      ? cotas.cotaRaster.meta
+        ? popAtingidaNaCota(rg.cotas, cotas.cotaRaster.meta.cotas, cotas.nCotas)
+        : { pop_atingida: 0, pct_atingida: 0 }
+      : cenario !== "(nenhum)"
+        ? rg.cenarios?.[cenSlug]
+        : null
+    return {
+      popTotal: rg.pop_total as number,
+      popCen,
+      rotular: cenario !== "(nenhum)",
+    }
+  }, [popData, cenario, cotas.cotasAtivo, cotas.cotaRaster.meta, cotas.nCotas])
 
   const [baseReady, setBaseReady] = useState(false)
   // true = carga inicial ainda em andamento; cenário effect deve ser ignorado até o mount terminar
@@ -1176,6 +1199,8 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (ALTURA_MANCHAS[cenario]) mostrarAvisoMancha(avisoDoCenario(cenario))
+    else if (cenario === COTAS_CENARIO)
+      mostrarAvisoMancha(AVISO_COTAS_SIMULACAO)
     else if (cenario === "Simulação de Maio de 2024 + 50%")
       mostrarAvisoMancha(AVISO_MAIO_2024_MAIS_50) // F3: o nome sugere +50% de área; é a água 60 cm mais alta
     else setAvisoMancha(null)
@@ -1935,6 +1960,13 @@ export default function Dashboard() {
     )
   }, [modoAba])
 
+  // Ao entrar na Simulação por Cotas, abre a aba "Por cota"; ao sair, volta ao "Resumo" (como no dashboard do BID).
+  useEffect(() => {
+    setTabAtiva((atual) =>
+      cotas.cotasAtivo ? "cotas" : atual === "cotas" ? "resumo" : atual
+    )
+  }, [cotas.cotasAtivo])
+
   // ─── Render ───────────────────────────────────────────────────────────────
 
   // Filtros: o painel nasce aberto (descobribilidade) e se recolhe sozinho uma vez, a menos que a pessoa
@@ -2109,6 +2141,7 @@ export default function Dashboard() {
           .maplibregl-popup-tip { border-top-color: #fff !important; border-bottom-color: #fff !important; }
           .maplibregl-popup-close-button { right:6px !important; top:6px !important; font-size:16px !important; color:#64748b !important; z-index:10 !important; }
           .maplibregl-popup-close-button:hover { background-color: transparent !important; color:#000 !important; }
+          .maplibregl-ctrl-attrib { display: none !important; }
         `,
           }}
         />
@@ -2135,19 +2168,13 @@ export default function Dashboard() {
           cursor={cursor}
           onMouseEnter={() => setCursor("pointer")}
           onMouseLeave={() => setCursor("grab")}
-          onLoad={(e) => {
-            setMapReady(true)
-            // Créditos do mapa recolhidos (só o botão "i"); o clique no "i" abre
-            e.target
-              .getContainer()
-              .querySelector(".maplibregl-ctrl-attrib")
-              ?.classList.remove("maplibregl-compact-show")
-          }}
+          onLoad={() => setMapReady(true)}
           maxPitch={0}
           dragRotate={false}
           pitchWithRotate={false}
           touchPitch={false}
           onMoveEnd={handleMapMoveEnd}
+          attributionControl={false}
         >
           {/* Véu claro sobre o mapa-base (ruas, água, rótulos), abaixo de todas as camadas de dados: suaviza o fundo e
               destaca mancha, pontos e demais camadas. O MapLibre não tem desfoque por camada; o véu faz o papel. */}
@@ -3973,6 +4000,16 @@ export default function Dashboard() {
             >
               {(
                 [
+                  // Simulação por Cotas: a aba "Por cota" (valores na cota do slider) vem primeiro, como no dashboard do BID
+                  ...(cotas.cotasAtivo
+                    ? [
+                        {
+                          value: "cotas",
+                          label: "Por cota",
+                          icon: <Waves size={11} strokeWidth={2.5} />,
+                        },
+                      ]
+                    : []),
                   // numa simulação com intervenção, "Dano Evitado" substitui "Resumo" (lib/cenarios.ts: abaDoPainel)
                   abaDoPainel(eventoSel, intervencaoSel) === "dano-evitado"
                     ? {
@@ -4036,7 +4073,11 @@ export default function Dashboard() {
               ).map(({ value, label, icon }) => (
                 <button
                   key={value}
-                  onClick={() => setTabAtiva(value)}
+                  onClick={() => {
+                    setTabAtiva(value)
+                    if (value === "cotas")
+                      mostrarAvisoMancha(AVISO_COTAS_SIMULACAO)
+                  }}
                   className="flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-[10px] font-bold transition-[background-color,color,box-shadow] duration-150 focus-visible:outline-none"
                   style={
                     tabAtiva === value
@@ -4059,101 +4100,35 @@ export default function Dashboard() {
               ))}
             </div>
 
+            {/* Por cota — Simulação por Cotas (components/CotasPanel.tsx) */}
+            {cotas.cotasAtivo && (
+              <TabsContent
+                value="cotas"
+                className="mt-2 flex min-h-0 flex-1 flex-col data-[state=inactive]:hidden"
+              >
+                {tabAtiva === "cotas" && (
+                  <CotasPanel
+                    raster={cotas.cotaRaster}
+                    detalhe={cotas.cotaDetalhe}
+                    populacao={
+                      popPainel && (
+                        <PopulacaoKpi {...popPainel} className="mb-0" />
+                      )
+                    }
+                  />
+                )}
+              </TabsContent>
+            )}
+
             {/* Resumo */}
             <TabsContent
               value="resumo"
               className="mt-2 flex min-h-0 flex-1 flex-col data-[state=inactive]:hidden"
             >
               <FitHeight min={0.5} max={1.3}>
-                {tabAtiva === "resumo" &&
-                  popData?.["Rio Grande"] &&
-                  (() => {
-                    const cenSlug = cenario
-                      .normalize("NFD")
-                      .replace(/[\u0300-\u036f]/g, "")
-                    const popCen =
-                      cenario !== "(nenhum)"
-                        ? popData["Rio Grande"].cenarios?.[cenSlug]
-                        : null
-                    // F1/F2: valor estimado é rotulado como estimativa; sem dado, "não calculada" (nunca omitir em silêncio)
-                    const popRotulo =
-                      cenario !== "(nenhum)" ? rotuloPopulacao(popCen) : null
-                    return (
-                      <div
-                        className="mt-2 mb-4 shrink-0 overflow-hidden rounded-lg border"
-                        style={{
-                          borderColor: "#e9d5ff",
-                          background:
-                            "linear-gradient(135deg, #faf5ff 0%, #ede9fe 100%)",
-                        }}
-                      >
-                        <div className="flex items-center gap-2 px-3 py-2">
-                          <Users
-                            size={13}
-                            strokeWidth={2.5}
-                            className="shrink-0 text-purple-600"
-                          />
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-end justify-between gap-1">
-                              <div className="min-w-0">
-                                <div className="mb-0.5 text-[9px] leading-none font-bold tracking-wider text-purple-500 uppercase">
-                                  Pop. Total
-                                </div>
-                                <div className="flex items-baseline gap-0.5">
-                                  <span className="text-[13px] font-black text-purple-800 tabular-nums">
-                                    {formatoBr(popData["Rio Grande"].pop_total)}
-                                  </span>
-                                  <span className="text-[9px] text-purple-400">
-                                    hab.
-                                  </span>
-                                </div>
-                              </div>
-                              {!popCen && popRotulo && (
-                                <div
-                                  className="min-w-0 shrink-0 text-right text-[9px] font-bold text-slate-500"
-                                  title={popRotulo.texto}
-                                >
-                                  Atingida: {popRotulo.texto.split(" para ")[0]}
-                                </div>
-                              )}
-                              {popCen && (
-                                <div
-                                  className="min-w-0 shrink-0 text-right"
-                                  title={popRotulo?.texto}
-                                >
-                                  <div className="mb-0.5 text-[9px] leading-none font-bold tracking-wider text-red-500 uppercase">
-                                    Atingida
-                                    {popRotulo?.estimado ? " (estimada)" : ""}
-                                  </div>
-                                  <div className="flex items-baseline justify-end gap-0.5">
-                                    <span className="text-[13px] font-black text-red-700 tabular-nums">
-                                      {popRotulo?.estimado ? "~" : ""}
-                                      {formatoBr(popCen.pop_atingida)}
-                                    </span>
-                                    <span className="text-[9px] text-red-400">
-                                      ({formatoBr(popCen.pct_atingida, 1)}%)
-                                    </span>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                            {popCen && (
-                              <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-purple-100">
-                                <div
-                                  className="h-full rounded-full transition-all duration-500"
-                                  style={{
-                                    width: `${Math.min(popCen.pct_atingida, 100)}%`,
-                                    background:
-                                      "linear-gradient(to right, #9333ea, #dc2626)",
-                                  }}
-                                />
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    )
-                  })()}
+                {tabAtiva === "resumo" && popPainel && (
+                  <PopulacaoKpi {...popPainel} />
+                )}
 
                 {(() => {
                   const staffBase = Object.values(

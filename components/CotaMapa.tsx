@@ -70,7 +70,7 @@ export function CotaMapa({
             fitBoundsOptions: { padding: 24 },
           }}
           mapStyle="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
-          attributionControl={{ compact: true }}
+          attributionControl={false}
           // Mapa fixo: não arrasta, não gira e não dá zoom por roda, duplo clique, gesto ou teclado; só os botões de
           // zoom (+/−) mexem na vista. Sem o zoom por roda, a página rola normalmente por cima do mapa.
           dragPan={false}

@@ -75,3 +75,84 @@ export function primeiraCotaExposta(porCota: PorCota): number | null {
     })
   return achada === undefined ? null : parseFloat(achada)
 }
+
+/** `Rio Grande.cotas` de populacao_atingida.json: população atingida acumulada em cada cota (ordem de cota_mapa.json). */
+export interface PopulacaoPorCota {
+  _metodologia?: string
+  por_cota: { cota: number; pop_atingida: number; pct_atingida: number }[]
+}
+
+/**
+ * População atingida na cota atual (a última cota da série já alcançada, como em `filtrarPorIndice`).
+ * `{ pop_atingida: 0, pct_atingida: 0 }` quando nenhuma cota foi atingida; `null` se o dado falta ou não bate com a
+ * série de cotas do raster (desalinhado: melhor não mostrar do que mostrar o valor de outra cota).
+ */
+export function popAtingidaNaCota(
+  pop: PopulacaoPorCota | undefined | null,
+  cotas: number[],
+  nCotas: number
+): {
+  pop_atingida: number
+  pct_atingida: number
+  _metodologia?: string
+} | null {
+  const lista = pop?.por_cota
+  if (!lista || lista.length !== cotas.length) return null
+  if (lista.some((p, i) => Math.abs(p.cota - cotas[i]) > EPS)) return null
+  if (nCotas <= 0)
+    return { pop_atingida: 0, pct_atingida: 0, _metodologia: pop._metodologia }
+  const p = lista[Math.min(nCotas, lista.length) - 1]
+  return {
+    pop_atingida: p.pop_atingida,
+    pct_atingida: p.pct_atingida,
+    _metodologia: pop._metodologia,
+  }
+}
+
+/**
+ * Chave de `por_cota` (climada_cota_detalhe) da cota atual: a última já atingida, pois o valor exposto é cumulativo
+ * e entre duas cotas vale a anterior. `chaves` em ordem crescente; `null` se nenhuma foi atingida.
+ */
+export function chaveCotaAtingida(
+  chaves: string[],
+  cota: number | null
+): string | null {
+  if (cota === null) return null
+  const alcancadas = chaves.filter((c) => parseFloat(c) <= cota + EPS)
+  return alcancadas[alcancadas.length - 1] ?? null
+}
+
+/**
+ * Perdas operacionais da cota reescaladas para `dias` efetivos de interrupção (como Perdas Operacionais e Dano Evitado,
+ * 30 dias): empresas, educação (perda + custo adicional) e saúde são proporcionais aos dias; a agricultura é custo fixo.
+ */
+export function perdasCotaEmDias(
+  p: {
+    dias_efetivos: number
+    empresas_vab: number
+    educacao_perdas: number
+    educacao_custo_adicional: number
+    saude_producao: number
+    agricultura_perdas: number
+  },
+  dias: number
+): {
+  empresas: number
+  educacao: number
+  saude: number
+  agricultura: number
+  total: number
+} {
+  const s = p.dias_efetivos > 0 ? dias / p.dias_efetivos : 0
+  const empresas = p.empresas_vab * s
+  const educacao = (p.educacao_perdas + p.educacao_custo_adicional) * s
+  const saude = p.saude_producao * s
+  const agricultura = p.agricultura_perdas
+  return {
+    empresas,
+    educacao,
+    saude,
+    agricultura,
+    total: empresas + educacao + saude + agricultura,
+  }
+}
