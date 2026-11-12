@@ -38,6 +38,9 @@ import {
   Stethoscope,
   LandPlot,
   RotateCcw,
+  GitCompare,
+  AlertTriangle,
+  X,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent } from "@/components/ui/tabs"
@@ -57,7 +60,10 @@ import {
 import { Skeleton } from "@/components/ui/skeleton"
 import { DonutChart } from "@/components/ui/donut-chart"
 import { FitHeight } from "@/components/FitHeight"
-import { ResumoPerdasDanos } from "@/components/ResumoPerdasDanos"
+import {
+  ResumoPerdasDanos,
+  NotasResumoCenario,
+} from "@/components/ResumoPerdasDanos"
 import { CotaCanvasLayer } from "@/components/CotaCanvasLayer"
 import { CotaControle } from "@/components/CotaControle"
 import { useCotas, useCotaAtingidos } from "@/hooks/useCotas"
@@ -67,6 +73,8 @@ import { calcPct, compactoBr, formatoBr } from "@/lib/formatos"
 import { AVISO_COTAS_SIMULACAO, AVISO_MAIO_2024_MAIS_50 } from "@/lib/avisos"
 import { PopulacaoKpi } from "@/components/PopulacaoKpi"
 import { CotasPanel } from "@/components/CotasPanel"
+import { MetricInfoPopover } from "@/components/MetricInfoPopover"
+import { CenariosComparatorModal } from "@/components/CenariosComparatorModal"
 import {
   ALTURA_SIMULACAO,
   EVENTOS_SIMULACAO,
@@ -166,26 +174,28 @@ const C = {
 // Gradiente de marca CIEX (135°) — usado em cabeçalhos de card, header e painéis
 const BRAND_GRADIENT = `linear-gradient(135deg, ${C.primary} 0%, ${C.field} 100%)`
 
-// Efeito "glass" (glassmorphism) — paleta CIEX preservada via tinte na cor de fundo.
+// Efeito "glass" Apple HIG (glassmorphism com saturação e reflexo especular superior)
 // `tint` opcional: cor de marca aplicada como fundo translúcido (ex.: header sobre o mapa).
-const glassStyle = (opacity = 0.55, tint?: string) =>
+const glassStyle = (opacity = 0.65, tint?: string) =>
   ({
     backgroundColor: tint
       ? `${tint}${Math.round(opacity * 255)
           .toString(16)
           .padStart(2, "0")}`
       : `rgba(255,255,255,${opacity})`,
-    backdropFilter: "saturate(180%) blur(20px)",
-    WebkitBackdropFilter: "saturate(180%) blur(20px)",
+    backdropFilter: "saturate(190%) blur(20px)",
+    WebkitBackdropFilter: "saturate(190%) blur(20px)",
     border: tint
-      ? `0.5px solid rgba(255,255,255,0.18)`
-      : "0.5px solid rgba(255,255,255,0.6)",
-    boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)",
+      ? `0.5px solid rgba(255,255,255,0.22)`
+      : "0.5px solid rgba(255,255,255,0.7)",
+    boxShadow: tint
+      ? "0 8px 32px rgba(0,0,0,0.16), inset 0 1px 0 rgba(255,255,255,0.25)"
+      : "0 8px 32px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.02), inset 0 1px 0 rgba(255,255,255,0.9)",
   }) as const
 
-// Fundo padrão de TODOS os cards/gráficos/elementos do Painel (translúcido)
-const PANEL_CARD_BG = "rgba(255,255,255,0.55)"
-const PANEL_TRACK_BG = "rgba(30,64,74,0.10)"
+// Fundo padrão de TODOS os cards/gráficos/elementos do Painel (translúcido com Apple Glass)
+const PANEL_CARD_BG = "rgba(255,255,255,0.65)"
+const PANEL_TRACK_BG = "rgba(30,64,74,0.08)"
 
 // Tipografia fluida do header (clamp: min, vw, max) — evita quebra em notebooks pequenos
 const HEADER_FLUID = {
@@ -197,9 +207,9 @@ const HEADER_FLUID = {
   selectTriggerSize: "clamp(9px, 0.85vw, 11px)",
 }
 
-// Botões de navegação do cabeçalho (Perdas · Danos Físicos · Metodologia)
+// Botões de navegação do cabeçalho (Perdas · Danos Físicos · Metodologia) no padrão Apple Capsule Pill
 const NAV_LINK_CLASS =
-  "active-press hover-lift flex items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-2.5 font-black whitespace-nowrap text-white/90 hover:bg-white/20 focus-visible:outline-none"
+  "apple-pill flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 font-semibold whitespace-nowrap text-white/90 hover:bg-white/20 hover:text-white focus-visible:outline-none active:scale-[0.97] transition-all duration-150 shadow-xs"
 const NAV_LINK_STYLE = {
   fontSize: "var(--btn-size)",
   height: "var(--btn-h)",
@@ -213,14 +223,14 @@ const PANEL_FLUID = {
   fontLabel: "clamp(8px, 1.05vh, 10px)",
 }
 
-// Header em glass tintado com a marca CIEX (gradiente translúcido + blur do mapa por trás)
+// Header em glass tintado com a marca CIEX (gradiente translúcido + blur Apple HIG do mapa por trás)
 const HEADER_GLASS = {
   backgroundImage:
-    "linear-gradient(135deg, rgba(30,64,74,0.82) 0%, rgba(37,83,98,0.82) 100%)",
-  backdropFilter: "saturate(180%) blur(20px)",
-  WebkitBackdropFilter: "saturate(180%) blur(20px)",
-  border: "0.5px solid rgba(255,255,255,0.18)",
-  boxShadow: "0 4px 24px rgba(0,0,0,0.18), 0 1px 4px rgba(0,0,0,0.08)",
+    "linear-gradient(135deg, rgba(30,64,74,0.85) 0%, rgba(37,83,98,0.85) 100%)",
+  backdropFilter: "saturate(190%) blur(24px)",
+  WebkitBackdropFilter: "saturate(190%) blur(24px)",
+  border: "0.5px solid rgba(255,255,255,0.22)",
+  boxShadow: "0 8px 32px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.3)",
 } as const
 
 // Simulações dos eventos (a intervenção é escolhida no seletor ao lado; ver lib/cenarios.ts). Substituem os antigos
@@ -591,6 +601,7 @@ export default function Dashboard() {
 
   const [showPainelAnalise, setShowPainelAnalise] = useState(true)
   const [showFiltros, setShowFiltros] = useState(true)
+  const [showComparador, setShowComparador] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [erroCarga, setErroCarga] = useState(false) // a carga inicial falhou mesmo com novas tentativas
   const [showLegenda, setShowLegenda] = useState(true) // nasce aberta e se recolhe sozinha (como os Filtros)
@@ -1194,7 +1205,7 @@ export default function Dashboard() {
   const mostrarAvisoMancha = useCallback((texto: string) => {
     if (avisoManchaTimerRef.current) clearTimeout(avisoManchaTimerRef.current)
     setAvisoMancha(texto)
-    avisoManchaTimerRef.current = setTimeout(() => setAvisoMancha(null), 10000)
+    avisoManchaTimerRef.current = setTimeout(() => setAvisoMancha(null), 8000)
   }, [])
 
   useEffect(() => {
@@ -1729,7 +1740,7 @@ export default function Dashboard() {
 
     if (source === "empresas")
       return (
-        <div className="flex w-56 flex-col gap-1.5 rounded-xl border border-slate-100 bg-white p-3 shadow-lg">
+        <div className="flex w-60 flex-col gap-1.5 rounded-2xl border border-white/60 bg-white/95 p-3.5 shadow-xl backdrop-blur-xl">
           <strong className="border-b border-slate-100 pb-1 text-[10px] tracking-wider text-blue-700 uppercase">
             🏢 Empresa
           </strong>
@@ -1737,7 +1748,7 @@ export default function Dashboard() {
             {p.CNAE_2 ? normalizeSetor(p.CNAE_2) : "Sem Setor"}
           </span>
           <div className="mt-1 grid grid-cols-2 gap-2">
-            <div className="rounded border border-slate-100 bg-slate-50 p-1.5">
+            <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-1.5">
               <span className="block text-[9px] font-bold text-slate-500 uppercase">
                 Empregados
               </span>
@@ -1745,7 +1756,7 @@ export default function Dashboard() {
                 {p.Empregados}
               </span>
             </div>
-            <div className="rounded border border-slate-100 bg-slate-50 p-1.5">
+            <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-1.5">
               <span className="block text-[9px] font-bold text-slate-500 uppercase">
                 Massa Sal.
               </span>
@@ -1759,7 +1770,7 @@ export default function Dashboard() {
 
     if (source === "educacao")
       return (
-        <div className="flex w-56 flex-col gap-1.5 rounded-xl border border-slate-100 bg-white p-3 shadow-lg">
+        <div className="flex w-60 flex-col gap-1.5 rounded-2xl border border-white/60 bg-white/95 p-3.5 shadow-xl backdrop-blur-xl">
           <strong className="border-b border-slate-100 pb-1 text-[10px] tracking-wider text-green-700 uppercase">
             🎓 Educação ({normalizeDep(String(p.tp_dependencia || "")) || "N/A"}
             )
@@ -1768,7 +1779,7 @@ export default function Dashboard() {
             {p.no_entidade || "Escola"}
           </span>
           <div className="mt-1 grid grid-cols-2 gap-2">
-            <div className="rounded border border-slate-100 bg-slate-50 p-1.5">
+            <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-1.5">
               <span className="block text-[9px] font-bold text-slate-500 uppercase">
                 Professores
               </span>
@@ -1776,7 +1787,7 @@ export default function Dashboard() {
                 {p.qtd_doc || 0}
               </span>
             </div>
-            <div className="rounded border border-slate-100 bg-slate-50 p-1.5">
+            <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-1.5">
               <span className="block text-[9px] font-bold text-slate-500 uppercase">
                 Total Alunos
               </span>
@@ -1796,7 +1807,7 @@ export default function Dashboard() {
     if (source === "saude") {
       const totalProf = STAFF_COLS.reduce((a, c) => a + (p[c] || 0), 0)
       return (
-        <div className="flex w-56 flex-col gap-1.5 rounded-xl border border-slate-100 bg-white p-3 shadow-lg">
+        <div className="flex w-60 flex-col gap-1.5 rounded-2xl border border-white/60 bg-white/95 p-3.5 shadow-xl backdrop-blur-xl">
           <strong className="border-b border-slate-100 pb-1 text-[10px] tracking-wider text-red-700 uppercase">
             🏥 Saúde ({p.co_tipo_estabelecimento || "N/A"})
           </strong>
@@ -1804,7 +1815,7 @@ export default function Dashboard() {
             {p.no_fantasia || p.no_razao_social || "Unidade"}
           </span>
           <div className="mt-1 grid grid-cols-2 gap-2">
-            <div className="rounded border border-slate-100 bg-slate-50 p-1.5">
+            <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-1.5">
               <span className="block text-[9px] font-bold text-slate-500 uppercase">
                 Médicos
               </span>
@@ -1812,7 +1823,7 @@ export default function Dashboard() {
                 {p.staff_medicos || 0}
               </span>
             </div>
-            <div className="rounded border border-slate-100 bg-slate-50 p-1.5">
+            <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-1.5">
               <span className="block text-[9px] font-bold text-slate-500 uppercase">
                 Enfermagem
               </span>
@@ -1820,7 +1831,7 @@ export default function Dashboard() {
                 {p.staff_enfermagem || 0}
               </span>
             </div>
-            <div className="col-span-2 rounded border border-slate-100 bg-slate-50 p-1.5">
+            <div className="col-span-2 rounded-xl border border-slate-100 bg-slate-50/80 p-1.5">
               <span className="block text-[9px] font-bold text-slate-500 uppercase">
                 Total Profissionais
               </span>
@@ -1835,7 +1846,7 @@ export default function Dashboard() {
 
     if (source === "patrimonio")
       return (
-        <div className="flex w-56 flex-col gap-1.5 rounded-xl border border-slate-100 bg-white p-3 shadow-lg">
+        <div className="flex w-60 flex-col gap-1.5 rounded-2xl border border-white/60 bg-white/95 p-3.5 shadow-xl backdrop-blur-xl">
           <strong
             className="border-b border-slate-100 pb-1 text-[10px] tracking-wider uppercase"
             style={{ color: COLORS.patrimonio }}
@@ -1912,7 +1923,7 @@ export default function Dashboard() {
         )
       if (!content) return null
       return (
-        <div className="flex w-56 flex-col gap-1.5 rounded-xl border border-slate-100 bg-white p-3 shadow-lg">
+        <div className="flex w-60 flex-col gap-1.5 rounded-2xl border border-white/60 bg-white/95 p-3.5 shadow-xl backdrop-blur-xl">
           <strong className="border-b border-slate-100 pb-1 text-[10px] tracking-wider text-orange-600 uppercase">
             🏗️ {nomeLower.replace(/_/g, " ")}
           </strong>
@@ -1990,7 +2001,8 @@ export default function Dashboard() {
     legendaJaRecolheu.current = false
     setShowLegenda(true)
   }, [cenario])
-  const filtrosVisiveis = showFiltros && (temCamadaTabular || isCenarioAtivo)
+  const filtrosVisiveis =
+    showFiltros && (temCamadaTabular || isCenarioAtivo || cotas.cotasAtivo)
   useEffect(() => {
     if (!filtrosVisiveis || filtrosJaRecolheu.current) return
     const t = setTimeout(() => {
@@ -2205,7 +2217,22 @@ export default function Dashboard() {
             />
           </Source>
 
-          <NavigationControl position="bottom-right" />
+          <NavigationControl
+            position="bottom-right"
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              height: 84,
+              width: 30,
+              borderRadius: 10,
+              overflow: "hidden",
+              boxShadow:
+                "0 0 0 1px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04)",
+              backgroundColor: "rgba(255, 255, 255, 0.95)",
+              border: "none",
+              margin: "0 8px 8px 0",
+            }}
+          />
 
           {popupInfo && (
             <Popup
@@ -2255,6 +2282,7 @@ export default function Dashboard() {
             showMancha &&
             ALTURA_MANCHAS[cenario] && (
               <Source
+                key={`mancha-altura-${scenarioSlug(cenario)}`}
                 id="mancha-altura-img"
                 type="image"
                 url={`/dados_convertidos/rio_grande/cenarios/altura_raster_${scenarioSlug(cenario)}.png`}
@@ -2948,51 +2976,46 @@ export default function Dashboard() {
           </Source>
         </Map>
 
-        {/* Logo CIEX + GPEA — barra com a mesma altura do grupo de zoom (130 px), alinhada a ele pela base (8 px) e topo (138 px), à esquerda do zoom */}
-        <div className="pointer-events-none absolute right-[59px] bottom-2 z-10">
+        {/* Logos institucionais (GPEA e FURG) — alinhado aos controles de zoom (84 px de altura, base a 8 px) */}
+        <div className="pointer-events-none absolute right-[44px] bottom-[8px] z-10 print:hidden">
           <div
-            className="flex h-[130px] w-[196px] items-center justify-center rounded-md bg-white/90 px-2 shadow-sm"
-            style={{ border: "2px solid rgba(0,0,0,0.1)" }}
+            className="flex h-[84px] w-[140px] flex-col items-center justify-center gap-1 rounded-[10px] bg-white/95 px-2.5 py-1.5 backdrop-blur-md"
+            style={{
+              boxShadow:
+                "0 0 0 1px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04)",
+            }}
           >
-            {/* A largura da fileira CIEX + GPEA define a da logo da FURG (w-0 + min-w-full: ela não alarga a fileira) */}
-            <div className="flex flex-col items-stretch gap-2">
-              <div className="flex items-center justify-center gap-2">
-                <Image
-                  src="/CIEX2.png"
-                  alt="CIEX"
-                  width={58}
-                  height={58}
-                  className="object-contain"
-                  style={{
-                    width: "auto",
-                    height: "auto",
-                    maxWidth: "58px",
-                    maxHeight: "58px",
-                  }}
-                  onError={(e) => (e.currentTarget.style.display = "none")}
-                />
-                <div className="h-10 w-px bg-black/10" />
-                <Image
-                  src="/GPEA.png"
-                  alt="GPEA"
-                  width={80}
-                  height={26}
-                  className="object-contain"
-                  style={{
-                    width: "auto",
-                    height: "auto",
-                    maxWidth: "92px",
-                    maxHeight: "48px",
-                  }}
-                  onError={(e) => (e.currentTarget.style.display = "none")}
-                />
-              </div>
+            <div className="flex w-full items-center justify-center border-b border-black/10 pb-1">
+              <Image
+                src="/GPEA.png"
+                alt="GPEA"
+                width={88}
+                height={26}
+                priority
+                className="object-contain"
+                style={{
+                  width: "auto",
+                  height: "auto",
+                  maxWidth: "96px",
+                  maxHeight: "26px",
+                }}
+                onError={(e) => (e.currentTarget.style.display = "none")}
+              />
+            </div>
+            <div className="flex w-full items-center justify-center pt-0.5">
               <Image
                 src="/FURG.png"
                 alt="FURG"
                 width={216}
                 height={82}
-                className="h-[45px] w-0 min-w-[90%] self-center object-fill"
+                priority
+                className="object-contain"
+                style={{
+                  width: "auto",
+                  height: "auto",
+                  maxWidth: "105px",
+                  maxHeight: "28px",
+                }}
                 onError={(e) => (e.currentTarget.style.display = "none")}
               />
             </div>
@@ -3047,7 +3070,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ── Legenda: canto direito, acima da barra de logos e dos controles do mapa ──────── */}
+      {/* ── Legenda: canto direito, alinhada com precisão sobre os logos e controles do mapa ──────── */}
       <div
         onPointerDown={() => {
           legendaInteragiu.current = true
@@ -3058,31 +3081,29 @@ export default function Dashboard() {
         onFocus={() => {
           legendaInteragiu.current = true
         }}
-        className="absolute right-2 bottom-[146px] z-10 flex w-[247px] flex-col justify-end"
+        className="absolute right-[8px] bottom-[98px] z-10 flex w-[176px] flex-col justify-end print:hidden"
         style={{
-          maxHeight: filtrosVisiveis
-            ? "calc(100vh - 290px)"
-            : `calc(100vh - ${146 + panelTop + 44}px)`,
+          maxHeight: `calc(100vh - ${98 + panelTop + 40}px)`,
         }}
       >
         <div
-          className="flex min-h-0 flex-col overflow-hidden rounded-xl"
-          style={glassStyle(0.55)}
+          className="flex min-h-0 flex-col overflow-hidden rounded-[10px] border border-white/60 shadow-lg"
+          style={glassStyle(0.65)}
         >
           <button
             onClick={() => setShowLegenda((p) => !p)}
-            className="flex w-full shrink-0 items-center justify-between gap-3 px-2 py-1.5"
+            className="flex w-full shrink-0 items-center justify-between gap-2 px-2.5 py-1.5 transition-colors hover:brightness-110 active:scale-[0.99]"
             style={{ background: BRAND_GRADIENT }}
           >
-            <span className="text-[8px] font-black tracking-wider text-white uppercase">
+            <span className="text-[9px] font-black tracking-wider text-white uppercase">
               Legenda
             </span>
-            <span className="text-white/80" style={{ fontSize: 8 }}>
+            <span className="text-white/80" style={{ fontSize: 9 }}>
               {showLegenda ? "▼" : "▲"}
             </span>
           </button>
           {showLegenda && (
-            <div className="flex min-h-0 flex-col gap-2 overflow-y-auto px-2 py-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-track]:bg-transparent">
+            <div className="flex min-h-0 flex-col gap-2 overflow-y-auto px-2.5 py-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-track]:bg-transparent">
               {(() => {
                 const pontos = [
                   camadas.includes("Empresas") && renderEmp?.features && (
@@ -3188,23 +3209,23 @@ export default function Dashboard() {
                           key: "pop",
                           titulo: "População",
                           corpo: (
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1.5 min-w-0">
                               <div
-                                className="h-3 w-16 shrink-0 rounded-sm"
+                                className="h-2.5 w-10 shrink-0 rounded-sm"
                                 style={{
                                   background:
                                     "linear-gradient(to right, #0d0887, #9c179e, #ed7953, #f0f921)",
                                 }}
                               />
-                              <div className="flex flex-col gap-0.5 leading-none">
+                              <div className="flex flex-col gap-0.5 leading-none min-w-0 truncate">
                                 <span
-                                  className="text-[10px] font-medium"
+                                  className="text-[9px] font-medium truncate"
                                   style={{ color: C.primary }}
                                 >
-                                  Pop. (hab./pixel)
+                                  Pop. (hab./px)
                                 </span>
                                 <span
-                                  className="text-[8px]"
+                                  className="text-[7.5px]"
                                   style={{ color: C.muted }}
                                 >
                                   baixo → alto
@@ -3304,30 +3325,37 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ── Aviso metodológico (mancha binária) ─────────────────────────── */}
+      {/* ── Aviso flutuante no mapa (Alinhado à direita no topo, sem sobrepor painéis/filtros) ── */}
       {avisoMancha && (
         <div
-          className="absolute inset-x-0 z-20 flex justify-center px-4"
+          className="pointer-events-none absolute right-4 z-40 flex justify-end max-w-[calc(100vw-2rem)] transition-all duration-300 print:hidden"
           style={{ top: panelTop }}
         >
           <div
-            className="animate-fade-in-up flex max-w-md items-start gap-2 rounded-xl px-3.5 py-2.5 shadow-2xl"
-            style={glassStyle(0.75)}
+            className="animate-fade-in-up pointer-events-auto flex max-w-lg items-start gap-2.5 rounded-2xl border border-amber-300/80 bg-[#fffef5]/95 px-4 py-2.5 shadow-2xl backdrop-blur-xl transition-all"
+            role="status"
           >
-            <span className="mt-0.5 shrink-0 text-sm leading-none">⚠️</span>
-            <p
-              className="text-[11px] leading-snug"
-              style={{ color: C.primary }}
-            >
-              {avisoMancha}
-            </p>
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+            <div className="flex-1 text-xs leading-relaxed text-amber-900">
+              <strong className="font-bold text-amber-950">
+                {avisoMancha.toLowerCase().includes("simulação") ||
+                avisoMancha.toLowerCase().includes("simulacao")
+                  ? "Aviso de Simulação: "
+                  : "Aviso: "}
+              </strong>
+              <span>
+                {avisoMancha.replace(
+                  /^(Aviso(\s+de\s+Simula[cç][aã]o)?:\s*)/i,
+                  ""
+                )}
+              </span>
+            </div>
             <button
               onClick={() => setAvisoMancha(null)}
               aria-label="Fechar aviso"
-              className="shrink-0 rounded p-0.5 transition-colors hover:bg-slate-100"
-              style={{ color: C.muted }}
+              className="shrink-0 rounded-full p-1 text-amber-700/60 transition-colors hover:bg-amber-100 hover:text-amber-900"
             >
-              <span className="text-[13px] leading-none">✕</span>
+              <X size={14} />
             </button>
           </div>
         </div>
@@ -3336,7 +3364,7 @@ export default function Dashboard() {
       {/* ── Header — 1 linha a partir de 1260 px (camadas só com ícone abaixo de 2200 px); abaixo de 1260 px quebra e as camadas vão para a 2ª linha; painéis seguem panelTop */}
       <header
         ref={headerRef}
-        className="dash-header absolute top-1.5 right-3 left-3 z-20 flex flex-wrap items-center rounded-xl shadow-2xl"
+        className="dash-header absolute top-1.5 right-3 left-3 z-20 flex flex-wrap items-center rounded-2xl shadow-2xl"
         style={{
           ...HEADER_GLASS,
           paddingInline: "0.75rem",
@@ -3344,7 +3372,7 @@ export default function Dashboard() {
           gap: "var(--section-gap)",
         }}
       >
-        {/* Ícone do projeto (favicon, no lugar das logos CIEX e GPEA) + título em uma linha */}
+        {/* Logo colorida do CIEX em fundo branco + título interativo para reiniciar seleções */}
         <div
           className="flex shrink-0 items-center gap-2.5 border-r"
           style={{
@@ -3352,31 +3380,44 @@ export default function Dashboard() {
             paddingRight: "var(--section-gap)",
           }}
         >
-          <Image
-            src="/icon.png"
-            alt="CIEX · GPEA"
-            width={48}
-            height={48}
-            className="shrink-0 rounded-lg object-contain"
-            style={{ height: "calc(var(--logo-h) * 1.5)", width: "auto" }}
-          />
-          <div className="flex min-w-0 flex-col justify-center">
+          <button
+            type="button"
+            onClick={reiniciar}
+            title="Clique para reiniciar seleções e voltar à vista inicial"
+            className="flex shrink-0 items-center justify-center rounded-lg bg-white px-2 py-1 shadow-xs border border-white/60 cursor-pointer transition-all duration-200 hover:scale-[1.03] active:scale-[0.96] hover:shadow-md focus-visible:outline-none"
+          >
+            <Image
+              src="/CIEX2.png"
+              alt="CIEX"
+              width={70}
+              height={52}
+              className="shrink-0 object-contain"
+              style={{ height: "calc(var(--logo-h) * 1.15)", width: "auto" }}
+              priority
+            />
+          </button>
+          <button
+            type="button"
+            onClick={reiniciar}
+            title="Clique para reiniciar seleções e voltar à vista inicial"
+            className="group/title flex min-w-0 flex-col justify-center text-left border-0 bg-transparent p-0 cursor-pointer outline-none transition-all duration-200 hover:opacity-90 active:scale-[0.97] active:opacity-75 select-none focus-visible:outline-none"
+          >
             <h1
-              className="leading-tight font-black whitespace-nowrap text-white"
+              className="leading-tight font-black whitespace-nowrap text-white transition-all duration-150 group-hover/title:text-white/95"
               style={{ fontSize: HEADER_FLUID.titleSize }}
             >
               Painel de Vulnerabilidade Econômica
             </h1>
             <span
-              className="font-medium tracking-wider whitespace-nowrap text-white/70 uppercase"
+              className="font-medium tracking-wider whitespace-nowrap text-white/70 uppercase transition-all duration-150 group-hover/title:text-white/80"
               style={{ fontSize: HEADER_FLUID.subtitleSize }}
             >
               Rio Grande, RS
             </span>
-          </div>
+          </button>
         </div>
 
-        {/* Perdas Operacionais / Metodologia — empilhados, empurram o resto para a direita (mr-auto) */}
+        {/* Perdas Operacionais / Metodologia / Comparar — empilhados, empurram o resto para a direita (mr-auto) */}
         <div className="grid shrink-0 grid-cols-2 gap-0.5 max-[1999px]:flex max-[1999px]:flex-row max-[1999px]:gap-1 min-[1260px]:mr-auto">
           <Link
             href="/perdas-operacionais"
@@ -3400,13 +3441,28 @@ export default function Dashboard() {
           </Link>
           <Link
             href="/metodologia"
-            className={`${NAV_LINK_CLASS} min-[2000px]:col-span-2`}
+            className={NAV_LINK_CLASS}
             style={NAV_LINK_STYLE}
             title="Ver metodologia do painel"
           >
             <BookOpen size={11} strokeWidth={2.5} />
             Metodologia
           </Link>
+          <button
+            type="button"
+            onClick={() => setShowComparador(true)}
+            className={NAV_LINK_CLASS}
+            style={{
+              ...NAV_LINK_STYLE,
+              background: "rgba(255,255,255,0.18)",
+              borderColor: "rgba(255,255,255,0.35)",
+            }}
+            title="Comparar dois cenários lado a lado com swipe no mapa"
+          >
+            <GitCompare size={11} strokeWidth={2.5} />
+            <span className="min-[2000px]:hidden">Comparar</span>
+            <span className="max-[1999px]:hidden">Comparar Cenários</span>
+          </button>
         </div>
 
         {/* Cenário */}
@@ -3506,7 +3562,7 @@ export default function Dashboard() {
                 type="button"
                 onClick={reiniciar}
                 aria-label="Reiniciar seleções"
-                className="active-press hover-lift flex items-center justify-center rounded-md border border-white/20 text-white/90 hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:outline-none"
+                className="apple-button hover-lift flex items-center justify-center rounded-lg border border-white/20 text-white/90 hover:bg-white/10 active:scale-95 focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:outline-none"
                 style={{
                   backgroundColor: C.field,
                   height: "var(--select-h)",
@@ -3581,7 +3637,7 @@ export default function Dashboard() {
                   <button
                     onClick={toggle ?? (() => toggleCamada(id))}
                     aria-pressed={ativo}
-                    className={`active-press hover-lift flex shrink-0 items-center justify-center gap-1 rounded-md border font-black whitespace-nowrap focus-visible:ring-2 focus-visible:ring-[#1E404A]/40 focus-visible:ring-offset-1 focus-visible:outline-none max-[1259px]:w-full ${ativo ? "border-[#dce1d8] bg-white text-[#1E404A]" : "border-white/20 text-white/80 hover:bg-white/10"}`}
+                    className={`apple-button hover-lift flex shrink-0 items-center justify-center gap-1 rounded-lg border font-bold whitespace-nowrap focus-visible:ring-2 focus-visible:ring-[#1E404A]/40 focus-visible:ring-offset-1 focus-visible:outline-none max-[1259px]:w-full ${ativo ? "border-[#dce1d8] bg-white text-[#1E404A] shadow-xs" : "border-white/20 text-white/80 hover:bg-white/10"}`}
                     style={{
                       fontSize: "var(--btn-size)",
                       height: "var(--btn-h)",
@@ -3651,45 +3707,67 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* ── Filtros (direita) — camadas/heatmaps como chips; selects de dados recolhidos em "Filtrar dados" ── */}
-      {showFiltros && (temCamadaTabular || isCenarioAtivo) && (
-        <div
-          onPointerDown={() => {
-            filtrosInteragiu.current = true
-          }}
-          onPointerEnter={() => {
-            filtrosInteragiu.current = true
-          }}
-          onFocus={() => {
-            filtrosInteragiu.current = true
-          }}
-          className="absolute right-4 z-10 flex w-44 flex-col gap-1.5 overflow-y-auto rounded-xl p-2 shadow-2xl [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-track]:bg-transparent"
-          style={{
-            top: panelTop,
-            maxHeight: `calc(100vh - ${panelTop + 20}px)`,
-            ...glassStyle(0.6),
-          }}
-        >
+      {/* ── Filtros — posicionado à direita do Painel (e à direita do trilho de cotas quando ativo) ── */}
+      {(() => {
+        const temTrilhoCota =
+          cotas.cotasAtivo &&
+          !cotas.cotaRaster?.erro &&
+          cotas.cotaRaster?.cota !== null
+        const temErroCota = cotas.cotasAtivo && Boolean(cotas.cotaRaster?.erro)
+
+        const filtrosLeft = showPainelAnalise
+          ? temTrilhoCota
+            ? 510
+            : temErroCota
+              ? 582
+              : 442
+          : 140
+
+        const filtrosTop = panelTop
+        const podeExibirFiltros =
+          temCamadaTabular || isCenarioAtivo || cotas.cotasAtivo
+
+        if (!podeExibirFiltros) return null
+
+        return showFiltros ? (
           <div
-            className="flex items-center justify-between border-b pb-1"
-            style={{ borderColor: C.border }}
+            onPointerDown={() => {
+              filtrosInteragiu.current = true
+            }}
+            onPointerEnter={() => {
+              filtrosInteragiu.current = true
+            }}
+            onFocus={() => {
+              filtrosInteragiu.current = true
+            }}
+            className="absolute z-20 flex w-48 flex-col gap-1.5 overflow-y-auto rounded-2xl p-2.5 shadow-2xl transition-[left,top] duration-300 ease-out print:hidden [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-track]:bg-transparent"
+            style={{
+              top: filtrosTop,
+              left: filtrosLeft,
+              maxHeight: `calc(100vh - ${filtrosTop + 20}px)`,
+              ...glassStyle(0.8),
+            }}
           >
-            <span
-              className="text-[9px] font-black tracking-wider uppercase"
-              style={{ color: C.primary }}
+            <div
+              className="flex items-center justify-between border-b pb-1"
+              style={{ borderColor: C.border }}
             >
-              Filtros de Mapa
-            </span>
-            <button
-              onClick={() => setShowFiltros(false)}
-              title="Recolher filtros"
-              aria-label="Recolher filtros"
-              className="flex items-center justify-center rounded p-0.5 transition-colors hover:bg-slate-100"
-              style={{ color: C.muted }}
-            >
-              <PanelRightClose size={13} strokeWidth={2.5} />
-            </button>
-          </div>
+              <span
+                className="text-[9px] font-black tracking-wider uppercase"
+                style={{ color: C.primary }}
+              >
+                Filtros de Mapa
+              </span>
+              <button
+                onClick={() => setShowFiltros(false)}
+                title="Recolher filtros"
+                aria-label="Recolher filtros"
+                className="flex items-center justify-center rounded-lg p-0.5 transition-colors hover:bg-slate-100/60"
+                style={{ color: C.muted }}
+              >
+                <PanelRightClose size={13} strokeWidth={2.5} />
+              </button>
+            </div>
 
           {(() => {
             type Chip = {
@@ -3748,7 +3826,7 @@ export default function Dashboard() {
             ]
             return (
               <>
-                {isCenarioAtivo && (
+                {(isCenarioAtivo || cotas.cotasAtivo) && (
                   <div className="flex flex-col gap-1">
                     {titulo("Camadas")}
                     <div className="grid grid-cols-2 gap-1">
@@ -3888,18 +3966,31 @@ export default function Dashboard() {
               )}
             </div>
           )}
-        </div>
-      )}
-      {!showFiltros && (temCamadaTabular || isCenarioAtivo) && (
-        <button
-          onClick={() => setShowFiltros(true)}
-          className="active-press hover-lift absolute right-4 z-20 flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-black shadow-2xl focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:outline-none"
-          style={{ top: panelTop, ...glassStyle(0.6), color: C.primary }}
-        >
-          <SlidersHorizontal size={12} strokeWidth={2.5} />
-          Filtros
-        </button>
-      )}
+          </div>
+        ) : (
+          <button
+            onClick={() => setShowFiltros(true)}
+            className="active-press hover-lift absolute z-20 flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold shadow-2xl active:scale-[0.97] transition-[left,top] duration-300 ease-out focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none print:hidden"
+            style={{
+              top: filtrosTop,
+              left: filtrosLeft,
+              ...glassStyle(0.8),
+              color: C.primary,
+            }}
+          >
+            <SlidersHorizontal size={12} strokeWidth={2.5} />
+            <span>Filtros</span>
+            {nFiltrosAtivos > 0 && (
+              <span
+                className="ml-0.5 rounded-full px-1.5 py-px text-[10px] text-white font-black"
+                style={{ backgroundColor: C.primary }}
+              >
+                {nFiltrosAtivos}
+              </span>
+            )}
+          </button>
+        )
+      })()}
 
       {/* Cenário "Simulação por Cotas": slider vertical ao lado do Painel (cota alta em cima), com play/pause.
           Acoplado à borda direita do Painel (432 px = 12 + 420, sem folga; mesma superfície de vidro) e, com o Painel oculto,
@@ -3911,7 +4002,7 @@ export default function Dashboard() {
               showPainelAnalise && !cotas.cotaRaster.erro
                 ? "left-[432px] rounded-r-xl border-l border-slate-300/50 shadow-2xl" // acoplado ao Painel (12 + 420 px)
                 : showPainelAnalise
-                  ? "left-[405px] rounded-xl"
+                  ? "left-[432px] rounded-xl"
                   : "left-3 rounded-xl"
             } ${cotas.cotaRaster.erro ? "max-w-[140px]" : "w-[68px]"}`}
             style={{
@@ -4123,14 +4214,15 @@ export default function Dashboard() {
             {/* Resumo */}
             <TabsContent
               value="resumo"
-              className="mt-2 flex min-h-0 flex-1 flex-col data-[state=inactive]:hidden"
+              className="mt-1 flex min-h-0 flex-1 flex-col overflow-hidden pb-1 data-[state=inactive]:hidden"
             >
-              <FitHeight min={0.5} max={1.3}>
-                {tabAtiva === "resumo" && popPainel && (
-                  <PopulacaoKpi {...popPainel} />
-                )}
+              <FitHeight min={0.4} max={1.2} className="flex-1 min-h-0">
+                <div className="flex flex-col gap-1.5 pb-2">
+                  {tabAtiva === "resumo" && popPainel && (
+                    <PopulacaoKpi {...popPainel} className="mb-0 mt-0" />
+                  )}
 
-                {(() => {
+                  {(() => {
                   const staffBase = Object.values(
                     metricasSau.base.staff
                   ).reduce((a, b) => a + (b as number), 0)
@@ -4170,6 +4262,7 @@ export default function Dashboard() {
                     base: number
                     sufixo?: string
                     casas?: number
+                    metricKey?: string
                   }[] = [
                     {
                       icon: <Users size={15} strokeWidth={2.5} />,
@@ -4179,6 +4272,7 @@ export default function Dashboard() {
                         ? metricasEmp.impacto.emp
                         : metricasEmp.base.emp,
                       base: metricasEmp.base.emp,
+                      metricKey: "massa_salarial",
                     },
                     {
                       icon: <Building2 size={15} strokeWidth={2.5} />,
@@ -4188,6 +4282,7 @@ export default function Dashboard() {
                         ? metricasEmp.impacto.estab
                         : metricasEmp.base.estab,
                       base: metricasEmp.base.estab,
+                      metricKey: "empresas_vab",
                     },
                     {
                       icon: <BookOpen size={15} strokeWidth={2.5} />,
@@ -4195,6 +4290,7 @@ export default function Dashboard() {
                       titulo: "Alunos",
                       valor: isCenarioAtivo ? alunosImpacto : alunosBase,
                       base: alunosBase,
+                      metricKey: "educacao",
                     },
                     {
                       icon: <GraduationCap size={15} strokeWidth={2.5} />,
@@ -4204,6 +4300,7 @@ export default function Dashboard() {
                         ? metricasEdu.impacto.escolas
                         : metricasEdu.base.escolas,
                       base: metricasEdu.base.escolas,
+                      metricKey: "educacao",
                     },
                     {
                       icon: <HeartPulse size={15} strokeWidth={2.5} />,
@@ -4213,6 +4310,7 @@ export default function Dashboard() {
                         ? metricasSau.impacto.unidades
                         : metricasSau.base.unidades,
                       base: metricasSau.base.unidades,
+                      metricKey: "saude",
                     },
                     {
                       icon: <Stethoscope size={15} strokeWidth={2.5} />,
@@ -4220,6 +4318,7 @@ export default function Dashboard() {
                       titulo: "Profissionais Saúde",
                       valor: isCenarioAtivo ? staffImpacto : staffBase,
                       base: staffBase,
+                      metricKey: "saude",
                     },
                     ...(metricasPatrimonio.base.total > 0
                       ? [
@@ -4231,6 +4330,7 @@ export default function Dashboard() {
                               ? metricasPatrimonio.impacto.total
                               : metricasPatrimonio.base.total,
                             base: metricasPatrimonio.base.total,
+                            metricKey: "danos_fisicos",
                           },
                         ]
                       : []),
@@ -4244,6 +4344,7 @@ export default function Dashboard() {
                               ? infraTerr.atingidos
                               : infraTerr.total,
                             base: infraTerr.total,
+                            metricKey: "edificacoes",
                           },
                         ]
                       : []),
@@ -4251,7 +4352,7 @@ export default function Dashboard() {
 
                   return (
                     <>
-                      <div className="mb-3 grid grid-cols-2 gap-2">
+                      <div className="mb-2 grid grid-cols-2 gap-1.5">
                         {tiles.map((t, i) => {
                           const pct = t.base > 0 ? (t.valor / t.base) * 100 : 0
                           const valorFmt =
@@ -4271,92 +4372,95 @@ export default function Dashboard() {
                               sub={sub}
                               pct={isCenarioAtivo ? pct : 100}
                               isLoading={isLoading}
+                              metricKey={t.metricKey}
                             />
                           )
                         })}
                       </div>
 
-                      {temIntervencao(eventoSel) ? (
-                        // Simulação sem intervenção: perdas operacionais e danos físicos no lugar da área agrícola
-                        // (nas simulações nenhuma lavoura passa do filtro de 0,5 ha)
+                      {isCenarioAtivo && eventoSel !== COTAS_CENARIO && (
                         <ResumoPerdasDanos evento={eventoSel} />
-                      ) : (
-                        haBaseAgri > 0 && (
-                          <div className="mb-2 overflow-hidden rounded-lg shadow-sm">
-                            <div
-                              className="flex items-center gap-1.5 px-3 py-1.5"
-                              style={{ background: BRAND_GRADIENT }}
-                            >
+                      )}
+
+                      {((!isCenarioAtivo && haBaseAgri > 0) ||
+                        (isCenarioAtivo && haImpAgri > 0)) && (
+                        <div className="mb-1.5 overflow-hidden rounded-lg shadow-sm">
+                          <div
+                            className="flex items-center justify-between px-2.5 py-1"
+                            style={{ background: BRAND_GRADIENT }}
+                          >
+                            <div className="flex items-center gap-1.5">
                               <Sprout
-                                size={12}
+                                size={11}
                                 strokeWidth={2.5}
                                 className="text-white"
                               />
-                              <span className="text-[10px] font-black tracking-wider text-white uppercase">
+                              <span className="text-[9px] font-black tracking-wide text-white uppercase">
                                 Área Agrícola
                               </span>
                             </div>
-                            <div
-                              className="flex items-center gap-3 px-3 py-2.5"
-                              style={{ backgroundColor: PANEL_CARD_BG }}
-                            >
-                              <DonutChart
-                                size={56}
-                                strokeWidth={7}
-                                highlightOnHover={false}
-                                data={[
-                                  {
-                                    value: isCenarioAtivo
-                                      ? haImpAgri
-                                      : haBaseAgri,
-                                    color: COLORS.agricultura,
-                                    label: "Área",
-                                  },
-                                  {
-                                    value: Math.max(
-                                      0,
-                                      haBaseAgri -
-                                        (isCenarioAtivo
-                                          ? haImpAgri
-                                          : haBaseAgri)
-                                    ),
-                                    color: `${COLORS.agricultura}22`,
-                                    label: "Resto",
-                                  },
-                                ]}
-                                centerContent={
-                                  <span
-                                    className="text-[10px] font-black"
-                                    style={{ color: COLORS.agricultura }}
-                                  >
-                                    {haBaseAgri > 0
-                                      ? Math.round(
-                                          ((isCenarioAtivo
-                                            ? haImpAgri
-                                            : haBaseAgri) /
-                                            haBaseAgri) *
-                                            100
-                                        )
-                                      : 0}
-                                    %
-                                  </span>
-                                }
-                              />
-                              <div className="flex min-w-0 flex-col">
+                            <MetricInfoPopover
+                              metricKey="agricultura"
+                              corIcone="#ffffff"
+                              iconSize={11}
+                            />
+                          </div>
+                          <div
+                            className="flex items-center gap-2.5 px-2.5 py-1.5"
+                            style={{ backgroundColor: PANEL_CARD_BG }}
+                          >
+                            <DonutChart
+                              size={34}
+                              strokeWidth={4.5}
+                              highlightOnHover={false}
+                              data={[
+                                {
+                                  value: isCenarioAtivo
+                                    ? haImpAgri
+                                    : haBaseAgri,
+                                  color: COLORS.agricultura,
+                                  label: "Área",
+                                },
+                                {
+                                  value: Math.max(
+                                    0,
+                                    haBaseAgri -
+                                      (isCenarioAtivo ? haImpAgri : haBaseAgri)
+                                  ),
+                                  color: `${COLORS.agricultura}22`,
+                                  label: "Resto",
+                                },
+                              ]}
+                              centerContent={
                                 <span
-                                  className="text-[9px] font-bold tracking-wider uppercase"
-                                  style={{ color: C.muted }}
+                                  className="text-[8.5px] font-black"
+                                  style={{ color: COLORS.agricultura }}
                                 >
-                                  {isCenarioAtivo
-                                    ? "Área Atingida"
-                                    : "Área Total"}
+                                  {haBaseAgri > 0
+                                    ? Math.round(
+                                        ((isCenarioAtivo
+                                          ? haImpAgri
+                                          : haBaseAgri) /
+                                          haBaseAgri) *
+                                          100
+                                      )
+                                    : 0}
+                                  %
                                 </span>
+                              }
+                            />
+                            <div className="flex min-w-0 flex-1 flex-col">
+                              <span
+                                className="text-[8.5px] font-bold tracking-wider uppercase text-slate-500"
+                              >
+                                {isCenarioAtivo
+                                  ? "Área Atingida"
+                                  : "Área Total"}
+                              </span>
+                              <div className="flex items-baseline gap-1.5">
                                 <span
-                                  className="leading-tight font-black"
-                                  style={{
-                                    color: C.primary,
-                                    fontSize: PANEL_FLUID.fontValor,
-                                  }}
+                                  className="text-sm leading-tight font-black tabular-nums"
+                                  style={{ color: C.primary }}
                                 >
                                   {compactoBr(
                                     isCenarioAtivo ? haImpAgri : haBaseAgri,
@@ -4366,8 +4470,7 @@ export default function Dashboard() {
                                 </span>
                                 {isCenarioAtivo && (
                                   <span
-                                    className="text-[9px]"
-                                    style={{ color: C.muted }}
+                                    className="text-[8.5px] text-slate-500 whitespace-nowrap"
                                   >
                                     de {compactoBr(haBaseAgri, 1)} ha
                                   </span>
@@ -4375,11 +4478,17 @@ export default function Dashboard() {
                               </div>
                             </div>
                           </div>
-                        )
+                        </div>
+                      )}
+
+                      {/* Avisos metodológicos e notas do cenário no final do painel */}
+                      {isCenarioAtivo && eventoSel !== COTAS_CENARIO && (
+                        <NotasResumoCenario evento={eventoSel} />
                       )}
                     </>
                   )
                 })()}
+                </div>
               </FitHeight>
             </TabsContent>
 
@@ -4406,42 +4515,6 @@ export default function Dashboard() {
                 evento={eventoSel}
                 intervencao={intervencaoSel}
               />
-              {pilhaEmpresas && isCenarioAtivo && (
-                <div className="mb-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-[11px] leading-snug text-amber-900">
-                  <strong>Localização aproximada.</strong>{" "}
-                  {empresasNaPilha > 0 ? (
-                    <>
-                      {formatoBr(empresasNaPilha, 0)} das{" "}
-                      {formatoBr(atingidosEmpresas?.features?.length ?? 0, 0)}{" "}
-                      empresas atingidas (
-                      {calcPct(
-                        empresasNaPilha,
-                        atingidosEmpresas?.features?.length ?? 0
-                      )}
-                      ) estão num mesmo ponto: o geocodificador colocou
-                      endereços diferentes no centro da cidade. Os totais de
-                      empresas, vínculos e VAB deste cenário dependem desse
-                      ponto.
-                    </>
-                  ) : (
-                    <>
-                      {formatoBr(pilhaEmpresas.n, 0)} empresas da base (
-                      {calcPct(
-                        pilhaEmpresas.n,
-                        baseEmpresas?.features?.length ?? 0
-                      )}
-                      ) têm localização aproximada e ficam fora da mancha deste
-                      cenário: o total atingido pode estar subestimado.
-                    </>
-                  )}{" "}
-                  <Link
-                    href="/metodologia#limitacoes"
-                    className="font-bold underline"
-                  >
-                    Saiba mais ↗
-                  </Link>
-                </div>
-              )}
               {setoresChart.length > 0 &&
                 (() => {
                   const totalBase = metricasEmp.base.estab
@@ -6499,6 +6572,13 @@ export default function Dashboard() {
           Abrir Painel
         </button>
       )}
+
+      {/* ── Modal Comparador de Cenários (Lado a Lado / Swipe Map) ── */}
+      <CenariosComparatorModal
+        isOpen={showComparador}
+        onClose={() => setShowComparador(false)}
+        cenarioInicialA={isCenarioAtivo ? cenario : undefined}
+      />
     </div>
   )
 }
@@ -6540,6 +6620,7 @@ function MiniStatCard({
   sub,
   pct,
   isLoading,
+  metricKey,
 }: {
   icon: React.ReactNode
   cor: string
@@ -6548,16 +6629,17 @@ function MiniStatCard({
   sub: string
   pct?: number
   isLoading?: boolean
+  metricKey?: string
 }) {
   const p = Math.max(0, Math.min(100, pct ?? 100))
   return (
     <div
-      className="flex items-center gap-2 rounded-lg px-2 py-2.5"
+      className="flex items-center gap-2 rounded-lg px-2 py-1.5"
       style={{ backgroundColor: PANEL_CARD_BG }}
     >
       <DonutChart
-        size={36}
-        strokeWidth={5}
+        size={34}
+        strokeWidth={4.5}
         highlightOnHover={false}
         data={[
           { value: p, color: cor, label: "atingido" },
@@ -6566,24 +6648,33 @@ function MiniStatCard({
         centerContent={<span style={{ color: cor }}>{icon}</span>}
       />
       <div className="flex min-w-0 flex-1 flex-col">
-        <span
-          className="text-[8.5px] leading-tight font-bold tracking-wider uppercase"
-          style={{ color: C.muted }}
-        >
-          {titulo}
-        </span>
+        <div className="flex items-center justify-between gap-1">
+          <span
+            className="truncate text-[8.5px] leading-tight font-bold tracking-wider uppercase"
+            style={{ color: C.muted }}
+          >
+            {titulo}
+          </span>
+          {metricKey && (
+            <MetricInfoPopover
+              metricKey={metricKey}
+              corIcone={cor}
+              iconSize={10}
+            />
+          )}
+        </div>
         {isLoading ? (
-          <Skeleton className="mt-0.5 h-5 w-16" />
+          <Skeleton className="mt-0.5 h-4 w-16" />
         ) : (
           <span
             className="leading-tight font-black whitespace-nowrap"
-            style={{ color: C.primary, fontSize: "clamp(15px, 2.1vh, 21px)" }}
+            style={{ color: C.primary, fontSize: "clamp(14px, 1.9vh, 18px)" }}
           >
             {valor}
           </span>
         )}
         <span
-          className="text-[9px] leading-tight whitespace-nowrap"
+          className="text-[8.5px] leading-tight whitespace-nowrap"
           style={{ color: C.muted }}
         >
           {sub}
@@ -6593,12 +6684,12 @@ function MiniStatCard({
   )
 }
 
-/** Nome da camada ao passar o mouse (o título nativo demora e some); `aria-hidden`: o botão já tem nome acessível. */
+/** Nome da camada ao passar o mouse (estilo Apple Tooltip); `aria-hidden`: o botão já tem nome acessível. */
 function TipCamada({ texto }: { texto: string }) {
   return (
     <span
       aria-hidden="true"
-      className="pointer-events-none absolute top-full left-1/2 z-30 mt-1 hidden -translate-x-1/2 rounded-md bg-slate-900 px-2 py-1 text-[10px] leading-none font-bold whitespace-nowrap text-white shadow-lg group-hover/tip:block"
+      className="pointer-events-none absolute top-full left-1/2 z-30 mt-1.5 hidden -translate-x-1/2 rounded-lg bg-slate-900/90 backdrop-blur-md border border-white/10 px-2.5 py-1 text-[11px] leading-none font-medium whitespace-nowrap text-white shadow-xl group-hover/tip:block"
     >
       {texto}
     </span>
@@ -6621,7 +6712,7 @@ function KPIRow({
   isLoading?: boolean
 }) {
   return (
-    <div className="overflow-hidden rounded-lg">
+    <div className="overflow-hidden rounded-xl border border-white/60 shadow-xs transition-all duration-150">
       <div
         className="flex items-center gap-1.5 px-3 py-1"
         style={{ background: BRAND_GRADIENT }}
@@ -6641,7 +6732,7 @@ function KPIRow({
         style={{ backgroundColor: PANEL_CARD_BG }}
       >
         <div className="flex min-w-0 flex-col">
-          <span className="text-[10px] leading-none" style={{ color: C.muted }}>
+          <span className="text-[10px] leading-none font-medium" style={{ color: C.muted }}>
             {sub}
           </span>
           {delta &&
@@ -6649,7 +6740,7 @@ function KPIRow({
               <Skeleton className="mt-1.5 h-4 w-16" />
             ) : (
               <span
-                className="mt-1.5 inline-block w-fit rounded px-1.5 py-0.5 text-[9px] font-semibold"
+                className="mt-1.5 inline-block w-fit rounded-full px-2 py-0.5 text-[9px] font-bold"
                 style={{
                   backgroundColor: PANEL_CARD_BG,
                   border: `1px solid ${C.border}`,
@@ -6664,7 +6755,7 @@ function KPIRow({
           <Skeleton className="h-6 w-20 shrink-0" />
         ) : (
           <span
-            className="shrink-0 leading-none font-black"
+            className="shrink-0 leading-none font-black tabular-nums tracking-tight"
             style={{ color: C.primary, fontSize: PANEL_FLUID.fontValor }}
           >
             {valor}
@@ -6762,7 +6853,7 @@ function KPICard({
   isLoading?: boolean
 }) {
   return (
-    <Card className="hover-lift gap-0 overflow-hidden border-0 bg-transparent p-0 shadow-none">
+    <Card className="hover-lift gap-0 overflow-hidden rounded-xl border border-white/60 bg-transparent p-0 shadow-xs transition-all duration-150">
       <div className="px-3 py-1.5" style={{ background: BRAND_GRADIENT }}>
         <CardTitle className="text-[10px] leading-tight font-black tracking-wider text-white uppercase">
           {titulo}
@@ -6776,7 +6867,7 @@ function KPICard({
           <Skeleton className="mb-1 h-6 w-24" />
         ) : (
           <div
-            className="leading-tight font-black"
+            className="leading-tight font-black tabular-nums tracking-tight"
             style={{ color: C.primary, fontSize: PANEL_FLUID.fontValor }}
           >
             {valor}
@@ -6793,7 +6884,7 @@ function KPICard({
             <Skeleton className="h-4 w-16" />
           ) : (
             <div
-              className="inline-block w-fit rounded px-1.5 py-0.5 text-[10px] font-semibold"
+              className="inline-block w-fit rounded-full px-2 py-0.5 text-[10px] font-bold"
               style={{
                 backgroundColor: PANEL_CARD_BG,
                 border: `1px solid ${C.border}`,

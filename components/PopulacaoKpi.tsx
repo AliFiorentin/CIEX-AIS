@@ -3,6 +3,7 @@
 import { Users } from "lucide-react"
 import { formatoBr } from "@/lib/formatos"
 import { rotuloPopulacao, type PopulacaoCenario } from "@/lib/avisos"
+import { MetricInfoPopover } from "@/components/MetricInfoPopover"
 
 /**
  * Card de população (total e atingida) do Painel. Usado no Resumo e, no cenário "Simulação por Cotas", na aba "Por cota"
@@ -30,7 +31,7 @@ export function PopulacaoKpi({
     : null
   return (
     <div
-      className={`${className} shrink-0 overflow-hidden rounded-lg border`}
+      className={`${className} shrink-0 overflow-hidden rounded-xl border shadow-xs`}
       style={{
         borderColor: "#e9d5ff",
         background: "linear-gradient(135deg, #faf5ff 0%, #ede9fe 100%)",
@@ -45,8 +46,13 @@ export function PopulacaoKpi({
         <div className="min-w-0 flex-1">
           <div className="flex items-end justify-between gap-1">
             <div className="min-w-0">
-              <div className="mb-0.5 text-[9px] leading-none font-bold tracking-wider text-purple-500 uppercase">
-                Pop. Total
+              <div className="mb-0.5 flex items-center gap-1 text-[9px] leading-none font-bold tracking-wider text-purple-500 uppercase">
+                <span>Pop. Total</span>
+                <MetricInfoPopover
+                  metricKey="populacao"
+                  corIcone="#9333ea"
+                  iconSize={10}
+                />
               </div>
               <div className="flex items-baseline gap-0.5">
                 <span className="text-[13px] font-black text-purple-800 tabular-nums">

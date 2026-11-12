@@ -3,19 +3,48 @@
 import Link from "next/link"
 import { Skeleton } from "@/components/ui/skeleton"
 import { TrendingDown, Waves } from "lucide-react"
-import { EVENTOS_SIMULACAO } from "@/lib/cenarios"
+import { EVENTOS_SIMULACAO, temIntervencao } from "@/lib/cenarios"
 import { perdasEmDias } from "@/lib/comparativo"
 import { fmtBRL } from "@/lib/formatos"
+import { AVISO_MAIO_2024_MAIS_50 } from "@/lib/avisos"
 import { useComparativo } from "@/hooks/useComparativo"
+import { usePerdasOperacionais } from "@/hooks/usePerdasOperacionais"
 import { usePerdasCotas } from "@/hooks/usePerdasCotas"
 import { perdasCotaEmDias } from "@/lib/cotas"
 import type { DetalheCotaValores } from "@/lib/cotas-types"
 import { NotasSimulacao } from "@/components/DanoEvitadoPainel"
+import { MetricInfoPopover } from "@/components/MetricInfoPopover"
 
 const DIAS_PERDAS = 30 // mesmos 30 dias efetivos do Dano Evitado
 const PRIMARY = "#1E404A"
 const BRAND_GRADIENT = "linear-gradient(135deg, #1E404A 0%, #255362 100%)"
-const CARD_BG = "rgba(255,255,255,0.55)"
+const CARD_BG = "rgba(255,255,255,0.72)"
+
+export interface ExposicaoCenario {
+  total: number
+  empresas: number
+  educacao: number
+  saude: number
+}
+
+/**
+ * Exposição física em R$ (valor de reposição de tudo o que molha, teto do dano físico) calculada com as mesmas
+ * regras do CLIMADA (scripts/valor_reposicao.py) para os cenários fora das 12 simulações de intervenção.
+ */
+export const EXPOSICAO_CENARIOS_EXTRAS: Record<string, ExposicaoCenario> = {
+  "Simulação de Maio de 2024 + 50%": {
+    total: 1992973483.17,
+    empresas: 1341411063.84,
+    educacao: 284331138.21,
+    saude: 367231281.12,
+  },
+  "Nível da Lagoa + Chuva Acumulada – 16/05/2024": {
+    total: 1297577037.15,
+    empresas: 1034766592.02,
+    educacao: 217012688.73,
+    saude: 45797756.40,
+  },
+}
 
 export function Cartao({
   titulo,
@@ -25,6 +54,7 @@ export function Cartao({
   linhas,
   ajuda,
   href,
+  metricKey,
 }: {
   titulo: string
   icone: React.ReactNode
@@ -33,33 +63,43 @@ export function Cartao({
   linhas: { rotulo: string; valor: string }[]
   ajuda: string
   href?: string
+  metricKey?: string
 }) {
   const corpo = (
     <>
       <div
-        className="flex items-center gap-1.5 px-3 py-1.5"
+        className="flex items-center justify-between px-2.5 py-1"
         style={{ background: BRAND_GRADIENT }}
       >
-        <span className="text-white">{icone}</span>
-        <span className="text-[9px] font-black tracking-wide whitespace-nowrap text-white uppercase">
-          {titulo}
-        </span>
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="text-white">{icone}</span>
+          <span className="text-[9px] font-black tracking-wide whitespace-nowrap text-white uppercase">
+            {titulo}
+          </span>
+        </div>
+        {metricKey && (
+          <MetricInfoPopover
+            metricKey={metricKey}
+            corIcone="#ffffff"
+            iconSize={11}
+          />
+        )}
       </div>
-      <div className="flex-1 px-3 py-2" style={{ backgroundColor: CARD_BG }}>
-        <div className="text-[9px] font-bold tracking-wide text-slate-500 uppercase">
+      <div className="flex-1 px-2.5 py-1.5" style={{ backgroundColor: CARD_BG }}>
+        <div className="text-[8.5px] font-bold tracking-wide text-slate-500 uppercase">
           {rotuloValor}
         </div>
         <div
-          className="text-lg leading-tight font-black whitespace-nowrap tabular-nums"
+          className="text-base leading-tight font-black whitespace-nowrap tabular-nums"
           style={{ color: PRIMARY }}
         >
           {valor}
         </div>
-        <dl className="mt-1.5 flex flex-col gap-0.5 border-t border-slate-200/80 pt-1.5">
+        <dl className="mt-1 flex flex-col gap-0.5 border-t border-slate-200/80 pt-1">
           {linhas.map((l) => (
             <div
               key={l.rotulo}
-              className="flex items-baseline justify-between gap-2 text-[9px] whitespace-nowrap tabular-nums"
+              className="flex items-baseline justify-between gap-2 text-[8.5px] whitespace-nowrap tabular-nums"
             >
               <dt className="text-slate-500">{l.rotulo}</dt>
               <dd className="font-bold text-slate-700">{l.valor}</dd>
@@ -74,7 +114,7 @@ export function Cartao({
     return (
       <Link
         href={href}
-        className="hover-lift flex h-full flex-col overflow-hidden rounded-lg shadow-sm transition-shadow"
+        className="hover-lift flex h-full flex-col overflow-hidden rounded-xl border border-white/60 shadow-xs transition-all active:scale-[0.98]"
         title={ajuda}
         aria-label={`${titulo}: ${rotuloValor} ${valor}`}
       >
@@ -85,7 +125,7 @@ export function Cartao({
 
   return (
     <div
-      className="flex h-full flex-col overflow-hidden rounded-lg shadow-sm"
+      className="flex h-full flex-col overflow-hidden rounded-xl border border-white/60 shadow-xs"
       title={ajuda}
       role="group"
       aria-label={`${titulo}: ${rotuloValor} ${valor}`}
@@ -96,35 +136,118 @@ export function Cartao({
 }
 
 /**
- * Resumo de uma simulação sem intervenção: dois cartões, Perdas Operacionais (DaLA, 30 dias) e Danos Físicos (exposição,
- * um teto), com os valores do mesmo comparativo que alimenta Dano Evitado, e as mesmas notas do fim daquela aba.
- * Sem dado (carregando ou ausente), mostra só o esqueleto e depois nada além das notas.
+ * Notas e avisos metodológicos do cenário (ex: DaLA, aviso de +50%, ou bases/parâmetros em intervenção).
+ * Posicionado no final do painel para manter os dados principais acima da dobra sem rolagem.
  */
-export function ResumoPerdasDanos({ evento }: { evento: string }) {
-  const { dados, carregando } = useComparativo()
-  const ev = EVENTOS_SIMULACAO.find((e) => e.nome === evento)
-  const ind =
-    ev && dados ? dados.eventos[ev.id]?.variantes["sem-intervencao"] : undefined
-
-  if (carregando) {
+export function NotasResumoCenario({ evento }: { evento: string }) {
+  const ehIntervencao = temIntervencao(evento)
+  if (ehIntervencao) {
     return (
-      <div className="mb-2 grid grid-cols-2 gap-2" aria-busy="true">
-        <Skeleton className="h-36 rounded-lg" />
-        <Skeleton className="h-36 rounded-lg" />
+      <div className="mt-1 flex flex-col gap-1 text-[8.5px] leading-snug text-slate-500">
+        <NotasSimulacao evento={evento} />
+      </div>
+    )
+  }
+  return (
+    <div className="mt-1 flex flex-col gap-1 text-[8.5px] leading-snug text-slate-500">
+      {evento === "Simulação de Maio de 2024 + 50%" && (
+        <p>{AVISO_MAIO_2024_MAIS_50}</p>
+      )}
+      <p>
+        Perdas com os parâmetros DaLA do cenário ({DIAS_PERDAS} dias
+        efetivos). Detalhes em{" "}
+        <Link href="/perdas-operacionais" className="font-bold underline">
+          Perdas Operacionais
+        </Link>{" "}
+        e na{" "}
+        <Link href="/metodologia#danos" className="font-bold underline">
+          Metodologia
+        </Link>
+        .
+      </p>
+    </div>
+  )
+}
+
+/**
+ * Resumo de uma simulação sem intervenção: dois cartões, Perdas Operacionais (DaLA, 30 dias) e Danos Físicos (exposição,
+ * um teto), com os valores do mesmo comparativo que alimenta Dano Evitado.
+ * Sem dado (carregando ou ausente), mostra só o esqueleto.
+ */
+export function ResumoPerdasDanos({
+  evento,
+  mostrarAvisos = false,
+}: {
+  evento: string
+  mostrarAvisos?: boolean
+}) {
+  const { dados, carregando: carregandoComp } = useComparativo()
+  const { perdas: perdasOp, carregando: carregandoOp } = usePerdasOperacionais()
+  const ehIntervencao = temIntervencao(evento)
+
+  if (ehIntervencao ? carregandoComp : carregandoOp) {
+    return (
+      <div className="mb-1.5 grid grid-cols-2 gap-1.5" aria-busy="true">
+        <Skeleton className="h-32 rounded-lg" />
+        <Skeleton className="h-32 rounded-lg" />
       </div>
     )
   }
 
-  const perdas = ind ? perdasEmDias(ind, DIAS_PERDAS) : undefined
+  const ev = ehIntervencao
+    ? EVENTOS_SIMULACAO.find((e) => e.nome === evento)
+    : undefined
+  const ind =
+    ev && dados ? dados.eventos[ev.id]?.variantes["sem-intervencao"] : undefined
+
+  const cenarioPerdas =
+    !ehIntervencao && perdasOp ? perdasOp[evento] : undefined
+
+  const perdas = ind
+    ? perdasEmDias(ind, DIAS_PERDAS)
+    : cenarioPerdas
+      ? (() => {
+          const s = DIAS_PERDAS / cenarioPerdas.dias_efetivos
+          const emp = cenarioPerdas.empresas_vab * s
+          const edu =
+            (cenarioPerdas.educacao_perdas +
+              cenarioPerdas.educacao_custo_adicional) *
+            s
+          const sau = cenarioPerdas.saude_producao * s
+          const agr = cenarioPerdas.agricultura_perdas
+          return {
+            empresas: emp,
+            educacao: edu,
+            saude: sau,
+            agricultura: agr,
+            total: emp + edu + sau + agr,
+          }
+        })()
+      : undefined
+
+  const expoExtra = EXPOSICAO_CENARIOS_EXTRAS[evento]
   const temExposicao =
-    !!dados?.exposicao_disponivel && ind?.exposicao_total !== undefined
+    (ehIntervencao &&
+      !!dados?.exposicao_disponivel &&
+      ind?.exposicao_total !== undefined) ||
+    !!expoExtra
+
+  const exposicaoTotal = ind?.exposicao_total ?? expoExtra?.total ?? 0
+  const exposicaoEmpresas = ind?.exposicao_empresas ?? expoExtra?.empresas ?? 0
+  const exposicaoEducacao = ind?.exposicao_educacao ?? expoExtra?.educacao ?? 0
+  const exposicaoSaude = ind?.exposicao_saude ?? expoExtra?.saude ?? 0
+
+  const ajudaExposicaoIndisponivel = ehIntervencao
+    ? "A exposição em R$ não passou na validação contra os totais do CLIMADA."
+    : "Exposição física em R$ não modelada para este cenário no CLIMADA. Clique para ver as cotas."
 
   return (
-    <div className="mb-2 flex flex-col gap-2">
-      {ind && perdas && (
-        <div className="grid grid-cols-2 gap-2">
+    <div className="mb-1.5 flex flex-col gap-1.5">
+      {perdas && (
+        <div className="grid grid-cols-2 gap-1.5">
           <Cartao
             titulo="Perdas Operacionais"
+            metricKey="perdas_operacionais"
             icone={<TrendingDown size={12} strokeWidth={2.5} />}
             rotuloValor={`Total (${DIAS_PERDAS} dias)`}
             valor={fmtBRL(perdas.total)}
@@ -140,19 +263,20 @@ export function ResumoPerdasDanos({ evento }: { evento: string }) {
           {temExposicao ? (
             <Cartao
               titulo="Danos Físicos"
+              metricKey="danos_fisicos"
               icone={<Waves size={12} strokeWidth={2.5} />}
               rotuloValor="Exposição (teto)"
-              valor={fmtBRL(ind.exposicao_total ?? 0)}
+              valor={fmtBRL(exposicaoTotal)}
               linhas={[
                 {
                   rotulo: "Empresas",
-                  valor: fmtBRL(ind.exposicao_empresas ?? 0),
+                  valor: fmtBRL(exposicaoEmpresas),
                 },
                 {
                   rotulo: "Educação",
-                  valor: fmtBRL(ind.exposicao_educacao ?? 0),
+                  valor: fmtBRL(exposicaoEducacao),
                 },
-                { rotulo: "Saúde", valor: fmtBRL(ind.exposicao_saude ?? 0) },
+                { rotulo: "Saúde", valor: fmtBRL(exposicaoSaude) },
               ]}
               ajuda="Valor de reposição de tudo o que molha, 100% de cada ponto. Não é dano nem se soma às perdas. Clique para ver detalhes."
               href="/danos-fisicos"
@@ -160,17 +284,18 @@ export function ResumoPerdasDanos({ evento }: { evento: string }) {
           ) : (
             <Cartao
               titulo="Danos Físicos"
+              metricKey="danos_fisicos"
               icone={<Waves size={12} strokeWidth={2.5} />}
               rotuloValor="Exposição (teto)"
               valor="—"
               linhas={[{ rotulo: "Indisponível", valor: "—" }]}
-              ajuda="A exposição em R$ não passou na validação contra os totais do CLIMADA."
+              ajuda={ajudaExposicaoIndisponivel}
               href="/danos-fisicos"
             />
           )}
         </div>
       )}
-      <NotasSimulacao evento={evento} />
+      {mostrarAvisos && <NotasResumoCenario evento={evento} />}
     </div>
   )
 }
@@ -191,9 +316,9 @@ export function ResumoPerdasDanosCota({
   const { perdas: porCota, erro } = usePerdasCotas()
   if (!porCota && !erro) {
     return (
-      <div className="grid grid-cols-2 gap-2" aria-busy="true">
-        <Skeleton className="h-36 rounded-lg" />
-        <Skeleton className="h-36 rounded-lg" />
+      <div className="grid grid-cols-2 gap-1.5" aria-busy="true">
+        <Skeleton className="h-32 rounded-lg" />
+        <Skeleton className="h-32 rounded-lg" />
       </div>
     )
   }
@@ -208,10 +333,11 @@ export function ResumoPerdasDanosCota({
   const expSau = exposicao?.saude.valor_exposto_brl ?? 0
 
   return (
-    <div className="grid grid-cols-2 gap-2">
+    <div className="grid grid-cols-2 gap-1.5">
       {perdas ? (
         <Cartao
           titulo="Perdas Operacionais"
+          metricKey="perdas_operacionais"
           icone={<TrendingDown size={12} strokeWidth={2.5} />}
           rotuloValor={`Total (${DIAS_PERDAS} dias)`}
           valor={fmtBRL(perdas.total)}
@@ -227,6 +353,7 @@ export function ResumoPerdasDanosCota({
       ) : (
         <Cartao
           titulo="Perdas Operacionais"
+          metricKey="perdas_operacionais"
           icone={<TrendingDown size={12} strokeWidth={2.5} />}
           rotuloValor={`Total (${DIAS_PERDAS} dias)`}
           valor="—"
@@ -237,6 +364,7 @@ export function ResumoPerdasDanosCota({
       )}
       <Cartao
         titulo="Danos Físicos"
+        metricKey="danos_fisicos"
         icone={<Waves size={12} strokeWidth={2.5} />}
         rotuloValor="Exposição (cota)"
         valor={fmtBRL(expEmp + expEdu + expSau)}
