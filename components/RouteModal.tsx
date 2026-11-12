@@ -24,25 +24,24 @@ export function RouteModal({ children }: { children: React.ReactNode }) {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto px-4 py-6"
+      className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto px-3 sm:px-4 py-4 sm:py-6"
       style={{
-        backgroundColor: "rgba(9,26,31,0.6)",
-        backdropFilter: "blur(6px)",
-        WebkitBackdropFilter: "blur(6px)",
+        backgroundColor: "rgba(15, 23, 42, 0.55)",
+        backdropFilter: "blur(24px) saturate(180%)",
+        WebkitBackdropFilter: "blur(24px) saturate(180%)",
       }}
       onClick={(e) => {
         if (e.target === e.currentTarget) close()
       }}
     >
-      <div className="animate-scale-in relative w-full max-w-[1440px] overflow-hidden rounded-2xl bg-white shadow-2xl">
+      <div className="animate-scale-in relative w-full max-w-[1440px] overflow-hidden rounded-3xl border border-white/60 bg-white shadow-2xl">
         <button
           onClick={close}
           aria-label="Fechar"
           title="Fechar (Esc)"
-          className="active-press absolute top-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-md transition-colors hover:bg-slate-100"
-          style={{ color: "#1E404A" }}
+          className="apple-button absolute top-3.5 right-3.5 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white/80 hover:bg-white text-slate-700 shadow-md backdrop-blur-md transition-all active:scale-95 border border-slate-200/60"
         >
-          <X size={16} strokeWidth={2.5} />
+          <X size={15} strokeWidth={2.5} />
         </button>
         {children}
       </div>

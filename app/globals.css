@@ -15,8 +15,9 @@
 }
 
 @theme inline {
-  --font-heading: var(--font-sans);
-  --font-sans: var(--font-sans);
+  --font-heading: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", -apple-system-subheadline, "Helvetica Neue", Arial, sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", -apple-system-subheadline, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "SF Mono", SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -48,13 +49,14 @@
   --color-card: var(--card);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  --radius-3xl: 28px;
+  --radius-4xl: 32px;
+  --radius-full: 9999px;
 }
 
 :root {
@@ -62,6 +64,38 @@
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
   --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
+  /* Apple HIG Standard Curves & Timings */
+  --ease-apple: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --ease-spring-snappy: cubic-bezier(0.2, 0.9, 0.3, 1.15);
+  --duration-instant: 120ms;
+  --duration-fast: 200ms;
+  --duration-normal: 300ms;
+  --duration-slow: 500ms;
+
+  /* Apple HIG 8pt Grid Spacing Scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* Apple HIG Typography Scale */
+  --text-caption2: 11px;
+  --text-caption1: 12px;
+  --text-footnote: 13px;
+  --text-subhead: 15px;
+  --text-body: 17px;
+  --text-headline: 17px;
+  --text-title3: 20px;
+  --text-title2: 22px;
+  --text-title1: 28px;
+  --text-large-title: 34px;
 
   /* CIEX palette — alinhada aos tokens hardcoded usados em app/page.tsx (objeto `C`),
        para que os primitivos shadcn (Select/Dropdown/Tabs/Card/Button) que consomem
@@ -89,7 +123,7 @@
   --chart-3: #3a6b78;
   --chart-4: #4f8a96;
   --chart-5: #6aa8b4;
-  --radius: 0.625rem;
+  --radius: 1rem;
 
   /* Sidebar CIEX */
   --sidebar: #1e404a;
@@ -105,12 +139,19 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
+    -webkit-tap-highlight-color: transparent;
   }
   html {
     @apply font-sans;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", -apple-system-subheadline, "Helvetica Neue", Arial, sans-serif;
+    letter-spacing: -0.012em;
   }
   .maplibregl-popup-content {
     @apply rounded-none! bg-transparent! p-0! shadow-none!;
@@ -179,21 +220,111 @@
 /* Micro-interaction utilities */
 .hover-lift {
   transition:
-    transform 200ms var(--ease-out),
-    box-shadow 200ms var(--ease-out);
+    transform var(--duration-fast) var(--ease-apple),
+    box-shadow var(--duration-fast) var(--ease-apple);
 }
 .hover-lift:hover {
   transform: translateY(-2px);
   box-shadow:
-    0 10px 15px -3px rgba(0, 0, 0, 0.05),
-    0 4px 6px -2px rgba(0, 0, 0, 0.025);
+    0 10px 24px -4px rgba(0, 0, 0, 0.08),
+    0 4px 8px -2px rgba(0, 0, 0, 0.04);
 }
 
 .active-press {
-  transition: transform 150ms var(--ease-out);
+  transition: transform var(--duration-instant) var(--ease-apple);
 }
 .active-press:active {
-  transform: scale(0.96);
+  transform: scale(0.97);
+}
+
+/* ── Apple HIG Glass & Vibrancy Components ── */
+.apple-glass {
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
+}
+
+.apple-glass-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02), inset 0 1px 0 0 rgba(255, 255, 255, 0.95);
+}
+
+.apple-glass-dark {
+  background: rgba(15, 23, 42, 0.78);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.35), inset 0 1px 0 0 rgba(255, 255, 255, 0.25);
+}
+
+.apple-glass-tinted {
+  background: linear-gradient(135deg, rgba(30, 64, 74, 0.82) 0%, rgba(37, 83, 98, 0.82) 100%);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  border: 0.5px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18), inset 0 1px 0 0 rgba(255, 255, 255, 0.3);
+}
+
+/* ── Apple HIG Interactive & Buttons ── */
+.apple-button {
+  transition: transform var(--duration-instant) var(--ease-apple),
+              background-color var(--duration-instant) var(--ease-apple),
+              border-color var(--duration-instant) var(--ease-apple),
+              box-shadow var(--duration-instant) var(--ease-apple);
+}
+.apple-button:active {
+  transform: scale(0.97);
+}
+
+.apple-pill {
+  border-radius: 9999px;
+  transition: transform var(--duration-instant) var(--ease-apple),
+              background-color var(--duration-instant) var(--ease-apple),
+              border-color var(--duration-instant) var(--ease-apple),
+              box-shadow var(--duration-instant) var(--ease-apple);
+}
+.apple-pill:active {
+  transform: scale(0.97);
+}
+
+.apple-card {
+  border-radius: var(--radius-lg);
+  transition: transform var(--duration-fast) var(--ease-apple),
+              box-shadow var(--duration-fast) var(--ease-apple);
+}
+.apple-card:hover {
+  box-shadow: 0 10px 28px -4px rgba(0, 0, 0, 0.07), 0 2px 6px -1px rgba(0, 0, 0, 0.03);
+}
+
+.apple-segmented-track {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  background-color: rgba(0, 0, 0, 0.06);
+  padding: 3px;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.apple-segmented-item {
+  border-radius: 9999px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+  transition: all var(--duration-instant) var(--ease-apple);
+}
+.apple-segmented-item:active {
+  transform: scale(0.97);
+}
+.apple-segmented-item[data-active="true"] {
+  background-color: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -221,19 +352,64 @@
   --layer-gap: clamp(2px, 0.4vw, 4px);
 }
 
-/* Botões de zoom do mapa: o grupo (3 botões) tem a mesma altura do cartão de logos (130 px). */
+/* Botões de navegação e zoom do mapa: perfeitamente alinhados ao cartão de logos institucionais (84 px de altura, base a 8 px). */
+.maplibregl-map .maplibregl-ctrl-bottom-right {
+  right: 0 !important;
+  bottom: 0 !important;
+}
+
 .maplibregl-map .maplibregl-ctrl-bottom-right .maplibregl-ctrl {
-  margin: 0 8px 8px 0;
+  margin: 0 8px 8px 0 !important;
 }
+
+.maplibregl-ctrl-bottom-right .maplibregl-ctrl-group {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 84px !important;
+  width: 30px !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: none !important;
+}
+
 .maplibregl-ctrl-bottom-right .maplibregl-ctrl-group button {
-  width: 43px;
-  height: 42.67px;
+  flex: 1 1 0% !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  outline: none !important;
+  border: 0 !important;
+  padding: 0 !important;
+  background-color: transparent !important;
+  transition: background-color 150ms ease !important;
 }
-.maplibregl-ctrl-bottom-right
-  .maplibregl-ctrl-group
-  button
-  .maplibregl-ctrl-icon {
-  background-size: 26px 26px;
+
+.maplibregl-ctrl-bottom-right .maplibregl-ctrl-group button:not(:disabled):hover {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+.maplibregl-ctrl-bottom-right .maplibregl-ctrl-group button:not(:disabled):active {
+  background-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+.maplibregl-ctrl-bottom-right .maplibregl-ctrl-group button + button {
+  border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+.maplibregl-ctrl-bottom-right .maplibregl-ctrl-group button .maplibregl-ctrl-icon {
+  display: block !important;
+  width: 16px !important;
+  height: 16px !important;
+  background-size: 16px 16px !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
 }
 
 /* Mapa fixo (Danos Físicos, mapa por cota): o desenho do mapa não recebe mouse nem toque, então não arrasta, não gira

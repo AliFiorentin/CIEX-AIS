@@ -28,11 +28,14 @@ export function Banner({
 }) {
   const Icone = ativa === "perdas" ? TrendingDown : Waves
   const linkNav =
-    "flex items-center gap-1.5 rounded-full border border-white/20 px-3 py-1 text-[10px] font-bold text-white/70 transition-colors hover:border-white/40 hover:text-white"
+    "apple-pill flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3.5 py-1 text-xs font-semibold text-white/80 transition-all hover:bg-white/20 hover:text-white active:scale-95 shadow-xs"
   return (
     <header
-      className="px-6 py-10 text-white"
-      style={{ backgroundColor: PRIMARY }}
+      className="relative px-6 py-10 text-white overflow-hidden"
+      style={{
+        background: `linear-gradient(135deg, ${PRIMARY} 0%, #255362 100%)`,
+        boxShadow: "0 8px 32px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.2)",
+      }}
     >
       <div className="mx-auto flex max-w-[1440px] items-start justify-between gap-6">
         <div className="min-w-0">
@@ -44,23 +47,23 @@ export function Banner({
               Metodologia →
             </Link>
           </div>
-          <p className="mb-2 text-[11px] font-semibold tracking-[0.18em] uppercase opacity-60">
+          <p className="mb-2 text-[11px] font-semibold tracking-[0.18em] uppercase text-sky-200/80">
             CIEX · GPEA · FURG
           </p>
-          <h1 className="mb-2 flex items-center gap-3 text-4xl leading-none font-black tracking-tight">
+          <h1 className="mb-2 flex items-center gap-3 text-4xl leading-none font-black tracking-tight text-white">
             <Icone
               size={36}
               strokeWidth={2.5}
-              className="shrink-0 opacity-80"
+              className="shrink-0 text-sky-300 opacity-90"
             />
             {titulo}
           </h1>
-          <p className="text-base font-medium opacity-75">{subtitulo}</p>
+          <p className="text-base font-medium text-white/80">{subtitulo}</p>
           {nota && (
-            <p className="mt-3 font-mono text-[11px] opacity-50">{nota}</p>
+            <p className="mt-3 font-mono text-[11px] text-white/50">{nota}</p>
           )}
           <nav
-            className="mt-5 flex flex-wrap gap-2"
+            className="mt-6 inline-flex rounded-full bg-black/20 p-1 border border-white/15 backdrop-blur-md gap-1"
             aria-label="Páginas de danos"
           >
             {PAGINAS.map(({ id, href, rotulo }) => (
@@ -68,20 +71,11 @@ export function Banner({
                 key={id}
                 href={href}
                 aria-current={ativa === id ? "page" : undefined}
-                className="rounded-full border px-4 py-1.5 text-[11px] font-black transition-all duration-150"
-                style={
+                className={`apple-pill rounded-full px-4 py-1.5 text-xs font-bold transition-all duration-150 active:scale-95 ${
                   ativa === id
-                    ? {
-                        backgroundColor: "#fff",
-                        color: PRIMARY,
-                        borderColor: "#fff",
-                      }
-                    : {
-                        backgroundColor: "rgba(255,255,255,0.08)",
-                        color: "rgba(255,255,255,0.85)",
-                        borderColor: "rgba(255,255,255,0.3)",
-                      }
-                }
+                    ? "bg-white text-[#1E404A] shadow-md"
+                    : "text-white/80 hover:text-white hover:bg-white/10"
+                }`}
               >
                 {rotulo}
               </Link>

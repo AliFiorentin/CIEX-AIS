@@ -8,7 +8,7 @@ import Image from "next/image"
 export function HeaderLogos() {
   return (
     <div className="hidden shrink-0 items-center gap-3 self-center sm:flex">
-      <div className="relative h-16 w-28 rounded-lg bg-white p-1.5">
+      <div className="relative h-16 w-28 rounded-xl bg-white/95 p-1.5 shadow-md border border-white/40 backdrop-blur-sm">
         <Image
           src="/CIEX2.png"
           alt="CIEX"
@@ -16,7 +16,7 @@ export function HeaderLogos() {
           className="object-contain p-1.5"
         />
       </div>
-      <div className="relative h-16 w-28 rounded-lg bg-white p-1.5">
+      <div className="relative h-16 w-28 rounded-xl bg-white/95 p-1.5 shadow-md border border-white/40 backdrop-blur-sm">
         <Image
           src="/GPEA.png"
           alt="GPEA"

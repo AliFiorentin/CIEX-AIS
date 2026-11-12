@@ -361,7 +361,7 @@ function Indicador({
 
   return (
     <div
-      className={`rounded-xl border border-slate-200 bg-white/80 shadow-sm ${larguraTotal ? "col-span-2" : "[&:last-child:nth-child(odd)]:col-span-2"} ${destaque ? "px-3 py-2.5" : "px-2.5 py-2"}`}
+      className={`rounded-xl border border-slate-200/80 bg-white/85 shadow-xs hover-lift transition-all ${larguraTotal ? "col-span-2" : "[&:last-child:nth-child(odd)]:col-span-2"} ${destaque ? "px-3 py-2.5" : "px-2.5 py-2"}`}
       title={cartao.ajuda}
       aria-label={resumo}
       role="group"

@@ -104,7 +104,7 @@ def vectorizar_tiff(tiff_path: Path, limite_path: Path) -> gpd.GeoDataFrame:
     print(f"    {len(gdf):,} cultivos apos dissolve")
 
     # Suaviza bordas de pixel com buffer round-trip
-    gdf["geometry"] = gdf.geometry.buffer(0.0003, join_style=1, resolution=8).buffer(-0.0003, join_style=1, resolution=8)
+    gdf["geometry"] = gdf.geometry.buffer(0.0003, join_style=1, quad_segs=8).buffer(-0.0003, join_style=1, quad_segs=8)
     gdf = gdf[gdf.geometry.is_valid & (gdf.geometry.area > 0)].copy()
 
     return gdf[["tipo_cultura", "classe", "geometry"]]

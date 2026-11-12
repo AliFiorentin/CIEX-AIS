@@ -13,7 +13,7 @@
     "lint": "eslint",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit",
-    "test": "node --test lib/*.test.ts && { [ ! -d scripts/tests ] || python3 -m unittest discover -s scripts/tests -p 'test_*.py'; }"
+    "test": "node --test lib/*.test.ts && { [ ! -d scripts/tests ] || { PY=$([ -x ../.venv/bin/python3 ] && echo ../.venv/bin/python3 || echo python3); $PY -m unittest discover -s scripts/tests -p 'test_*.py'; }; }"
   },
   "dependencies": {
     "@turf/turf": "^7.4.0",

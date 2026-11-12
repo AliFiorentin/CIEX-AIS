@@ -31,16 +31,6 @@ export const COR_ALAGADO: [number, number, number] = [16, 84, 168]
 const DURACAO_MS = 14000
 const PAUSA_FIM_MS = 1800
 
-/** População atingida na cota atual (acumulada até a última cota-raster já atingida). */
-export function popAtingidaNaCota(
-  meta: CotaMeta | null,
-  cota: number | null
-): number | null {
-  if (!meta?.pop_por_cota || cota === null) return null
-  const k = meta.cotas.filter((c) => c <= cota + 1e-6).length
-  return k === 0 ? 0 : (meta.pop_por_cota[k - 1] ?? 0)
-}
-
 const passoDe = (m: CotaMeta) =>
   m.cotas.length > 1 ? m.cotas[1] - m.cotas[0] : 1
 

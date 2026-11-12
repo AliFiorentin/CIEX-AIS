@@ -50,7 +50,7 @@ export function Section({
     <section id={id} className="mb-10 scroll-mt-20">
       <div className="mb-4 flex items-center gap-2.5">
         <span
-          className="shrink-0 rounded-md px-2.5 py-1 text-xs font-black text-white"
+          className="shrink-0 rounded-full px-3 py-1 text-xs font-bold text-white shadow-2xs"
           style={{ backgroundColor: primary }}
         >
           {num}
@@ -164,7 +164,7 @@ export function GeoCard({
   children: React.ReactNode
 }) {
   return (
-    <div className="mt-3 rounded-xl border border-[#c7d6d9] bg-white p-4 shadow-sm">
+    <div className="mt-3 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs">
       <p
         className="mb-0.5 text-[11px] font-black tracking-wider uppercase"
         style={{ color: primary }}
@@ -287,7 +287,7 @@ export function Note({
   }[type]
   return (
     <div
-      className={`my-3 rounded-lg border-l-[3px] px-4 py-3 text-[12px] leading-relaxed ${cfg.bg} ${cfg.border} ${cfg.text}`}
+      className={`my-3 rounded-xl border border-l-4 px-4 py-3 text-[13px] leading-relaxed shadow-2xs ${cfg.bg} ${cfg.border} ${cfg.text}`}
     >
       <span className="mr-1.5 font-bold">{cfg.icon}</span>
       {children}
